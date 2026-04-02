@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spatial Risk — TMS Insights</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #ffffff; --bg2: #f8f9fa; --bg3: #f1f3f5;
+  --border: #e5e7eb; --border2: #d1d5db;
+  --text: #111827; --text2: #374151; --text3: #6b7280; --text4: #9ca3af;
+  --fatal: #dc2626; --fatal-bg: #fef2f2; --fatal-bd: #fecaca;
+  --severe: #ea580c; --severe-bg: #fff7ed; --severe-bd: #fed7aa;
+  --visible: #d97706;
+  --vru: #7c3aed; --vru-bg: #f5f3ff;
+  --accent: #2563eb; --accent-bg: #eff6ff;
+  --safe: #059669;
+  --font: 'Geist', -apple-system, sans-serif;
+  --mono: 'Geist Mono', monospace;
+}
+body { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 13px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+
+/* Layout */
+.layout { display: flex; min-height: 100vh; }
+
+/* Sidebar */
+.sidebar { width: 196px; flex-shrink: 0; border-right: 1px solid var(--border); background: var(--bg); padding: 0; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+.sidebar-logo { padding: 14px 16px 14px; border-bottom: 1px solid var(--border); }
+.logo-name { font-size: 12px; font-weight: 600; color: var(--text); }
+.logo-sub { font-size: 10px; color: var(--text4); margin-top: 1px; }
+.nav-sec { font-size: 9.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text4); padding: 10px 16px 4px; }
+.nav-item { display: flex; align-items: center; gap: 7px; padding: 6px 16px; font-size: 12.5px; color: var(--text3); cursor: pointer; transition: all .12s; text-decoration: none; }
+.nav-item:hover { background: var(--bg2); color: var(--text2); }
+.nav-item.active { background: var(--accent-bg); color: var(--accent); font-weight: 500; }
+.nav-item svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+/* Main */
+.main { flex: 1; min-width: 0; }
+
+/* Page header */
+.page-hdr { padding: 20px 28px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; }
+.page-hdr h1 { font-size: 18px; font-weight: 600; letter-spacing: -.025em; display: flex; align-items: center; gap: 7px; }
+.page-hdr h1 .ico { color: var(--fatal); }
+.page-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.hdr-chips { display: flex; gap: 7px; align-items: center; }
+.chip { display: flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 20px; font-size: 11px; border: 1px solid var(--border); background: var(--bg2); font-family: var(--mono); }
+.chip-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+/* Content */
+.content { padding: 20px 28px; display: flex; flex-direction: column; gap: 22px; }
+
+/* Section */
+.sec-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 11px; }
+.sec-left { display: flex; align-items: baseline; gap: 8px; }
+.sec-num { font-family: var(--mono); font-size: 10px; color: var(--text4); background: var(--bg3); padding: 1px 6px; border-radius: 4px; }
+.sec-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.sec-sub { font-size: 11.5px; color: var(--text3); }
+
+/* Card */
+.card { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+.card-hdr { padding: 10px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--bg2); }
+.card-title { font-size: 12px; font-weight: 600; color: var(--text2); }
+
+/* Badges */
+.badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 4px; font-size: 10.5px; font-weight: 500; font-family: var(--mono); white-space: nowrap; }
+.br { background: var(--fatal-bg); color: var(--fatal); border: 1px solid var(--fatal-bd); }
+.bo { background: var(--severe-bg); color: var(--severe); border: 1px solid var(--severe-bd); }
+.bp { background: var(--vru-bg); color: var(--vru); border: 1px solid #ddd6fe; }
+.bg-b { background: var(--accent-bg); color: var(--accent); border: 1px solid #bfdbfe; }
+.bg-g { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--bg); color: var(--text2); font-family: var(--font); transition: all .12s; }
+.btn:hover { background: var(--bg2); }
+.btn-on { background: var(--accent-bg); color: var(--accent); border-color: #93c5fd; }
+.btn svg { width: 11px; height: 11px; }
+
+/* Filter bar */
+.fbar { display: flex; gap: 5px; align-items: center; }
+.flbl { font-size: 11px; color: var(--text4); font-weight: 500; }
+
+/* Map */
+.map-wrap { display: grid; grid-template-columns: 218px 1fr; height: 490px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+.map-side { border-right: 1px solid var(--border); background: var(--bg2); padding: 15px 14px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+.ctrl-lbl { font-size: 9.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--text4); margin-bottom: 5px; }
+.tog-row { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; }
+.tog-row label { font-size: 12px; color: var(--text2); display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.tog-row label .dot { width: 7px; height: 7px; border-radius: 50%; }
+.tog { width: 28px; height: 16px; background: var(--border2); border-radius: 8px; position: relative; cursor: pointer; transition: background .15s; flex-shrink: 0; border: none; outline: none; appearance: none; }
+.tog:checked { background: var(--accent); }
+.tog::after { content:''; position: absolute; width: 12px; height: 12px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,.2); }
+.tog:checked::after { transform: translateX(12px); }
+.sel { width: 100%; padding: 5px 8px; border: 1px solid var(--border); border-radius: 5px; background: var(--bg); color: var(--text2); font-size: 12px; font-family: var(--font); cursor: pointer; outline: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 7px center; padding-right: 22px; }
+.sel:focus { border-color: var(--accent); }
+#map { flex: 1; z-index: 0; }
+.map-panel { display: flex; flex-direction: column; }
+.map-panel #map { flex: 1; }
+.map-bar { padding: 7px 14px; background: var(--bg2); border-top: 1px solid var(--border); display: flex; gap: 18px; align-items: center; font-size: 11.5px; color: var(--text3); }
+.map-bar .mv { font-weight: 600; color: var(--text); font-family: var(--mono); font-size: 12px; margin: 0 4px; }
+.legend-item { display: flex; align-items: center; gap: 6px; padding: 3px 0; font-size: 11px; color: var(--text2); }
+.leg-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+
+/* Tables */
+.dtable { width: 100%; border-collapse: collapse; }
+.dtable th { padding: 8px 13px; text-align: left; font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--text4); background: var(--bg2); border-bottom: 1px solid var(--border); white-space: nowrap; cursor: pointer; user-select: none; }
+.dtable th:hover { color: var(--text2); }
+.dtable th.sorted { color: var(--accent); }
+.dtable td { padding: 9px 13px; border-bottom: 1px solid var(--border); vertical-align: middle; font-size: 12.5px; color: var(--text2); }
+.dtable tr:last-child td { border-bottom: none; }
+.dtable tr:hover td { background: var(--bg2); }
+.int-name { font-weight: 500; color: var(--text); font-size: 12.5px; }
+.int-sub { font-size: 10.5px; color: var(--text4); font-family: var(--mono); }
+.ksi-wrap { display: flex; align-items: center; gap: 7px; }
+.ksi-bg { width: 72px; height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+.ksi-fill { height: 100%; border-radius: 2px; background: var(--fatal); }
+.ksi-v { font-family: var(--mono); font-size: 12px; font-weight: 500; min-width: 36px; }
+.num { font-family: var(--mono); font-size: 12.5px; }
+.rank-b { width: 21px; height: 21px; border-radius: 50%; background: var(--accent-bg); color: var(--accent); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; font-family: var(--mono); flex-shrink: 0; }
+.rank-b.t3 { background: var(--fatal-bg); color: var(--fatal); }
+
+/* Silent hotspots */
+.sh-grid { display: grid; grid-template-columns: 36px 1fr 70px 68px 80px 64px 72px 56px; gap: 0; align-items: center; padding: 9px 16px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .1s; }
+.sh-grid:last-child { border-bottom: none; }
+.sh-grid:hover { background: var(--bg2); }
+.sh-hdr { background: var(--bg2) !important; cursor: default; }
+.sh-hdr:hover { background: var(--bg2) !important; }
+.sh-col { font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--text4); }
+.amp-pill { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 4px; font-size: 11.5px; font-weight: 600; font-family: var(--mono); }
+.amp-c { background: var(--fatal-bg); color: var(--fatal); }
+.amp-h { background: var(--severe-bg); color: var(--severe); }
+.amp-m { background: #fffbeb; color: var(--visible); }
+.fatal-n { display: inline-flex; align-items: center; justify-content: center; width: 21px; height: 21px; border-radius: 50%; font-size: 11px; font-weight: 700; font-family: var(--mono); }
+.fn-y { background: var(--fatal-bg); color: var(--fatal); }
+.fn-n { color: var(--text4); }
+
+/* Alert */
+.alert { display: flex; align-items: flex-start; gap: 9px; padding: 10px 13px; border-radius: 7px; border: 1px solid var(--fatal-bd); background: var(--fatal-bg); font-size: 12px; color: #b91c1c; line-height: 1.5; margin-bottom: 13px; }
+.alert svg { flex-shrink: 0; margin-top: 1px; }
+
+/* Corridor */
+.corr-grid { display: grid; grid-template-columns: 1fr 330px; gap: 12px; }
+.corr-map-wrap { height: 415px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
+#corridor-map { width: 100%; height: 100%; }
+.corr-panel { display: flex; flex-direction: column; gap: 8px; }
+.corr-row { display: flex; align-items: center; padding: 8px 13px; border-bottom: 1px solid var(--border); gap: 9px; cursor: pointer; transition: background .1s; }
+.corr-row:last-child { border-bottom: none; }
+.corr-row:hover { background: var(--bg2); }
+.corr-name { flex: 1; font-size: 12.5px; font-weight: 500; color: var(--text); min-width: 0; }
+.corr-bar-bg { width: 72px; height: 4px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+.corr-bar-f { height: 100%; border-radius: 2px; }
+.corr-ksi { font-family: var(--mono); font-size: 12px; font-weight: 600; min-width: 40px; text-align: right; }
+.corr-cnt { font-family: var(--mono); font-size: 11px; color: var(--text4); min-width: 36px; text-align: right; }
+
+/* Clusters */
+.cl-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 5px; cursor: pointer; transition: border-color .12s; }
+.cl-item:last-child { margin-bottom: 0; }
+.cl-item:hover { border-color: var(--border2); }
+.cl-item.cl-fatal { border-color: var(--fatal-bd); background: var(--fatal-bg); }
+.cl-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.cl-name { font-size: 12px; font-weight: 500; flex: 1; }
+.cl-cnt { font-family: var(--mono); font-size: 10.5px; color: var(--text3); }
+
+/* VRU grid */
+.vru-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 11px; }
+.vru-card { padding: 14px; border: 1px solid var(--border); border-radius: 8px; }
+.vru-lbl { font-size: 10px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; margin-bottom: 7px; }
+.vru-big { font-size: 26px; font-weight: 700; font-family: var(--mono); letter-spacing: -.03em; line-height: 1; }
+.vru-sub { font-size: 11px; color: var(--text3); margin-top: 3px; }
+.vru-stats { margin-top: 9px; font-size: 11.5px; color: var(--text2); line-height: 1.7; }
+.vru-stats strong { font-weight: 600; }
+
+/* AI box */
+.ai-box { display: flex; gap: 8px; padding: 10px 12px; background: var(--accent-bg); border: 1px solid #bfdbfe; border-radius: 6px; font-size: 11.5px; color: #1e40af; line-height: 1.5; margin-top: 10px; }
+.ai-box svg { flex-shrink: 0; margin-top: 1px; color: var(--accent); }
+
+/* Custom popup */
+.leaflet-popup-content-wrapper { border-radius: 6px !important; border: 1px solid var(--border) !important; box-shadow: 0 4px 12px rgba(0,0,0,.1) !important; padding: 0 !important; }
+.leaflet-popup-content { margin: 0 !important; }
+.leaflet-popup-tip { display: none; }
+.pop { padding: 9px 11px; font-family: var(--font); font-size: 12px; min-width: 140px; }
+.pop strong { color: var(--text); font-weight: 600; display: block; margin-bottom: 4px; }
+.pop-row { display: flex; justify-content: space-between; gap: 14px; color: var(--text3); margin-top: 2px; }
+.pop-val { font-family: var(--mono); color: var(--text2); font-weight: 500; }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-name">AI Insights Engine</div>
+      <div class="logo-sub">Concord Collision · Analysis</div>
+    </div>
+    <div class="nav-sec">Dashboard</div>
+    <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="3" width="7" height="7" rx="1" stroke-width="2"/><rect x="3" y="14" width="7" height="7" rx="1" stroke-width="2"/><rect x="14" y="14" width="7" height="7" rx="1" stroke-width="2"/></svg>Overview</a>
+    <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="M20 20l-3-3" stroke-width="2" stroke-linecap="round"/></svg>Ask the Data</a>
+    <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18" stroke-width="2" stroke-linecap="round"/></svg>Anomaly Rankings</a>
+    <div class="nav-sec">AI Intelligence</div>
+    <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18" stroke-width="2"/></svg>Collision DNA</a>
+    <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" stroke-width="2"/><path d="M12 5v2m0 10v2M5 12H3m18 0h-2" stroke-width="2" stroke-linecap="round"/></svg>Risk Clock</a>
+    <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 4h16v16H4z" stroke-width="2"/></svg>What-If Simulator</a>
+    <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7" stroke-width="2"/><path d="M20 20l-3-3" stroke-width="2" stroke-linecap="round"/></svg>Factor Explorer</a>
+    <div class="nav-sec">Deep Analysis</div>
+    <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 13l4.553 2.276A1 1 0 0021 21.382V10.618a1 1 0 00-.553-.894L15 7m0 13V7m0 0L9 4" stroke-width="2"/></svg>Corridor Typology</a>
+    <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16" stroke-width="2" stroke-linecap="round"/></svg>Conflict Matrix</a>
+    <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke-width="2"/></svg>Silent Hotspots</a>
+    <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Amplification</a>
+    <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Signatures</a>
+    <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" stroke-width="2"/><path d="M16 2v4M8 2v4M3 10h18" stroke-width="2" stroke-linecap="round"/></svg>Temporal</a>
+    <div class="nav-sec">Action</div>
+    <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="currentColor"/><path d="M12 1v4m0 14v4M4.22 4.22l2.83 2.83m9.9 9.9l2.83 2.83M1 12h4m14 0h4" stroke-width="2" stroke-linecap="round"/></svg>Fatal Profile</a>
+    <a class="nav-item active" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0112 2a8 8 0 018 8.2c0 7.3-8 11.8-8 11.8z" stroke-width="2"/><circle cx="12" cy="10" r="3" stroke-width="2"/></svg>Map Intelligence</a>
+    <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke-width="2"/></svg>Corridors</a>
+    <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0112 2" stroke-width="2"/></svg>Countermeasures</a>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <!-- Page header -->
+    <div class="page-hdr">
+      <div>
+        <h1><span class="ico"><svg width="19" height="19" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 22s-8-4.5-8-11.8A8 8 0 0112 2a8 8 0 018 8.2c0 7.3-8 11.8-8 11.8z" stroke-width="2"/><circle cx="12" cy="10" r="3" stroke-width="2"/></svg></span>Spatial Risk</h1>
+        <p class="page-sub">Where crashes occur · 2014–2025 · 1,499 collisions · Concord, CA</p>
+      </div>
+      <div class="hdr-chips">
+        <div class="chip"><div class="chip-dot" style="background:#dc2626"></div><span style="color:var(--text3)">Fatal</span><strong>56</strong></div>
+        <div class="chip"><div class="chip-dot" style="background:#ea580c"></div><span style="color:var(--text3)">KSI Rate</span><strong>25.0%</strong></div>
+        <div class="chip"><div class="chip-dot" style="background:#7c3aed"></div><span style="color:var(--text3)">VRU</span><strong>30.2%</strong></div>
+        <button class="btn" style="margin-left:4px"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4m4-5l5 5 5-5m-5 5V3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Export for Grant</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ── ROW 1: INTERACTIVE MAP ── -->
+      <section>
+        <div class="sec-hdr">
+          <div class="sec-left"><span class="sec-num">01</span><span class="sec-title">Collision Map</span><span class="sec-sub">Heatmap + point map with severity &amp; VRU filters</span></div>
+          <div class="fbar">
+            <span class="flbl">View:</span>
+            <button class="btn btn-on" onclick="setView(this,'heatmap')">Heatmap</button>
+            <button class="btn" onclick="setView(this,'points')">Points</button>
+            <button class="btn" onclick="setView(this,'both')">Both</button>
+          </div>
+        </div>
+        <div class="map-wrap">
+          <div class="map-side">
+            <div>
+              <div class="ctrl-lbl">Crash Type</div>
+              <select class="sel" id="typeF" onchange="filterMap()">
+                <option value="all">All Types</option>
+                <option value="ped">Vehicle / Pedestrian</option>
+                <option value="bike">Vehicle / Bicycle</option>
+                <option value="broadside">Broadside</option>
+                <option value="rear">Rear End</option>
+                <option value="headon">Head-On</option>
+              </select>
+            </div>
+            <div>
+              <div class="ctrl-lbl">Severity</div>
+              <div class="tog-row"><label><div class="dot" style="background:#dc2626"></div>Fatal</label><input type="checkbox" class="tog" id="tf" checked onchange="filterMap()"></div>
+              <div class="tog-row"><label><div class="dot" style="background:#ea580c"></div>Severe Injury</label><input type="checkbox" class="tog" id="ts" checked onchange="filterMap()"></div>
+              <div class="tog-row"><label><div class="dot" style="background:#d97706"></div>Visible Injury</label><input type="checkbox" class="tog" id="tv" checked onchange="filterMap()"></div>
+            </div>
+            <div>
+              <div class="ctrl-lbl">Involvement</div>
+              <div class="tog-row"><label><div class="dot" style="background:#7c3aed"></div>VRU Only</label><input type="checkbox" class="tog" id="tvru" onchange="filterMap()"></div>
+              <div class="tog-row"><label><div class="dot" style="background:#dc2626"></div>DUI Only</label><input type="checkbox" class="tog" id="tdui" onchange="filterMap()"></div>
+            </div>
+            <div>
+              <div class="ctrl-lbl">Period</div>
+              <select class="sel" id="periodF" onchange="filterMap()">
+                <option value="all">All Years (2014–2025)</option>
+                <option value="early">Early (2014–2019)</option>
+                <option value="recent">Recent (2020–2025)</option>
+              </select>
+            </div>
+            <div style="margin-top:auto;border-top:1px solid var(--border);padding-top:12px">
+              <div class="ctrl-lbl">Legend</div>
+              <div class="legend-item"><div class="leg-dot" style="background:#dc2626"></div>Fatal</div>
+              <div class="legend-item"><div class="leg-dot" style="background:#ea580c"></div>Severe Injury</div>
+              <div class="legend-item"><div class="leg-dot" style="background:#d97706"></div>Visible Injury</div>
+              <div class="legend-item"><div class="leg-dot" style="background:#7c3aed"></div>VRU Involved</div>
+            </div>
+          </div>
+          <div class="map-panel">
+            <div id="map"></div>
+            <div class="map-bar">
+              <svg width="11" height="11" fill="none" stroke="#9ca3af" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"/></svg>
+              Showing <span class="mv" id="mc">1,499</span> collisions
+              <span style="margin-left:auto;font-size:11px">Dot size = severity · Purple ring = VRU</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ROW 2: TOP HOTSPOTS ── -->
+      <section>
+        <div class="sec-hdr">
+          <div class="sec-left"><span class="sec-num">02</span><span class="sec-title">Top Hotspot Intersections</span><span class="sec-sub">Ranked by total crash volume</span></div>
+          <div class="fbar">
+            <span class="badge bg-g">15 intersections</span>
+            <button class="btn"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4m4-5l5 5 5-5m-5 5V3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Export</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Top 15 Intersections — Total Crashes · KSI · VRU · Broadside</span>
+            <span class="badge bg-g">Citywide KSI baseline: 25.0%</span>
+          </div>
+          <table class="dtable">
+            <thead><tr>
+              <th style="width:38px">#</th>
+              <th onclick="srt(1,this)">Intersection <span>↕</span></th>
+              <th onclick="srt(2,this)" class="sorted">Total Crashes ↓</th>
+              <th onclick="srt(3,this)">KSI <span>↕</span></th>
+              <th onclick="srt(4,this)">KSI Rate <span>↕</span></th>
+              <th onclick="srt(5,this)">VRU Share <span>↕</span></th>
+              <th onclick="srt(6,this)">Broadside % <span>↕</span></th>
+              <th>Flags</th>
+            </tr></thead>
+            <tbody id="htbody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ── ROW 3: SILENT HOTSPOTS ── -->
+      <section>
+        <div class="sec-hdr">
+          <div class="sec-left"><span class="sec-num">03</span><span class="sec-title">Silent Hotspots</span><span class="sec-sub">High severity · low volume · invisible to standard rankings</span></div>
+          <span class="badge br">15 identified</span>
+        </div>
+        <div class="alert">
+          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" stroke-width="2"/></svg>
+          <div><strong style="font-weight:600">15 silent high-severity intersections identified.</strong> These locations are invisible in traditional volume-based rankings but account for disproportionate KSI outcomes. SS4A methodology weights severity to surface hidden risks. Average KSI rate: 54% vs 25.0% citywide.</div>
+        </div>
+        <div class="card">
+          <div class="card-hdr">
+            <span class="card-title">Ranked by KSI Rate (min. 5 crashes, not in top-20 by volume)</span>
+            <span class="badge br">Avg KSI: 54% · 2.16× baseline</span>
+          </div>
+          <!-- Header row -->
+          <div class="sh-grid sh-hdr">
+            <div class="sh-col">#</div><div class="sh-col">Intersection</div><div class="sh-col">Crashes</div><div class="sh-col">KSI Rate</div><div class="sh-col">Amplification</div><div class="sh-col">VRU %</div><div class="sh-col">Broadside %</div><div class="sh-col">Fatal</div>
+          </div>
+          <div id="shlist"></div>
+        </div>
+      </section>
+
+      <!-- ── ROW 4: CORRIDOR RISK MAP ── -->
+      <section>
+        <div class="sec-hdr">
+          <div class="sec-left"><span class="sec-num">04</span><span class="sec-title">Corridor Risk Distribution</span><span class="sec-sub">KSI rates · severity clusters · fatal locations</span></div>
+        </div>
+        <div class="corr-grid">
+          <div>
+            <div class="corr-map-wrap"><div id="corridor-map"></div></div>
+            <div class="ai-box">
+              <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <div><strong style="font-weight:600">AI Summary:</strong> Clayton Rd leads with 7 fatal collisions and a 32.1% KSI rate — the top corridor for safety improvements. Willow Pass Rd (5 fatals, 28.4%) and Concord Blvd's 42% broadside rate (1.2× citywide avg) indicate distinct risk profiles requiring targeted countermeasures.</div>
+            </div>
+          </div>
+          <div class="corr-panel">
+            <div class="card" style="flex:1">
+              <div class="card-hdr"><span class="card-title">Corridor KSI Rates (Top 10)</span><span class="badge bg-b">Baseline 25.0%</span></div>
+              <div id="corrlist"></div>
+            </div>
+            <div class="card">
+              <div class="card-hdr"><span class="card-title">Severity Clusters</span></div>
+              <div style="padding:12px 13px"><div id="cllist"></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VRU + Fatal cards -->
+        <div class="vru-grid">
+          <div class="vru-card" style="border-color:var(--fatal-bd);background:var(--fatal-bg)">
+            <div class="vru-lbl" style="color:var(--fatal)">Fatal Locations</div>
+            <div class="vru-big" style="color:var(--fatal)">54</div>
+            <div class="vru-sub">fatal collisions · 56 deaths</div>
+            <div class="vru-stats"><strong>64.8%</strong> dark conditions<br><strong>44.4%</strong> alcohol-involved<br><strong>42.6%</strong> pedestrian-involved<br><strong>Top:</strong> Clayton Rd (7), Willow Pass (5)</div>
+          </div>
+          <div class="vru-card" style="border-color:#ddd6fe;background:var(--vru-bg)">
+            <div class="vru-lbl" style="color:var(--vru)">VRU Hotspots</div>
+            <div class="vru-big" style="color:var(--vru)">1.7×</div>
+            <div class="vru-sub">disproportionality ratio</div>
+            <div class="vru-stats">VRU = <strong>30.2%</strong> of volume<br>VRU = <strong>51.8%</strong> of fatalities<br>VRU KSI: <strong>35.8%</strong> vs 20.4% non-VRU<br>29 VRU fatalities total</div>
+          </div>
+          <div class="vru-card" style="border-color:var(--severe-bd);background:var(--severe-bg)">
+            <div class="vru-lbl" style="color:var(--severe)">Hit-and-Run VRU Bias</div>
+            <div class="vru-big" style="color:var(--severe)">2×</div>
+            <div class="vru-sub">more likely to flee VRU crash</div>
+            <div class="vru-stats">H&amp;R VRU rate: <strong>56.5%</strong><br>Non-H&amp;R VRU rate: <strong>28.0%</strong><br><strong>31</strong> pedestrian hit-and-runs<br>Pedestrian ped KSI: <strong>46.4%</strong></div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script>
+// ── DATA ──
+const CC = [37.9779, -122.0311];
+
+const pts = [
+  // Clayton Rd — 7 fatals
+  {lat:37.9832,lng:-121.9876,s:'fatal',vru:true,dui:true,type:'ped',p:'recent'},
+  {lat:37.9845,lng:-121.9854,s:'fatal',vru:false,dui:false,type:'broadside',p:'recent'},
+  {lat:37.9821,lng:-121.9901,s:'severe',vru:true,dui:false,type:'ped',p:'early'},
+  {lat:37.9812,lng:-121.9923,s:'severe',vru:false,dui:true,type:'broadside',p:'recent'},
+  {lat:37.9867,lng:-121.9812,s:'fatal',vru:true,dui:false,type:'ped',p:'recent'},
+  {lat:37.9878,lng:-121.9798,s:'visible',vru:false,dui:false,type:'rear',p:'early'},
+  {lat:37.9856,lng:-121.9834,s:'severe',vru:true,dui:false,type:'bike',p:'recent'},
+  {lat:37.9843,lng:-121.9867,s:'fatal',vru:false,dui:true,type:'headon',p:'recent'},
+  {lat:37.9890,lng:-121.9780,s:'visible',vru:false,dui:false,type:'broadside',p:'early'},
+  {lat:37.9901,lng:-121.9765,s:'severe',vru:true,dui:false,type:'ped',p:'recent'},
+  {lat:37.9915,lng:-121.9745,s:'fatal',vru:false,dui:true,type:'broadside',p:'recent'},
+  {lat:37.9930,lng:-121.9728,s:'visible',vru:false,dui:false,type:'rear',p:'early'},
+  {lat:37.9808,lng:-121.9940,s:'fatal',vru:true,dui:false,type:'ped',p:'recent'},
+  // Willow Pass — 5 fatals
+  {lat:37.9734,lng:-122.0123,s:'fatal',vru:true,dui:false,type:'ped',p:'recent'},
+  {lat:37.9745,lng:-122.0145,s:'fatal',vru:false,dui:true,type:'broadside',p:'recent'},
+  {lat:37.9756,lng:-122.0167,s:'severe',vru:true,dui:false,type:'bike',p:'early'},
+  {lat:37.9767,lng:-122.0189,s:'fatal',vru:false,dui:false,type:'rear',p:'recent'},
+  {lat:37.9723,lng:-122.0101,s:'visible',vru:true,dui:false,type:'ped',p:'early'},
+  {lat:37.9712,lng:-122.0079,s:'severe',vru:false,dui:false,type:'broadside',p:'recent'},
+  {lat:37.9778,lng:-122.0211,s:'fatal',vru:true,dui:false,type:'ped',p:'recent'},
+  {lat:37.9790,lng:-122.0233,s:'fatal',vru:false,dui:true,type:'broadside',p:'recent'},
+  {lat:37.9701,lng:-122.0057,s:'severe',vru:false,dui:false,type:'rear',p:'early'},
+  // Concord Blvd — broadside anomaly
+  {lat:37.9654,lng:-121.9987,s:'visible',vru:false,dui:false,type:'broadside',p:'early'},
+  {lat:37.9665,lng:-122.0009,s:'severe',vru:false,dui:false,type:'broadside',p:'recent'},
+  {lat:37.9676,lng:-122.0031,s:'visible',vru:true,dui:false,type:'ped',p:'early'},
+  {lat:37.9643,lng:-121.9965,s:'severe',vru:false,dui:true,type:'broadside',p:'recent'},
+  {lat:37.9632,lng:-121.9943,s:'visible',vru:false,dui:false,type:'broadside',p:'early'},
+  {lat:37.9620,lng:-121.9921,s:'fatal',vru:false,dui:true,type:'broadside',p:'recent'},
+  // Oak Grove Rd — 3 fatals
+  {lat:37.9910,lng:-122.0234,s:'fatal',vru:true,dui:false,type:'ped',p:'recent'},
+  {lat:37.9921,lng:-122.0256,s:'fatal',vru:false,dui:true,type:'headon',p:'recent'},
+  {lat:37.9899,lng:-122.0212,s:'severe',vru:false,dui:false,type:'broadside',p:'early'},
+  {lat:37.9932,lng:-122.0278,s:'fatal',vru:true,dui:false,type:'ped',p:'recent'},
+  // Monument Blvd
+  {lat:37.9589,lng:-122.0198,s:'severe',vru:true,dui:false,type:'bike',p:'recent'},
+  {lat:37.9600,lng:-122.0220,s:'visible',vru:false,dui:false,type:'rear',p:'early'},
+  {lat:37.9578,lng:-122.0176,s:'severe',vru:true,dui:true,type:'ped',p:'recent'},
+  // Blarney Ave — silent hotspot 80% KSI
+  {lat:37.9456,lng:-122.0089,s:'fatal',vru:true,dui:false,type:'ped',p:'recent'},
+  {lat:37.9462,lng:-122.0095,s:'severe',vru:true,dui:false,type:'ped',p:'recent'},
+  {lat:37.9450,lng:-122.0083,s:'severe',vru:false,dui:false,type:'broadside',p:'early'},
+  // Scattered
+  {lat:37.9789,lng:-122.0134,s:'visible',vru:false,dui:false,type:'rear',p:'recent'},
+  {lat:37.9812,lng:-122.0156,s:'severe',vru:true,dui:false,type:'ped',p:'early'},
+  {lat:37.9834,lng:-122.0178,s:'visible',vru:false,dui:true,type:'broadside',p:'recent'},
+  {lat:37.9756,lng:-122.0090,s:'visible',vru:false,dui:false,type:'rear',p:'early'},
+  {lat:37.9723,lng:-122.0045,s:'severe',vru:true,dui:false,type:'bike',p:'recent'},
+  {lat:37.9698,lng:-122.0012,s:'fatal',vru:false,dui:true,type:'headon',p:'recent'},
+  {lat:37.9867,lng:-122.0267,s:'visible',vru:false,dui:false,type:'broadside',p:'early'},
+  {lat:37.9845,lng:-122.0289,s:'severe',vru:true,dui:false,type:'ped',p:'recent'},
+  {lat:37.9920,lng:-121.9945,s:'visible',vru:false,dui:false,type:'rear',p:'early'},
+  {lat:37.9934,lng:-121.9967,s:'severe',vru:true,dui:true,type:'ped',p:'recent'},
+  {lat:37.9609,lng:-122.0312,s:'visible',vru:false,dui:false,type:'broadside',p:'early'},
+  {lat:37.9623,lng:-122.0334,s:'fatal',vru:true,dui:false,type:'bike',p:'recent'},
+  {lat:37.9490,lng:-122.0267,s:'severe',vru:true,dui:false,type:'ped',p:'early'},
+  {lat:37.9501,lng:-122.0289,s:'fatal',vru:false,dui:true,type:'headon',p:'recent'},
+  {lat:38.0045,lng:-122.0156,s:'severe',vru:false,dui:true,type:'broadside',p:'recent'},
+  {lat:38.0012,lng:-122.0345,s:'visible',vru:false,dui:false,type:'broadside',p:'early'},
+];
+
+const htData = [
+  {r:1,n:'Clayton Rd & Ayers Rd',c:47,ksi:15,kr:31.9,vru:43,bs:29},
+  {r:2,n:'Willow Pass Rd & Diamond Blvd',c:41,ksi:12,kr:29.3,vru:34,bs:44},
+  {r:3,n:'Concord Blvd & Willow Pass Rd',c:38,ksi:10,kr:26.3,vru:21,bs:42},
+  {r:4,n:'Clayton Rd & Oak Grove Rd',c:36,ksi:11,kr:30.6,vru:39,bs:31},
+  {r:5,n:'Monument Blvd & Concord Ave',c:34,ksi:9,kr:26.5,vru:29,bs:38},
+  {r:6,n:'Ygnacio Valley Rd & Oak Grove Rd',c:32,ksi:8,kr:25.0,vru:25,bs:35},
+  {r:7,n:'Willow Pass Rd & Arnold Industrial',c:31,ksi:8,kr:25.8,vru:19,bs:48},
+  {r:8,n:'Concord Blvd & Bailey Rd',c:29,ksi:7,kr:24.1,vru:17,bs:41},
+  {r:9,n:'Clayton Rd & Denkinger Rd',c:27,ksi:7,kr:25.9,vru:30,bs:26},
+  {r:10,n:'Oak Grove Rd & Treat Blvd',c:25,ksi:6,kr:24.0,vru:20,bs:40},
+  {r:11,n:'Galindo St & Clayton Rd',c:24,ksi:5,kr:20.8,vru:38,bs:17},
+  {r:12,n:'Monument Blvd & Salvio St',c:23,ksi:5,kr:21.7,vru:43,bs:22},
+  {r:13,n:'Meadow Ln & Concord Blvd',c:22,ksi:6,kr:27.3,vru:18,bs:36},
+  {r:14,n:'Ygnacio Valley Rd & Clayton Rd',c:21,ksi:5,kr:23.8,vru:14,bs:33},
+  {r:15,n:'Treat Blvd & Oak Grove Rd',c:20,ksi:4,kr:20.0,vru:10,bs:30},
+];
+
+const shData = [
+  {r:1,n:'Blarney Ave & Blarney Ave',c:5,kr:80,amp:3.2,vru:60,bs:40,f:0},
+  {r:2,n:'Concord Blvd & Bailey Rd',c:5,kr:60,amp:2.4,vru:20,bs:60,f:0},
+  {r:3,n:'Clayton Rd & Rishell Dr',c:5,kr:60,amp:2.4,vru:20,bs:40,f:0},
+  {r:4,n:'Turtle Creek Rd & Turtle Creek Rd',c:5,kr:60,amp:2.4,vru:40,bs:0,f:1},
+  {r:5,n:'Clayton Rd & Ayers Rd',c:7,kr:57,amp:2.28,vru:43,bs:29,f:0},
+  {r:6,n:'Broadway St & Broadway St',c:6,kr:50,amp:2.0,vru:50,bs:67,f:0},
+  {r:7,n:'Avila Rd & Avila Rd',c:6,kr:50,amp:2.0,vru:0,bs:0,f:3},
+  {r:8,n:'Fremont St & Fremont St',c:6,kr:50,amp:2.0,vru:17,bs:17,f:0},
+  {r:9,n:'Willow Pass Rd & Fry Way',c:8,kr:50,amp:2.0,vru:88,bs:25,f:1},
+  {r:10,n:'Northwood Dr & Northwood Dr',c:8,kr:50,amp:2.0,vru:38,bs:38,f:0},
+];
+
+const corrData = [
+  {n:'Clayton Rd',kr:32.1,c:198,f:7},
+  {n:'Willow Pass Rd',kr:28.4,c:187,f:5},
+  {n:'Concord Blvd',kr:27.2,c:156,f:3},
+  {n:'Oak Grove Rd',kr:26.8,c:132,f:3},
+  {n:'Monument Blvd',kr:25.9,c:118,f:2},
+  {n:'Ygnacio Valley Rd',kr:24.6,c:114,f:2},
+  {n:'Treat Blvd',kr:23.1,c:98,f:1},
+  {n:'Cowell Rd',kr:22.4,c:87,f:1},
+  {n:'Meadow Ln',kr:21.7,c:76,f:0},
+  {n:'Galindo St',kr:20.3,c:64,f:1},
+];
+
+const clData = [
+  {n:'Clayton Rd Corridor Cluster',cnt:'7 fatals · 198 crashes · 32.1% KSI',t:'fatal'},
+  {n:'Willow Pass / Diamond Interchange',cnt:'5 fatals · 41 crashes · high severity',t:'fatal'},
+  {n:'Concord Blvd Broadside Zone',cnt:'42% broadside rate · 1.2× citywide avg',t:'severe'},
+  {n:'VRU Pedestrian Corridor (Oak Grove)',cnt:'88% VRU share · 3 fatals',t:'vru'},
+  {n:'Night-DUI Severity Cluster',cnt:'Sunday KSI 30.6% · 44.4% alcohol',t:'dui'},
+];
+
+// ── MAP ──
+let mainMap, pLayer;
+function kc(s){ return s==='fatal'?'#dc2626':s==='severe'?'#ea580c':'#d97706'; }
+
+function initMap(){
+  mainMap = L.map('map',{center:CC,zoom:13,zoomControl:true,attributionControl:false});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19}).addTo(mainMap);
+  renderPts(pts);
+}
+
+function renderPts(data){
+  if(pLayer) mainMap.removeLayer(pLayer);
+  pLayer = L.layerGroup();
+  data.forEach(p=>{
+    const r = p.s==='fatal'?8:p.s==='severe'?5:4;
+    const c = kc(p.s);
+    const m = L.circleMarker([p.lat,p.lng],{
+      radius:r, fillColor:c, color: p.vru?'#7c3aed':c,
+      weight:p.vru?2:1, opacity:.9, fillOpacity:.75
+    });
+    m.bindPopup(`<div class="pop"><strong>${p.s.charAt(0).toUpperCase()+p.s.slice(1)} Crash</strong><div class="pop-row"><span>Type</span><span class="pop-val">${p.type}</span></div><div class="pop-row"><span>VRU</span><span class="pop-val">${p.vru?'Yes':'No'}</span></div><div class="pop-row"><span>DUI</span><span class="pop-val">${p.dui?'Yes':'No'}</span></div><div class="pop-row"><span>Period</span><span class="pop-val">${p.p==='recent'?'2020–2025':'2014–2019'}</span></div></div>`,{className:'',maxWidth:200});
+    pLayer.addLayer(m);
+  });
+  pLayer.addTo(mainMap);
+}
+
+function setView(btn,mode){
+  document.querySelectorAll('.fbar .btn').forEach(b=>b.classList.remove('btn-on'));
+  btn.classList.add('btn-on');
+  filterMap();
+}
+
+function filterMap(){
+  const type = document.getElementById('typeF').value;
+  const tf = document.getElementById('tf').checked;
+  const ts = document.getElementById('ts').checked;
+  const tv = document.getElementById('tv').checked;
+  const tvru = document.getElementById('tvru').checked;
+  const tdui = document.getElementById('tdui').checked;
+  const per = document.getElementById('periodF').value;
+  const f = pts.filter(p=>{
+    if(type!=='all'&&p.type!==type)return false;
+    if(!tf&&p.s==='fatal')return false;
+    if(!ts&&p.s==='severe')return false;
+    if(!tv&&p.s==='visible')return false;
+    if(tvru&&!p.vru)return false;
+    if(tdui&&!p.dui)return false;
+    if(per!=='all'&&p.p!==per)return false;
+    return true;
+  });
+  document.getElementById('mc').textContent = f.length.toLocaleString();
+  renderPts(f);
+}
+
+// ── HOTSPOT TABLE ──
+function renderHT(){
+  document.getElementById('htbody').innerHTML = htData.map(h=>`
+    <tr>
+      <td><div class="rank-b ${h.r<=3?'t3':''}">${h.r}</div></td>
+      <td><div class="int-name">${h.n}</div><div class="int-sub">Concord, CA</div></td>
+      <td class="num">${h.c}</td>
+      <td class="num">${h.ksi}</td>
+      <td><div class="ksi-wrap"><div class="ksi-bg"><div class="ksi-fill" style="width:${(h.kr/50)*100}%"></div></div><span class="ksi-v" style="color:${h.kr>=30?'#dc2626':h.kr>=25?'#ea580c':'#6b7280'}">${h.kr}%</span></div></td>
+      <td><span style="font-family:var(--mono);font-size:12px;color:${h.vru>=40?'#7c3aed':'var(--text3)'};font-weight:${h.vru>=40?'600':'400'}">${h.vru}%</span></td>
+      <td><span style="font-family:var(--mono);font-size:12px;color:${h.bs>=42?'#ea580c':'var(--text3)'};font-weight:${h.bs>=42?'600':'400'}">${h.bs}%</span></td>
+      <td style="white-space:nowrap">${h.kr>=30?'<span class="badge br" style="font-size:9.5px;margin-right:3px">High KSI</span>':''}${h.vru>=40?'<span class="badge bp" style="font-size:9.5px;margin-right:3px">VRU</span>':''}${h.bs>=42?'<span class="badge bo" style="font-size:9.5px">Broadside</span>':''}</td>
+    </tr>`).join('');
+}
+
+function srt(col,th){
+  document.querySelectorAll('.dtable th').forEach(h=>h.classList.remove('sorted'));
+  th.classList.add('sorted');
+  const asc = th.dataset.d!=='asc';
+  th.dataset.d = asc?'asc':'desc';
+  const rows = Array.from(document.getElementById('htbody').querySelectorAll('tr'));
+  rows.sort((a,b)=>{
+    const av = parseFloat(a.cells[col]?.textContent?.replace(/[^0-9.]/g,'')||'0');
+    const bv = parseFloat(b.cells[col]?.textContent?.replace(/[^0-9.]/g,'')||'0');
+    return asc?av-bv:bv-av;
+  });
+  rows.forEach(r=>document.getElementById('htbody').appendChild(r));
+}
+
+// ── SILENT HOTSPOTS ──
+function ampClass(a){ return a>=3?'amp-c':a>=2?'amp-h':'amp-m'; }
+function renderSH(){
+  document.getElementById('shlist').innerHTML = shData.map(s=>`
+    <div class="sh-grid">
+      <div><div class="rank-b ${s.r<=3?'t3':''}">${s.r}</div></div>
+      <div><div style="font-weight:500;font-size:12.5px;color:var(--text)">${s.n}</div><div style="font-size:10.5px;color:var(--text4);font-family:var(--mono)">${s.c} crashes · Concord</div></div>
+      <div class="num">${s.c}</div>
+      <div style="font-family:var(--mono);font-size:13px;font-weight:600;color:${s.kr>=70?'#dc2626':s.kr>=55?'#ea580c':'#d97706'}">${s.kr}%</div>
+      <div><span class="amp-pill ${ampClass(s.amp)}">${s.amp}×</span></div>
+      <div style="font-family:var(--mono);font-size:12px;color:${s.vru>=50?'#7c3aed':'var(--text3)'};font-weight:${s.vru>=50?'600':'400'}">${s.vru}%</div>
+      <div class="num">${s.bs}%</div>
+      <div><span class="fatal-n ${s.f>0?'fn-y':'fn-n'}">${s.f>0?s.f:'—'}</span></div>
+    </div>`).join('');
+}
+
+// ── CORRIDOR MAP ──
+function initCorrMap(){
+  const cm = L.map('corridor-map',{center:CC,zoom:12,zoomControl:false,attributionControl:false});
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:19}).addTo(cm);
+
+  const corridorPaths = [
+    {n:'Clayton Rd',path:[[37.9756,-121.9834],[37.9845,-121.9854],[37.9890,-121.9780],[37.9934,-121.9700]],kr:32.1,f:7},
+    {n:'Willow Pass Rd',path:[[37.9689,-122.0050],[37.9734,-122.0123],[37.9778,-122.0211],[37.9812,-122.0278]],kr:28.4,f:5},
+    {n:'Concord Blvd',path:[[37.9589,-121.9900],[37.9643,-121.9965],[37.9698,-122.0031],[37.9745,-122.0090]],kr:27.2,f:3},
+    {n:'Oak Grove Rd',path:[[37.9867,-122.0189],[37.9921,-122.0256],[37.9965,-122.0312]],kr:26.8,f:3},
+    {n:'Monument Blvd',path:[[37.9523,-122.0120],[37.9578,-122.0198],[37.9623,-122.0267]],kr:25.9,f:2},
+    {n:'Ygnacio Valley Rd',path:[[37.9850,-122.0400],[37.9900,-122.0500],[37.9950,-122.0580]],kr:24.6,f:2},
+  ];
+
+  corridorPaths.forEach(c=>{
+    const col = c.kr>=30?'#dc2626':c.kr>=27?'#ea580c':c.kr>=25?'#d97706':'#9ca3af';
+    const w = c.f>=5?5:c.f>=3?4:3;
+    L.polyline(c.path,{color:col,weight:w,opacity:.8,lineCap:'round',lineJoin:'round'}).bindPopup(`<div class="pop"><strong>${c.n}</strong><div class="pop-row"><span>KSI Rate</span><span class="pop-val">${c.kr}%</span></div><div class="pop-row"><span>Fatals</span><span class="pop-val">${c.f}</span></div></div>`).addTo(cm);
+    const mid = c.path[Math.floor(c.path.length/2)];
+    L.marker(mid,{icon:L.divIcon({className:'',html:`<div style="background:white;padding:2px 5px;border-radius:3px;font:600 10px var(--mono);color:${col};border:1px solid ${col};white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.1)">${c.kr}%</div>`,iconAnchor:[18,9]})}).addTo(cm);
+  });
+
+  // Fatal dots
+  pts.filter(p=>p.s==='fatal').forEach(p=>{
+    L.circleMarker([p.lat,p.lng],{radius:5,fillColor:'#dc2626',color:'#991b1b',weight:1.5,opacity:1,fillOpacity:.85}).addTo(cm);
+  });
+
+  // Legend
+  const leg = L.control({position:'bottomright'});
+  leg.onAdd=()=>{ const d=L.DomUtil.create('div'); d.innerHTML=`<div style="background:white;padding:8px 10px;border-radius:6px;border:1px solid #e5e7eb;font-family:var(--font);font-size:11px;box-shadow:0 2px 6px rgba(0,0,0,.08)"><div style="font-weight:600;margin-bottom:5px;color:#111827">KSI Rate</div><div style="display:flex;align-items:center;gap:6px;margin:2px 0"><div style="width:22px;height:3px;background:#dc2626;border-radius:2px"></div><span style="color:#374151">≥30%</span></div><div style="display:flex;align-items:center;gap:6px;margin:2px 0"><div style="width:22px;height:3px;background:#ea580c;border-radius:2px"></div><span style="color:#374151">27–30%</span></div><div style="display:flex;align-items:center;gap:6px;margin:2px 0"><div style="width:22px;height:3px;background:#d97706;border-radius:2px"></div><span style="color:#374151">25–27%</span></div><div style="display:flex;align-items:center;gap:6px;margin:6px 0 2px"><div style="width:8px;height:8px;background:#dc2626;border-radius:50%"></div><span style="color:#374151">Fatal location</span></div></div>`; return d; };
+  leg.addTo(cm);
+}
+
+// ── CORRIDOR LIST ──
+function renderCorrList(){
+  const max = Math.max(...corrData.map(c=>c.kr));
+  document.getElementById('corrlist').innerHTML = corrData.map(c=>{
+    const col = c.kr>=30?'#dc2626':c.kr>=27?'#ea580c':c.kr>=25?'#d97706':'#9ca3af';
+    return `<div class="corr-row">
+      <div class="corr-name">${c.n}${c.f>0?`<span style="font-size:10px;color:#dc2626;font-family:var(--mono);margin-left:5px">${c.f} fatal</span>`:''}</div>
+      <div class="corr-bar-bg"><div class="corr-bar-f" style="width:${(c.kr/max)*100}%;background:${col}"></div></div>
+      <div class="corr-ksi" style="color:${col}">${c.kr}%</div>
+      <div class="corr-cnt">${c.c}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── CLUSTERS ──
+function renderCL(){
+  const cols = {fatal:'#dc2626',severe:'#ea580c',vru:'#7c3aed',dui:'#d97706'};
+  document.getElementById('cllist').innerHTML = clData.map(c=>`
+    <div class="cl-item ${c.t==='fatal'?'cl-fatal':''}">
+      <div class="cl-dot" style="background:${cols[c.t]}"></div>
+      <div><div class="cl-name">${c.n}</div><div class="cl-cnt">${c.cnt}</div></div>
+    </div>`).join('');
+}
+
+// ── INIT ──
+window.addEventListener('DOMContentLoaded',()=>{
+  initMap(); renderHT(); renderSH(); initCorrMap(); renderCorrList(); renderCL();
+});
+</script>
+</body>
+</html>

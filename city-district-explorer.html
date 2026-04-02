@@ -1,0 +1,1449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>City District Explorer — TMS Insights · Concord</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{font-family:'Inter',ui-sans-serif,system-ui,sans-serif;background:#f8fafc;color:#0f172a;-webkit-font-smoothing:antialiased;min-height:100vh;overflow:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:2px}
+
+/* ── APP SHELL ─────────────────────────────────── */
+.app-shell{display:grid;grid-template-columns:1fr 360px 340px;grid-template-rows:48px 1fr;height:100vh;gap:0}
+
+/* ── TOP BAR ──────────────────────────────────── */
+.topbar{grid-column:1/-1;background:#fff;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:16px;padding:0 20px;z-index:100}
+.topbar-logo{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#0f172a}
+.topbar-logo svg{color:#9333ea}
+.topbar-sep{width:1px;height:20px;background:#e2e8f0}
+.topbar-crumb{font-size:12px;color:#475569;display:flex;align-items:center;gap:6px}
+.topbar-crumb span{color:#9333ea;font-weight:500}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.topbar-chip{display:inline-flex;align-items:center;gap:5px;border-radius:9999px;padding:3px 10px;font-size:11px;font-weight:500;border:1px solid}
+.chip-live{background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.2);color:#16a34a}
+.chip-flow{background:rgba(147,51,234,.08);border-color:rgba(147,51,234,.2);color:#9333ea}
+.chip-official{background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.2);color:#2563eb}
+.topbar-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#1d4ed8);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff}
+
+/* ── LAYER TOGGLE ─────────────────────────────── */
+.layer-toggle-bar{position:absolute;top:58px;left:12px;z-index:400;display:flex;gap:0;background:#fff;border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.layer-btn{padding:6px 12px;font-size:11px;font-weight:500;font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;border:none;background:transparent;color:#64748b;transition:all .12s;display:flex;align-items:center;gap:5px;border-right:1px solid #e2e8f0}
+.layer-btn:last-child{border-right:none}
+.layer-btn.active{background:#9333ea;color:#fff}
+.layer-btn:hover:not(.active){background:#f8fafc;color:#1e293b}
+
+/* ── PANEL 1: MAP ─────────────────────────────── */
+.panel-map{background:#fff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.map-header{padding:12px 16px 10px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.map-header-left{display:flex;flex-direction:column;gap:1px}
+.map-label{font-size:10px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em}
+.map-subtitle{font-size:12px;font-weight:600;color:#1e293b;display:flex;align-items:center;gap:5px}
+.map-subtitle svg{color:#9333ea}
+.map-sel-badge{font-size:11px;font-family:'JetBrains Mono',monospace;color:#9333ea;font-weight:500;background:#faf5ff;border:1px solid #e9d5ff;border-radius:6px;padding:2px 8px;white-space:nowrap}
+#map{flex:1;min-height:0}
+.map-footer{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:7px 14px;border-top:1px solid #f1f5f9;background:#f8fafc;flex-shrink:0}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b}
+.leg-dot{width:8px;height:8px;border-radius:50%}
+.leg-swatch{width:14px;height:8px;border-radius:2px;opacity:.7}
+.map-hint{margin-left:auto;font-size:10px;color:#94a3b8;font-family:'JetBrains Mono',monospace}
+
+/* ── CITY OVERVIEW STATS BAR (Panel 2 top) ────── */
+.panel-health{background:#f8fafc;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;overflow:hidden}
+.panel-health-inner{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.panel-health-inner::-webkit-scrollbar{width:3px}
+.panel-health-inner::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:2px}
+.map-header-btn{padding:5px 11px;border:1px solid #e9d5ff;background:#faf5ff;border-radius:6px;font-size:11px;font-weight:500;color:#9333ea;cursor:pointer;font-family:'Inter',sans-serif;transition:all .12s;display:flex;align-items:center;gap:5px}
+.map-header-btn:hover{background:#f5f3ff;border-color:#c4b5fd}
+
+/* Tab bar */
+.ph-tabs{display:flex;gap:2px;background:#f1f5f9;border-radius:8px;padding:3px;flex-shrink:0}
+.ph-tab{flex:1;padding:6px 0;border-radius:6px;font-size:11px;font-weight:500;font-family:'JetBrains Mono',monospace;text-align:center;cursor:pointer;color:#64748b;background:transparent;border:none;transition:all .12s;text-transform:uppercase;letter-spacing:.04em}
+.ph-tab.active{background:#fff;color:#0f172a;box-shadow:0 1px 2px rgba(0,0,0,.07),0 1px 3px rgba(0,0,0,.1)}
+.ph-tab:hover:not(.active){color:#334155}
+
+/* Section cards */
+.sec-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.sec-hdr{padding:12px 16px 11px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between}
+.sec-hdr-left{display:flex;flex-direction:column;gap:2px}
+.sec-hdr-label{font-size:10px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em}
+.sec-hdr-title{font-size:13px;font-weight:600;color:#1e293b;display:flex;align-items:center;gap:6px}
+.sec-hdr-title svg{color:#9333ea;flex-shrink:0}
+
+/* Stat grid */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #f1f5f9}
+.stat-grid-3{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid #f1f5f9}
+.stat-cell{padding:14px 12px;border-right:1px solid #f1f5f9;text-align:center}
+.stat-cell:last-child{border-right:none}
+.stat-lbl{font-size:9px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em}
+.stat-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;color:#0f172a;margin-top:4px;line-height:1}
+.stat-val.red{color:#dc2626}.stat-val.amber{color:#d97706}.stat-val.green{color:#16a34a}.stat-val.blue{color:#2563eb}.stat-val.purple{color:#9333ea}
+.stat-sub{font-size:9px;font-family:'JetBrains Mono',monospace;color:#94a3b8;margin-top:3px}
+
+/* Sparkline */
+.sparkline-wrap{padding:14px 16px;border-top:1px solid #f1f5f9}
+.sparkline-lbl-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.sparkline-lbl{font-size:10px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em}
+.sparkline-badge{font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:500;padding:2px 8px;border-radius:9999px;border:1px solid}
+.badge-up{background:rgba(220,38,38,.08);border-color:rgba(220,38,38,.2);color:#dc2626}
+.badge-down{background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.2);color:#16a34a}
+svg.sparkline-svg{width:100%;height:40px;overflow:visible}
+
+/* District list rows */
+.district-row{padding:10px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:10px;cursor:pointer;transition:background .1s}
+.district-row:last-child{border-bottom:none}
+.district-row:hover{background:#faf5ff}
+.district-row.active-row{background:#faf5ff;border-left:3px solid #9333ea;padding-left:11px}
+.dr-swatch{width:12px;height:12px;border-radius:3px;flex-shrink:0;opacity:.8}
+.dr-body{flex:1;min-width:0}
+.dr-name{font-size:12px;font-weight:600;color:#1e293b;display:flex;align-items:center;gap:6px}
+.dr-meta{font-size:10px;font-family:'JetBrains Mono',monospace;color:#94a3b8;margin-top:1px}
+.dr-ksi{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;flex-shrink:0}
+.dr-badge{font-size:9px;font-weight:500;padding:1px 6px;border-radius:9999px;border:1px solid;font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.sev-crit{background:rgba(220,38,38,.1);border-color:rgba(220,38,38,.25);color:#dc2626}
+.sev-high{background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.25);color:#ea580c}
+.sev-med{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.25);color:#2563eb}
+.sev-low{background:rgba(148,163,184,.1);border-color:rgba(148,163,184,.25);color:#64748b}
+
+/* Bar charts for districts */
+.bar-section{padding:14px 16px;border-top:1px solid #f1f5f9}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:9px}
+.bar-row:last-child{margin-bottom:0}
+.bar-label{font-size:11px;color:#475569;width:80px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-track{flex:1;height:7px;background:#f1f5f9;border-radius:4px;overflow:hidden;position:relative}
+.bar-fill{height:100%;border-radius:4px;transition:width .5s ease}
+.bar-val{font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8;width:30px;text-align:right;flex-shrink:0}
+
+/* Action buttons */
+.action-buttons{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-top:1px solid #f1f5f9}
+.btn-primary{width:100%;padding:11px 16px;background:#9333ea;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-primary:hover{background:#7c3aed}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn-ghost{padding:9px 10px;background:#fff;border:1px solid #e2e8f0;border-radius:7px;font-size:11px;font-weight:500;color:#64748b;cursor:pointer;transition:all .12s;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px}
+.btn-ghost:hover{border-color:#94a3b8;color:#1e293b}
+
+/* Factor tab content */
+.factor-tab-content{display:none;animation:fadeIn .2s ease}
+.factor-tab-content.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+/* PCF bars */
+.pcf-section{padding:14px 16px;border-top:1px solid #f1f5f9}
+.pcf-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.pcf-row:last-child{margin-bottom:0}
+.pcf-name{font-size:11px;color:#475569;width:110px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcf-track{flex:1;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden}
+.pcf-fill{height:100%;border-radius:3px}
+.fill-red{background:#ef4444}.fill-amber{background:#f59e0b}.fill-blue{background:#3b82f6}.fill-purple{background:#9333ea}
+.pcf-count{font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8;width:24px;text-align:right;flex-shrink:0}
+
+/* Risk meter */
+.risk-meter-wrap{padding:14px 16px;border-top:1px solid #f1f5f9}
+.risk-meter-bar{height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;position:relative;margin:8px 0}
+.risk-meter-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#3b82f6,#d97706,#dc2626);transition:width .6s ease}
+.risk-meter-labels{display:flex;justify-content:space-between;font-size:9px;font-family:'JetBrains Mono',monospace;color:#94a3b8}
+
+/* ── PANEL 3: AI CONTEXT ──────────────────────── */
+.panel-ai{background:#fff;display:flex;flex-direction:column;overflow:hidden}
+.ai-header{padding:12px 16px 10px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.ai-header-left{display:flex;flex-direction:column;gap:2px}
+.ai-label{font-size:10px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em}
+.ai-subtitle{font-size:13px;font-weight:600;color:#1e293b;display:flex;align-items:center;gap:6px}
+.ai-subtitle svg{color:#9333ea}
+.ai-status{display:flex;align-items:center;gap:5px;font-size:10px;color:#16a34a;font-family:'JetBrains Mono',monospace}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:#16a34a;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.ai-context-card{background:linear-gradient(135deg,#faf5ff,#f5f3ff);border-bottom:1px solid #e9d5ff;padding:14px 16px;flex-shrink:0;animation:fadeIn .3s ease}
+.ai-ctx-label{font-size:10px;font-weight:500;color:#9333ea;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.ai-ctx-title{font-size:13px;font-weight:600;color:#1e293b;margin-bottom:5px}
+.ai-ctx-text{font-size:11px;color:#475569;line-height:1.65}
+.ai-ctx-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.ctx-tag{display:inline-flex;align-items:center;border-radius:9999px;padding:2px 8px;font-size:9px;font-weight:500;border:1px solid;font-family:'JetBrains Mono',monospace}
+.ctx-tag-red{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);color:#dc2626}
+.ctx-tag-amber{background:rgba(217,119,6,.08);border-color:rgba(217,119,6,.2);color:#d97706}
+.ctx-tag-blue{background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.2);color:#2563eb}
+.ctx-tag-purple{background:rgba(147,51,234,.08);border-color:rgba(147,51,234,.2);color:#9333ea}
+
+/* Chat messages */
+.ai-chat-area{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.ai-chat-area::-webkit-scrollbar{width:3px}
+.ai-chat-area::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:2px}
+.msg-wrapper{display:flex;flex-direction:column;gap:4px;animation:fadeIn .2s ease}
+.msg-wrapper.user-msg{align-items:flex-end}
+.msg-meta{font-size:9px;color:#94a3b8;font-family:'JetBrains Mono',monospace;padding:0 4px}
+.msg-bubble{max-width:90%;padding:10px 13px;border-radius:10px;font-size:12px;line-height:1.65}
+.bubble-user{background:#9333ea;color:#fff;border-bottom-right-radius:3px}
+.bubble-ai{background:#f8fafc;border:1px solid #e2e8f0;color:#1e293b;border-bottom-left-radius:3px}
+.bubble-ai strong{color:#0f172a}
+.typing-indicator{display:none;align-items:center;gap:4px;padding:4px 0}
+.typing-indicator.active{display:flex}
+.typing-dot{width:5px;height:5px;border-radius:50%;background:#94a3b8;animation:bounce .8s infinite}
+.typing-dot:nth-child(2){animation-delay:.15s}
+.typing-dot:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-4px)}}
+.ai-input-area{padding:12px 16px;border-top:1px solid #f1f5f9;flex-shrink:0;background:#fff}
+.ai-input-row{display:flex;gap:8px;align-items:center}
+.ai-input{flex:1;padding:9px 13px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;font-family:'Inter',sans-serif;color:#1e293b;background:#f8fafc;outline:none;resize:none;min-height:38px;max-height:80px;transition:border-color .15s}
+.ai-input:focus{border-color:#c4b5fd;background:#fff;box-shadow:0 0 0 2px rgba(168,85,247,.06)}
+.ai-input::placeholder{color:#94a3b8}
+.ai-send{width:36px;height:36px;background:#9333ea;color:#fff;border:none;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0}
+.ai-send:hover{background:#7c3aed}
+.ai-quick-prompts{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.quick-btn{padding:4px 10px;background:#fff;border:1px solid #e2e8f0;border-radius:9999px;font-size:10px;color:#64748b;cursor:pointer;transition:all .12s;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.quick-btn:hover{border-color:#c4b5fd;color:#9333ea;background:#faf5ff}
+
+/* Empty states */
+.panel-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;padding:24px;text-align:center}
+.empty-icon-wrap{width:44px;height:44px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center}
+.empty-title{font-size:13px;font-weight:500;color:#94a3b8}
+.empty-sub{font-size:11px;color:#cbd5e1;line-height:1.65;font-family:'JetBrains Mono',monospace}
+
+/* Popup */
+.leaflet-popup-content-wrapper{border-radius:10px!important;border:1px solid #e2e8f0!important;box-shadow:0 4px 18px rgba(0,0,0,.13)!important;padding:0!important;font-family:'Inter',sans-serif!important}
+.leaflet-popup-content{margin:0!important;padding:0!important}
+.leaflet-popup-tip{background:#fff!important}
+.pp{padding:12px 13px;min-width:185px}
+.pp-name{font-size:13px;font-weight:700;color:#1e293b;margin-bottom:2px}
+.pp-type{font-size:10px;color:#64748b;margin-bottom:8px;font-family:'JetBrains Mono',monospace}
+.pp-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.pp-cell{background:#f8fafc;border-radius:6px;padding:4px 8px}
+.pp-cl{font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em}
+.pp-cv{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:#0f172a;margin-top:1px}
+.pp-cv.red{color:#dc2626}.pp-cv.amb{color:#d97706}.pp-cv.grn{color:#16a34a}
+.pp-btn{width:100%;margin-top:8px;padding:6px 0;background:#9333ea;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:background .15s}
+.pp-btn:hover{background:#7c3aed}
+
+/* ── DISTRICT SCORECARD OVERLAY ───────────────── */
+.dist-overlay{position:fixed;inset:0;z-index:500;pointer-events:none;display:flex;justify-content:flex-end}
+.dist-overlay.open{pointer-events:auto}
+.dist-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.28);opacity:0;transition:opacity .25s ease}
+.dist-overlay.open .dist-backdrop{opacity:1}
+.dist-drawer{position:relative;width:760px;height:100vh;background:#f8fafc;border-left:1px solid #e2e8f0;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.22,1,.36,1);box-shadow:-8px 0 40px rgba(0,0,0,.12);overflow:hidden}
+.dist-overlay.open .dist-drawer{transform:translateX(0)}
+
+.dist-drawer-header{background:#fff;border-bottom:1px solid #e2e8f0;padding:14px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.dist-close-btn{width:28px;height:28px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#64748b;transition:all .12s;flex-shrink:0}
+.dist-close-btn:hover{background:#f1f5f9;color:#1e293b;border-color:#94a3b8}
+.dist-drawer-title-group{flex:1}
+.dist-drawer-eyebrow{font-size:10px;font-weight:500;color:#2563eb;text-transform:uppercase;letter-spacing:.07em;font-family:'JetBrains Mono',monospace;margin-bottom:2px;display:flex;align-items:center;gap:5px}
+.dist-drawer-name{font-size:15px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px}
+.dist-drawer-name .official-badge{font-size:11px;font-weight:500;padding:2px 9px;border-radius:9999px;background:rgba(37,99,235,.1);border:1px solid rgba(37,99,235,.25);color:#2563eb;font-family:'JetBrains Mono',monospace}
+.dist-header-right{display:flex;align-items:center;gap:8px}
+.btn-export-summary{padding:8px 14px;background:#2563eb;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s;white-space:nowrap}
+.btn-export-summary:hover{background:#1d4ed8}
+
+/* Drawer tabs */
+.dist-drawer-tabs{display:flex;gap:0;background:#fff;border-bottom:1px solid #e2e8f0;padding:0 20px;flex-shrink:0}
+.dist-tab{padding:10px 14px;font-size:11px;font-weight:500;color:#94a3b8;border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;transition:all .12s;font-family:'Inter',sans-serif;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.dist-tab.active{color:#2563eb;border-bottom-color:#2563eb}
+.dist-tab:hover:not(.active){color:#475569}
+.dist-tab-count{font-size:9px;font-family:'JetBrains Mono',monospace;background:#f1f5f9;border-radius:9999px;padding:1px 6px;color:#64748b}
+.dist-tab.active .dist-tab-count{background:#eff6ff;color:#2563eb}
+
+/* Drawer body */
+.dist-drawer-body{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.dist-drawer-body::-webkit-scrollbar{width:3px}
+.dist-drawer-body::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:2px}
+.dist-tab-panel{display:none}
+.dist-tab-panel.active{display:flex;flex-direction:column;gap:14px}
+
+/* Scorecard cards */
+.sc-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.sc-card-hdr{padding:11px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between}
+.sc-card-label{font-size:10px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em}
+.sc-card-title{font-size:12px;font-weight:600;color:#1e293b;display:flex;align-items:center;gap:6px;margin-top:1px}
+.sc-card-title svg{color:#2563eb;flex-shrink:0}
+.sc-badge{font-size:9px;font-family:'JetBrains Mono',monospace;padding:1px 7px;border-radius:4px;background:#f1f5f9;color:#64748b}
+
+/* Benchmark comparison bars */
+.bench-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-bottom:1px solid #f1f5f9}
+.bench-row:last-child{border-bottom:none}
+.bench-label{font-size:11px;color:#475569;width:90px;flex-shrink:0}
+.bench-track{flex:1;height:8px;background:#f1f5f9;border-radius:4px;position:relative;overflow:hidden}
+.bench-fill-base{height:100%;background:#e2e8f0;border-radius:4px;position:absolute;top:0;left:0}
+.bench-fill-district{height:100%;border-radius:4px;position:absolute;top:0;left:0;transition:width .6s ease}
+.bench-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:#1e293b;width:40px;text-align:right;flex-shrink:0}
+.bench-delta{font-size:9px;font-family:'JetBrains Mono',monospace;padding:1px 5px;border-radius:4px;flex-shrink:0}
+.delta-above{background:rgba(220,38,38,.08);color:#dc2626}
+.delta-below{background:rgba(22,163,74,.08);color:#16a34a}
+.delta-equal{background:#f1f5f9;color:#64748b}
+
+/* Top corridor list */
+.corridor-rank-item{padding:11px 14px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:12px}
+.corridor-rank-item:last-child{border-bottom:none}
+.crk-num{width:22px;height:22px;border-radius:50%;background:#2563eb;color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.crk-body{flex:1;min-width:0}
+.crk-name{font-size:12px;font-weight:500;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.crk-meta{font-size:10px;font-family:'JetBrains Mono',monospace;color:#94a3b8;margin-top:2px}
+.crk-ksi{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:600;color:#dc2626}
+.crk-bar-wrap{margin-top:5px;height:3px;background:#f1f5f9;border-radius:2px;overflow:hidden}
+.crk-bar{height:100%;background:#2563eb;border-radius:2px}
+
+/* Complaint items */
+.complaint-item{padding:10px 14px;border-bottom:1px solid #f8fafc;display:flex;align-items:flex-start;gap:10px}
+.complaint-item:last-child{border-bottom:none}
+.complaint-dot{width:7px;height:7px;border-radius:50%;margin-top:3px;flex-shrink:0}
+.comp-open{background:#d97706}.comp-resolved{background:#16a34a}.comp-urgent{background:#dc2626}
+.complaint-body{flex:1}
+.complaint-text{font-size:11px;color:#1e293b;font-weight:500;margin-bottom:2px}
+.complaint-meta{font-size:10px;color:#94a3b8;font-family:'JetBrains Mono',monospace}
+
+/* Countermeasure items */
+.cm-item{padding:11px 14px;border-bottom:1px solid #f8fafc;display:flex;align-items:flex-start;gap:10px}
+.cm-item:last-child{border-bottom:none}
+.cm-pill{font-size:9px;font-weight:600;padding:2px 8px;border-radius:9999px;border:1px solid;white-space:nowrap;font-family:'JetBrains Mono',monospace;flex-shrink:0;margin-top:1px}
+.pill-deployed{background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.2);color:#16a34a}
+.pill-pending{background:rgba(249,115,22,.08);border-color:rgba(249,115,22,.2);color:#ea580c}
+.pill-planned{background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.2);color:#2563eb}
+.cm-body{flex:1}
+.cm-name{font-size:12px;font-weight:500;color:#1e293b;margin-bottom:2px}
+.cm-meta{font-size:10px;color:#64748b;font-family:'JetBrains Mono',monospace}
+
+/* AI analysis */
+.ai-analysis-wrap{padding:14px 16px;background:linear-gradient(135deg,#eff6ff,#f0f9ff);border-radius:0 0 12px 12px}
+.ai-analysis-label{font-size:10px;font-weight:500;color:#2563eb;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.ai-analysis-text{font-size:12px;color:#1e293b;line-height:1.75}
+.ai-analysis-text strong{color:#0f172a}
+.ai-analysis-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+
+/* Drawer footer */
+.dist-drawer-footer{background:#fff;border-top:1px solid #e2e8f0;padding:14px 20px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.footer-left{display:flex;flex-direction:column;gap:2px}
+.footer-label{font-size:10px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em}
+.footer-hint{font-size:11px;color:#475569}
+.btn-export-full{padding:10px 18px;background:#2563eb;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .15s;white-space:nowrap}
+.btn-export-full:hover{background:#1d4ed8;box-shadow:0 4px 12px rgba(37,99,235,.3)}
+
+/* ── EXPORT MODAL ─────────────────────────────── */
+.export-modal-overlay{position:fixed;inset:0;z-index:600;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s ease}
+.export-modal-overlay.open{opacity:1;pointer-events:auto}
+.export-modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.4)}
+.export-modal{position:relative;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.2);width:520px;overflow:hidden;animation:slideUp .3s ease}
+@keyframes slideUp{from{transform:translateY(20px);opacity:0}to{transform:translateY(0);opacity:1}}
+.export-modal-hdr{padding:20px 24px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between}
+.export-modal-title{font-size:14px;font-weight:700;color:#0f172a}
+.export-modal-sub{font-size:11px;color:#64748b;margin-top:2px}
+.export-close{width:26px;height:26px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#64748b;transition:all .12s}
+.export-close:hover{background:#f1f5f9;color:#1e293b}
+.export-preview{background:#f8fafc;margin:16px;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden}
+.export-preview-header{background:linear-gradient(135deg,#1e3a8a,#2563eb);padding:16px 20px}
+.ep-city{font-size:10px;font-weight:500;color:rgba(255,255,255,.7);text-transform:uppercase;letter-spacing:.08em;font-family:'JetBrains Mono',monospace}
+.ep-title{font-size:15px;font-weight:700;color:#fff;margin-top:3px}
+.ep-meta{font-size:10px;color:rgba(255,255,255,.6);margin-top:2px;font-family:'JetBrains Mono',monospace}
+.export-preview-body{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+.ep-row{display:flex;gap:10px}
+.ep-stat{flex:1;background:#fff;border:1px solid #e2e8f0;border-radius:7px;padding:10px;text-align:center}
+.ep-stat-lbl{font-size:9px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em}
+.ep-stat-val{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;margin-top:3px}
+.ep-section{background:#fff;border:1px solid #e2e8f0;border-radius:7px;padding:10px 12px}
+.ep-section-lbl{font-size:9px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.ep-section-row{display:flex;justify-content:space-between;font-size:11px;color:#475569;margin-bottom:4px;padding-bottom:4px;border-bottom:1px solid #f1f5f9}
+.ep-section-row:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.ep-section-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:#1e293b}
+.export-modal-footer{padding:14px 24px;border-top:1px solid #f1f5f9;display:flex;gap:8px;justify-content:flex-end}
+.btn-cancel{padding:9px 16px;border:1px solid #e2e8f0;border-radius:7px;font-size:12px;font-weight:500;color:#64748b;cursor:pointer;background:#fff;font-family:'Inter',sans-serif;transition:all .12s}
+.btn-cancel:hover{border-color:#94a3b8;color:#1e293b}
+.btn-download{padding:9px 18px;background:#2563eb;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s}
+.btn-download:hover{background:#1d4ed8}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+      TMS Insights
+    </div>
+    <div class="topbar-sep"></div>
+    <div class="topbar-crumb">
+      Concord, CA &rsaquo; City View &rsaquo; <span id="crumbDistrict">All Districts</span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-chip chip-live">
+        <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="currentColor"/></svg>
+        Live Data
+      </span>
+      <span class="topbar-chip chip-official">
+        <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+        Flow 3 — Elected Official
+      </span>
+      <span class="topbar-chip chip-flow">Council Member</span>
+      <div class="topbar-avatar">CM</div>
+    </div>
+  </div>
+
+  <!-- PANEL 1: MAP -->
+  <div class="panel-map">
+    <div class="map-header">
+      <div class="map-header-left">
+        <div class="map-label">Panel 01 &middot; City Map</div>
+        <div class="map-subtitle">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+          Concord, CA — Voting Districts
+        </div>
+      </div>
+      <div class="map-sel-badge" id="mapSelBadge">Voting Districts Active</div>
+    </div>
+    <div id="map"></div>
+    <div class="map-footer">
+      <div class="leg-item"><div class="leg-swatch" style="background:#dc2626"></div>Critical KSI</div>
+      <div class="leg-item"><div class="leg-swatch" style="background:#d97706"></div>High KSI</div>
+      <div class="leg-item"><div class="leg-swatch" style="background:#2563eb"></div>Moderate</div>
+      <div class="leg-item"><div class="leg-swatch" style="background:#94a3b8"></div>Low</div>
+      <span class="map-hint">Click district → Scorecard</span>
+    </div>
+    <!-- Layer toggles -->
+    <div class="layer-toggle-bar">
+      <button class="layer-btn active" id="layerDistricts" onclick="setLayer('districts')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/></svg>
+        Districts
+      </button>
+      <button class="layer-btn" id="layerCorridors" onclick="setLayer('corridors')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+        Corridors
+      </button>
+      <button class="layer-btn" id="layerHeatmap" onclick="setLayer('heatmap')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        Heat Map
+      </button>
+    </div>
+  </div>
+
+  <!-- PANEL 2: CITY-LEVEL HEALTH -->
+  <div class="panel-health">
+    <div class="map-header" style="flex-shrink:0">
+      <div class="map-header-left">
+        <div class="map-label">Panel 02 &middot; City Overview</div>
+        <div class="map-subtitle">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+          All Voting Districts
+        </div>
+      </div>
+      <button class="map-header-btn" onclick="openCityExport()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        City Report
+      </button>
+    </div>
+
+    <div class="panel-health-inner">
+
+      <!-- City-wide KSI stats -->
+      <div class="sec-card">
+        <div class="sec-hdr">
+          <div class="sec-hdr-left">
+            <div class="sec-hdr-label">City KSI Summary</div>
+            <div class="sec-hdr-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+              Concord, CA — 2024
+            </div>
+          </div>
+          <span class="sparkline-badge badge-up">+12% YoY</span>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-cell">
+            <div class="stat-lbl">City KSI</div>
+            <div class="stat-val red">142</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-lbl">Fatalities</div>
+            <div class="stat-val red">18</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-lbl">Total Crashes</div>
+            <div class="stat-val amber">894</div>
+          </div>
+          <div class="stat-cell">
+            <div class="stat-lbl">KSI/Mile</div>
+            <div class="stat-val amber">6.1</div>
+          </div>
+        </div>
+        <div class="sparkline-wrap">
+          <div class="sparkline-lbl-row">
+            <span class="sparkline-lbl">City KSI Trend</span>
+            <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#94a3b8">2022 → 2024</span>
+          </div>
+          <svg class="sparkline-svg" viewBox="0 0 300 36" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="citySpkGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#ef4444" stop-opacity=".15"/>
+                <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M0,30 L75,24 L150,22 L225,18 L300,8 Z" fill="url(#citySpkGrad)"/>
+            <path d="M0,30 L75,24 L150,22 L225,18 L300,8" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="0" cy="30" r="3" fill="#ef4444"/>
+            <circle cx="150" cy="22" r="3" fill="#ef4444"/>
+            <circle cx="300" cy="8" r="3" fill="#ef4444"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- County benchmark comparison -->
+      <div class="sec-card">
+        <div class="sec-hdr">
+          <div class="sec-hdr-left">
+            <div class="sec-hdr-label">Benchmark Comparison</div>
+            <div class="sec-hdr-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+              City vs. County vs. State
+            </div>
+          </div>
+          <span style="font-size:9px;font-family:'JetBrains Mono',monospace;color:#94a3b8;background:#f1f5f9;padding:1px 6px;border-radius:4px">KSI/MILE</span>
+        </div>
+        <div style="padding:0">
+          <div class="bench-row">
+            <div class="bench-label" style="font-size:11px;color:#475569">Concord</div>
+            <div class="bench-track">
+              <div class="bench-fill-base" style="width:100%"></div>
+              <div class="bench-fill-district" style="width:68%;background:#dc2626"></div>
+            </div>
+            <div class="bench-val" style="color:#dc2626">6.1</div>
+            <div class="bench-delta delta-above">+29%</div>
+          </div>
+          <div class="bench-row">
+            <div class="bench-label" style="font-size:11px;color:#475569">Contra Costa</div>
+            <div class="bench-track">
+              <div class="bench-fill-base" style="width:100%"></div>
+              <div class="bench-fill-district" style="width:53%;background:#d97706"></div>
+            </div>
+            <div class="bench-val">4.7</div>
+            <div class="bench-delta delta-equal">Avg</div>
+          </div>
+          <div class="bench-row">
+            <div class="bench-label" style="font-size:11px;color:#475569">California</div>
+            <div class="bench-track">
+              <div class="bench-fill-base" style="width:100%"></div>
+              <div class="bench-fill-district" style="width:44%;background:#2563eb"></div>
+            </div>
+            <div class="bench-val" style="color:#16a34a">3.9</div>
+            <div class="bench-delta delta-below">−17%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- District ranking -->
+      <div class="sec-card">
+        <div class="sec-hdr">
+          <div class="sec-hdr-left">
+            <div class="sec-hdr-label">Voting Districts</div>
+            <div class="sec-hdr-title">
+              <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/></svg>
+              KSI by District
+            </div>
+          </div>
+          <span style="font-size:9px;font-family:'JetBrains Mono',monospace;color:#9333ea;background:#faf5ff;border:1px solid #e9d5ff;padding:1px 6px;border-radius:4px">CLICK TO OPEN</span>
+        </div>
+        <div id="districtRankList">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PANEL 3: AI CONTEXT -->
+  <div class="panel-ai">
+    <div class="ai-header">
+      <div class="ai-header-left">
+        <div class="ai-label">Panel 03 &middot; AI Context</div>
+        <div class="ai-subtitle">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+          Safety Intelligence
+        </div>
+      </div>
+      <div class="ai-status">
+        <div class="ai-dot"></div>
+        AI Ready
+      </div>
+    </div>
+
+    <!-- Default context card -->
+    <div class="ai-context-card" id="aiContextCard">
+      <div class="ai-ctx-label">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        City-Level Briefing
+      </div>
+      <div class="ai-ctx-title" id="aiCtxTitle">District 3 leads city KSI — 3 consecutive years</div>
+      <div class="ai-ctx-text" id="aiCtxText">District 3 (Northeast Concord) has the highest KSI rate at 9.2/mile — 51% above the city average. Willow Pass Rd and Concord Ave are the primary contributors. Three countermeasures are pending council approval.</div>
+      <div class="ai-ctx-tags" id="aiCtxTags">
+        <span class="ctx-tag ctx-tag-red">District 3 · Critical</span>
+        <span class="ctx-tag ctx-tag-amber">3 CMs Pending</span>
+        <span class="ctx-tag ctx-tag-blue">Council Vote Due</span>
+      </div>
+    </div>
+
+    <div id="p3Content" style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+      <div class="ai-chat-area" id="aiChatArea">
+        <div class="msg-wrapper">
+          <div class="msg-meta">Safety AI · Just now</div>
+          <div class="msg-bubble bubble-ai">
+            Welcome, Council Member. I have your <strong>city-wide safety briefing</strong> ready for today.<br><br>
+            District 3 remains the highest-priority area with <strong>38 KSI incidents</strong> in 2024 — 51% above the city average. Click any district boundary on the map to open the full District Scorecard, or ask me about specific areas.
+          </div>
+        </div>
+        <div class="typing-indicator" id="typingIndicator">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      </div>
+
+      <div class="ai-input-area">
+        <div class="ai-quick-prompts">
+          <button class="quick-btn" onclick="sendQuick('which district has the worst KSI trend?')">worst trend?</button>
+          <button class="quick-btn" onclick="sendQuick('compare all districts to city avg')">compare districts</button>
+          <button class="quick-btn" onclick="sendQuick('pending countermeasures for council')">pending CMs</button>
+          <button class="quick-btn" onclick="sendQuick('top 3 corridors citywide')">top corridors</button>
+        </div>
+        <div class="ai-input-row">
+          <textarea class="ai-input" id="aiInput" placeholder="Ask about any district or city trend…" rows="1" onkeydown="handleKey(event)"></textarea>
+          <button class="ai-send" onclick="sendMessage()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /app-shell -->
+
+<!-- ── DISTRICT SCORECARD OVERLAY ──────────────────────────────────────────── -->
+<div class="dist-overlay" id="distOverlay">
+  <div class="dist-backdrop" onclick="closeScorecard()"></div>
+  <div class="dist-drawer">
+
+    <div class="dist-drawer-header">
+      <button class="dist-close-btn" onclick="closeScorecard()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="dist-drawer-title-group">
+        <div class="dist-drawer-eyebrow">
+          <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/></svg>
+          District Scorecard
+        </div>
+        <div class="dist-drawer-name" id="distDrawerName">
+          — <span class="official-badge" id="distOfficialBadge">—</span>
+        </div>
+      </div>
+      <div class="dist-header-right">
+        <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#94a3b8" id="distCrashCount">—</span>
+        <button class="btn-export-summary" onclick="openExportModal()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Export Summary
+        </button>
+      </div>
+    </div>
+
+    <div class="dist-drawer-tabs">
+      <button class="dist-tab active" id="dtab-scorecard" onclick="switchDistTab('scorecard')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+        KSI Scorecard
+      </button>
+      <button class="dist-tab" id="dtab-corridors" onclick="switchDistTab('corridors')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        Top Corridors <span class="dist-tab-count" id="dtab-corridors-count">3</span>
+      </button>
+      <button class="dist-tab" id="dtab-complaints" onclick="switchDistTab('complaints')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Complaints <span class="dist-tab-count" id="dtab-complaints-count">0</span>
+      </button>
+      <button class="dist-tab" id="dtab-cms" onclick="switchDistTab('cms')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+        Countermeasures <span class="dist-tab-count" id="dtab-cms-count">0</span>
+      </button>
+    </div>
+
+    <div class="dist-drawer-body">
+
+      <!-- TAB: SCORECARD -->
+      <div class="dist-tab-panel active" id="dtabpanel-scorecard">
+
+        <!-- KSI Rate card -->
+        <div class="sc-card">
+          <div class="sc-card-hdr">
+            <div>
+              <div class="sc-card-label">KSI Benchmark</div>
+              <div class="sc-card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                District KSI Rate vs. Benchmarks
+              </div>
+            </div>
+            <span class="sc-badge" id="scTrendBadge">—</span>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-cell">
+              <div class="stat-lbl">District KSI</div>
+              <div class="stat-val red" id="scKsi">—</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-lbl">Fatalities</div>
+              <div class="stat-val red" id="scFatal">—</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-lbl">KSI Rate</div>
+              <div class="stat-val amber" id="scRate">—</div>
+              <div class="stat-sub">per mile</div>
+            </div>
+            <div class="stat-cell">
+              <div class="stat-lbl">YoY Change</div>
+              <div class="stat-val" id="scYoy">—</div>
+            </div>
+          </div>
+          <div style="padding:14px 16px;border-top:1px solid #f1f5f9">
+            <div style="font-size:10px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Rate Comparison</div>
+            <div id="scBenchmarks"><!-- populated --></div>
+          </div>
+        </div>
+
+        <!-- YoY Sparkline card -->
+        <div class="sc-card">
+          <div class="sc-card-hdr">
+            <div>
+              <div class="sc-card-label">Year-over-Year Trend</div>
+              <div class="sc-card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                3-Year KSI Trend
+              </div>
+            </div>
+          </div>
+          <div class="sparkline-wrap">
+            <div class="sparkline-lbl-row">
+              <span class="sparkline-lbl">KSI by Year</span>
+              <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#94a3b8">2022 → 2024</span>
+            </div>
+            <svg class="sparkline-svg" id="distSparklineSvg" viewBox="0 0 300 36" preserveAspectRatio="none">
+              <defs>
+                <linearGradient id="distSpkGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stop-color="#2563eb" stop-opacity=".15"/>
+                  <stop offset="100%" stop-color="#2563eb" stop-opacity="0"/>
+                </linearGradient>
+              </defs>
+              <path id="distSpkArea" fill="url(#distSpkGrad)" stroke="none"/>
+              <path id="distSpkLine" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle id="distSpkDot1" r="3" fill="#2563eb"/>
+              <circle id="distSpkDot2" r="3" fill="#2563eb"/>
+              <circle id="distSpkDot3" r="3" fill="#2563eb"/>
+            </svg>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- TAB: TOP CORRIDORS -->
+      <div class="dist-tab-panel" id="dtabpanel-corridors">
+        <div class="sc-card">
+          <div class="sc-card-hdr">
+            <div>
+              <div class="sc-card-label">Highest KSI Corridors</div>
+              <div class="sc-card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><line x1="3" y1="12" x2="21" y2="12"/></svg>
+                Top 3 Corridors in District
+              </div>
+            </div>
+            <span class="sc-badge">BY KSI COUNT</span>
+          </div>
+          <div id="topCorridorsList"><!-- populated --></div>
+        </div>
+      </div>
+
+      <!-- TAB: COMPLAINTS -->
+      <div class="dist-tab-panel" id="dtabpanel-complaints">
+        <div class="sc-card">
+          <div class="sc-card-hdr">
+            <div>
+              <div class="sc-card-label">Resident Complaints</div>
+              <div class="sc-card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Filed Within District Boundary
+              </div>
+            </div>
+            <span class="sc-badge" id="scComplaintTotal">—</span>
+          </div>
+          <div id="distComplaintsList"><!-- populated --></div>
+        </div>
+        <!-- Summary stats -->
+        <div class="sc-card">
+          <div class="sc-card-hdr">
+            <div>
+              <div class="sc-card-label">Complaint Summary</div>
+              <div class="sc-card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
+                By Category
+              </div>
+            </div>
+          </div>
+          <div class="pcf-section" id="complaintsByCategory"><!-- populated --></div>
+        </div>
+      </div>
+
+      <!-- TAB: COUNTERMEASURES -->
+      <div class="dist-tab-panel" id="dtabpanel-cms">
+        <div class="sc-card">
+          <div class="sc-card-hdr">
+            <div>
+              <div class="sc-card-label">Active Countermeasures</div>
+              <div class="sc-card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                Deployed in Past 2 Years
+              </div>
+            </div>
+            <span class="sc-badge" id="scDeployedCount">—</span>
+          </div>
+          <div id="deployedCmsList"><!-- populated --></div>
+        </div>
+        <div class="sc-card">
+          <div class="sc-card-hdr">
+            <div>
+              <div class="sc-card-label">Pending Requests</div>
+              <div class="sc-card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Awaiting Approval or Funding
+              </div>
+            </div>
+            <span class="sc-badge" id="scPendingCount">—</span>
+          </div>
+          <div id="pendingCmsList"><!-- populated --></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="dist-drawer-footer">
+      <div class="footer-left">
+        <div class="footer-label">Council Presentation Export</div>
+        <div class="footer-hint">One-page district summary formatted for council meeting</div>
+      </div>
+      <button class="btn-export-full" onclick="openExportModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        Export District Summary
+      </button>
+    </div>
+
+  </div>
+</div><!-- /dist-overlay -->
+
+<!-- ── EXPORT MODAL ──────────────────────────────────────────────────────────── -->
+<div class="export-modal-overlay" id="exportModal">
+  <div class="export-modal-backdrop" onclick="closeExportModal()"></div>
+  <div class="export-modal">
+    <div class="export-modal-hdr">
+      <div>
+        <div class="export-modal-title" id="exportModalTitle">District 3 — Council Summary</div>
+        <div class="export-modal-sub">One-page brief formatted for council presentation</div>
+      </div>
+      <button class="export-close" onclick="closeExportModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="export-preview">
+      <div class="export-preview-header">
+        <div class="ep-city">Concord, CA · Traffic Safety Division</div>
+        <div class="ep-title" id="epTitle">District 3 — Safety Scorecard</div>
+        <div class="ep-meta" id="epMeta">Council Member: J. Martinez · Generated: March 2024</div>
+      </div>
+      <div class="export-preview-body">
+        <div class="ep-row" id="epStatRow"><!-- populated --></div>
+        <div class="ep-section">
+          <div class="ep-section-lbl">Top Corridors by KSI</div>
+          <div id="epCorridors"><!-- populated --></div>
+        </div>
+        <div class="ep-section">
+          <div class="ep-section-lbl">Countermeasure Status</div>
+          <div id="epCMs"><!-- populated --></div>
+        </div>
+      </div>
+    </div>
+    <div class="export-modal-footer">
+      <button class="btn-cancel" onclick="closeExportModal()">Cancel</button>
+      <button class="btn-download" onclick="triggerDownload()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Download PDF
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const DISTRICTS = {
+  d1: {
+    id: 'd1', name: 'District 1', subName: 'Southwest Concord',
+    official: 'CM A. Chen', color: '#dc2626', fillOpacity: 0.18,
+    ksi: 38, fatal: 6, totalCrashes: 241, rate: 9.2, yoy: +18,
+    ksi3yr: [26, 32, 38], cityAvg: 6.1, countyBench: 4.7,
+    severity: 'crit',
+    bounds: [[37.9500, -122.0700], [37.9800, -122.0200]],
+    center: [37.9650, -122.0450],
+    corridors: [
+      { name: 'Willow Pass Rd', ksi: 22, pct: 85 },
+      { name: 'Monument Blvd', ksi: 14, pct: 55 },
+      { name: 'Concord Ave', ksi: 9, pct: 35 },
+    ],
+    complaints: [
+      { dot: 'comp-urgent', text: 'Speeding on Willow Pass near Oak Grove school', date: 'Mar 2', type: 'Speeding', tag: 'Open · Urgent' },
+      { dot: 'comp-open', text: 'No crosswalk markings at Monument & Grant', date: 'Feb 28', type: 'Pedestrian', tag: 'Open' },
+      { dot: 'comp-open', text: 'Signal timing too short at Concord Ave/Willow', date: 'Feb 22', type: 'Signal', tag: 'Open' },
+      { dot: 'comp-resolved', text: 'Broken streetlight at Concord/Mohr', date: 'Feb 15', type: 'Lighting', tag: 'Resolved' },
+      { dot: 'comp-open', text: 'Frequent near-misses at Willow Pass/Salvio', date: 'Feb 10', type: 'Speeding', tag: 'Open' },
+    ],
+    complaintCats: [
+      { name: 'Speeding', count: 34, pct: 62, fill: 'fill-red' },
+      { name: 'Ped Safety', count: 18, pct: 33, fill: 'fill-amber' },
+      { name: 'Signal Issue', count: 12, pct: 22, fill: 'fill-blue' },
+    ],
+    totalComplaints: 64,
+    deployedCms: [
+      { name: 'Speed Feedback Sign — Willow Pass @ Oak Grove', date: 'Dec 2023', pill: 'pill-deployed', status: 'DEPLOYED' },
+      { name: 'Leading Pedestrian Interval — Concord/Monument', date: 'Sep 2023', pill: 'pill-deployed', status: 'DEPLOYED' },
+      { name: 'High-Vis Crosswalk Striping — Monument Blvd', date: 'Jul 2023', pill: 'pill-deployed', status: 'DEPLOYED' },
+    ],
+    pendingCms: [
+      { name: 'HAWK Signal — Willow Pass @ Grant', requested: 'Jan 2024', pill: 'pill-pending', status: 'PENDING', est: '$180K' },
+      { name: 'Pedestrian Refuge Island — Monument/Oak', requested: 'Nov 2023', pill: 'pill-pending', status: 'PENDING', est: '$95K' },
+      { name: 'Speed Camera Installation — Willow Pass Rd', requested: 'Oct 2023', pill: 'pill-planned', status: 'PLANNED', est: '$340K' },
+    ],
+    aiNote: 'District 1 is a Tier 1 priority. Willow Pass Rd alone contributes 58% of district KSI. The three pending countermeasures could reduce district KSI by an estimated 26% over 3 years. Council approval of the HAWK signal is the critical path item.',
+    aiTags: [
+      { label: 'Tier 1 Priority', cls: 'ctx-tag-red' },
+      { label: 'Council Vote Needed', cls: 'ctx-tag-amber' },
+      { label: 'HAWK Signal', cls: 'ctx-tag-blue' },
+    ]
+  },
+  d2: {
+    id: 'd2', name: 'District 2', subName: 'Northwest Concord',
+    official: 'CM B. Rodriguez', color: '#d97706', fillOpacity: 0.14,
+    ksi: 27, fatal: 3, totalCrashes: 178, rate: 6.8, yoy: +9,
+    ksi3yr: [22, 24, 27], cityAvg: 6.1, countyBench: 4.7,
+    severity: 'high',
+    bounds: [[37.9800, -122.0700], [38.0100, -122.0200]],
+    center: [37.9950, -122.0450],
+    corridors: [
+      { name: 'Treat Blvd', ksi: 16, pct: 80 },
+      { name: 'Ygnacio Valley Rd', ksi: 11, pct: 55 },
+      { name: 'Contra Costa Blvd', ksi: 7, pct: 35 },
+    ],
+    complaints: [
+      { dot: 'comp-open', text: 'Excessive speeding near Ygnacio Valley school zone', date: 'Mar 3', type: 'Speeding', tag: 'Open' },
+      { dot: 'comp-open', text: 'Dangerous merge on Treat Blvd at Highway 4 ramp', date: 'Feb 25', type: 'Merge Conflict', tag: 'Open' },
+      { dot: 'comp-resolved', text: 'Faded crosswalk on Contra Costa Blvd', date: 'Feb 12', type: 'Pedestrian', tag: 'Resolved' },
+    ],
+    complaintCats: [
+      { name: 'Speeding', count: 22, pct: 55, fill: 'fill-red' },
+      { name: 'Merge/Lane', count: 14, pct: 35, fill: 'fill-amber' },
+      { name: 'Ped Safety', count: 8, pct: 20, fill: 'fill-blue' },
+    ],
+    totalComplaints: 40,
+    deployedCms: [
+      { name: 'Dynamic Speed Board — Treat Blvd Westbound', date: 'Nov 2023', pill: 'pill-deployed', status: 'DEPLOYED' },
+      { name: 'Rumble Strips — Ygnacio Valley Rd', date: 'Aug 2023', pill: 'pill-deployed', status: 'DEPLOYED' },
+    ],
+    pendingCms: [
+      { name: 'Protected Left Turn Phase — Treat/Ygnacio', requested: 'Feb 2024', pill: 'pill-pending', status: 'PENDING', est: '$220K' },
+      { name: 'Pedestrian Countdown Signal — Treat/Contra Costa', requested: 'Dec 2023', pill: 'pill-planned', status: 'PLANNED', est: '$75K' },
+    ],
+    aiNote: 'District 2 is trending upward at +9% YoY, primarily driven by Treat Blvd merge conflicts and Ygnacio Valley speeding. The protected left turn phase at Treat/Ygnacio would address the dominant crash type and is estimated to reduce KSI by 18%.',
+    aiTags: [
+      { label: 'High Priority', cls: 'ctx-tag-amber' },
+      { label: '+9% YoY', cls: 'ctx-tag-red' },
+      { label: 'Merge Conflicts', cls: 'ctx-tag-blue' },
+    ]
+  },
+  d3: {
+    id: 'd3', name: 'District 3', subName: 'Central Concord',
+    official: 'CM C. Park', color: '#2563eb', fillOpacity: 0.12,
+    ksi: 21, fatal: 2, totalCrashes: 134, rate: 5.4, yoy: -4,
+    ksi3yr: [24, 23, 21], cityAvg: 6.1, countyBench: 4.7,
+    severity: 'med',
+    bounds: [[37.9500, -122.0200], [37.9800, -121.9700]],
+    center: [37.9650, -121.9950],
+    corridors: [
+      { name: 'Clayton Rd', ksi: 12, pct: 78 },
+      { name: 'Kirker Pass Rd', ksi: 8, pct: 52 },
+      { name: 'Port Chicago Hwy', ksi: 5, pct: 32 },
+    ],
+    complaints: [
+      { dot: 'comp-open', text: 'Unmarked crossings at Clayton/Kirker junction', date: 'Mar 1', type: 'Pedestrian', tag: 'Open' },
+      { dot: 'comp-resolved', text: 'School zone speed sign not visible — Clayton Rd', date: 'Jan 20', type: 'Signage', tag: 'Resolved' },
+    ],
+    complaintCats: [
+      { name: 'Ped Safety', count: 18, pct: 60, fill: 'fill-red' },
+      { name: 'Signage', count: 9, pct: 30, fill: 'fill-amber' },
+      { name: 'Bicycle', count: 6, pct: 20, fill: 'fill-blue' },
+    ],
+    totalComplaints: 30,
+    deployedCms: [
+      { name: 'Raised Crosswalk — Clayton Rd @ School Dr', date: 'Oct 2023', pill: 'pill-deployed', status: 'DEPLOYED' },
+    ],
+    pendingCms: [
+      { name: 'HAWK Pedestrian Signal — Clayton/Kirker', requested: 'Jan 2024', pill: 'pill-pending', status: 'PENDING', est: '$195K' },
+      { name: 'Bike Lane Extension — Clayton Rd (1.2mi)', requested: 'Feb 2024', pill: 'pill-planned', status: 'PLANNED', est: '$280K' },
+    ],
+    aiNote: 'District 3 shows a positive trend at −4% YoY, the only district improving in 2024. The raised crosswalk deployment in Oct 2023 has contributed to this reduction. Focus should remain on the Clayton/Kirker pedestrian hotspot.',
+    aiTags: [
+      { label: '↓ Improving', cls: 'ctx-tag-purple' },
+      { label: 'Ped Focus', cls: 'ctx-tag-blue' },
+      { label: '−4% YoY', cls: 'ctx-tag-purple' },
+    ]
+  },
+  d4: {
+    id: 'd4', name: 'District 4', subName: 'East Concord',
+    official: 'CM D. Williams', color: '#94a3b8', fillOpacity: 0.10,
+    ksi: 14, fatal: 1, totalCrashes: 88, rate: 3.8, yoy: +2,
+    ksi3yr: [13, 13, 14], cityAvg: 6.1, countyBench: 4.7,
+    severity: 'low',
+    bounds: [[37.9800, -122.0200], [38.0100, -121.9700]],
+    center: [37.9950, -121.9950],
+    corridors: [
+      { name: 'Balfour Rd', ksi: 8, pct: 80 },
+      { name: 'Marsh Creek Rd', ksi: 5, pct: 50 },
+      { name: 'Olivera Rd', ksi: 3, pct: 30 },
+    ],
+    complaints: [
+      { dot: 'comp-open', text: 'Speeding on Balfour Rd near Marsh Creek junction', date: 'Feb 18', type: 'Speeding', tag: 'Open' },
+      { dot: 'comp-resolved', text: 'Signal malfunction at Balfour/Delta', date: 'Jan 30', type: 'Signal', tag: 'Resolved' },
+    ],
+    complaintCats: [
+      { name: 'Speeding', count: 10, pct: 50, fill: 'fill-red' },
+      { name: 'Signal Issue', count: 5, pct: 25, fill: 'fill-amber' },
+      { name: 'Road Condition', count: 4, pct: 20, fill: 'fill-blue' },
+    ],
+    totalComplaints: 19,
+    deployedCms: [
+      { name: 'Speed Feedback Sign — Balfour Rd', date: 'Jun 2023', pill: 'pill-deployed', status: 'DEPLOYED' },
+    ],
+    pendingCms: [
+      { name: 'Rumble Strip Installation — Marsh Creek Rd', requested: 'Mar 2024', pill: 'pill-planned', status: 'PLANNED', est: '$48K' },
+    ],
+    aiNote: 'District 4 is the lowest-risk district with a largely stable KSI trend. Balfour Rd remains the primary concern. The planned rumble strip installation on Marsh Creek Rd is a low-cost, high-impact intervention.',
+    aiTags: [
+      { label: 'Low Priority', cls: 'ctx-tag-blue' },
+      { label: 'Stable Trend', cls: 'ctx-tag-purple' },
+    ]
+  },
+};
+
+const CITY_AVG = 6.1;
+const COUNTY_BENCH = 4.7;
+let currentDistrict = null;
+let activeDistTab = 'scorecard';
+let map, districtLayers = {};
+
+const AI_DISTRICT_RESPONSES = {
+  'which district has the worst ksi trend?': () => `
+    <strong>District 1 (Southwest Concord)</strong> has the worst KSI trend at <strong>+18% YoY</strong> — the steepest increase in the city.<br><br>
+    District 2 is also concerning at +9%. Only District 3 is improving (−4%).<br><br>
+    District 1's Willow Pass Rd alone contributes 58% of that district's KSI total. Three countermeasures are pending council approval that could reverse this trend.
+  `,
+  'compare all districts to city avg': () => `
+    <strong>District vs. City Average (6.1 KSI/mile):</strong><br><br>
+    • District 1: <span style="color:#dc2626">9.2/mile ↑ +51%</span><br>
+    • District 2: <span style="color:#d97706">6.8/mile ↑ +11%</span><br>
+    • District 3: <span style="color:#2563eb">5.4/mile ↓ −11%</span><br>
+    • District 4: <span style="color:#16a34a">3.8/mile ↓ −38%</span><br><br>
+    Districts 1 and 2 are above city average. District 3 is trending down — the raised crosswalk on Clayton Rd is contributing to improvement.
+  `,
+  'pending countermeasures for council': () => `
+    <strong>Pending countermeasures requiring council action:</strong><br><br>
+    <strong>District 1:</strong><br>
+    • HAWK Signal — Willow Pass @ Grant · $180K · <em>High impact</em><br>
+    • Pedestrian Refuge Island · $95K<br>
+    • Speed Cameras — Willow Pass Rd · $340K<br><br>
+    <strong>District 2:</strong><br>
+    • Protected Left Turn Phase — Treat/Ygnacio · $220K<br><br>
+    <strong>District 3:</strong><br>
+    • HAWK Signal — Clayton/Kirker · $195K<br><br>
+    Total pending budget: <strong>$1.13M</strong>. Estimated combined KSI reduction: <strong>−28%</strong> over 3 years citywide.
+  `,
+  'top 3 corridors citywide': () => `
+    <strong>Top 3 highest-KSI corridors citywide (2024):</strong><br><br>
+    1. <strong>Willow Pass Rd</strong> (District 1) — 22 KSI · 9.2/mile · Critical<br>
+    2. <strong>Treat Blvd</strong> (District 2) — 16 KSI · 7.1/mile · High<br>
+    3. <strong>Monument Blvd</strong> (District 1) — 14 KSI · 6.8/mile · High<br><br>
+    Districts 1 and 2 have 4 of the top 5 corridors. Focusing resources on these corridors would impact approximately 43% of citywide KSI.
+  `,
+};
+
+// ── MAP INIT ──────────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  map = L.map('map', { zoomControl: false, attributionControl: false }).setView([37.9720, -122.0190], 12);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+  // Draw district polygons
+  Object.entries(DISTRICTS).forEach(([key, d]) => {
+    const sw = d.bounds[0];
+    const ne = d.bounds[1];
+    const poly = L.rectangle([sw, ne], {
+      color: d.color,
+      weight: 2,
+      fillColor: d.color,
+      fillOpacity: d.fillOpacity,
+      dashArray: '4 3',
+    }).addTo(map);
+
+    // Add label
+    const label = L.divIcon({
+      className: '',
+      html: `<div style="background:#fff;border:1px solid ${d.color};border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;color:${d.color};font-family:'JetBrains Mono',monospace;box-shadow:0 1px 4px rgba(0,0,0,.12);white-space:nowrap">${d.name}</div>`,
+      iconAnchor: [40, 10],
+    });
+    L.marker(d.center, { icon: label, interactive: false }).addTo(map);
+
+    poly.on('click', () => openDistrictScorecard(key));
+    poly.on('mouseover', () => { poly.setStyle({ fillOpacity: d.fillOpacity + 0.1, weight: 2.5 }); });
+    poly.on('mouseout', () => {
+      if (currentDistrict !== key) poly.setStyle({ fillOpacity: d.fillOpacity, weight: 2 });
+    });
+
+    poly.bindPopup(`
+      <div class="pp">
+        <div class="pp-name">${d.name}</div>
+        <div class="pp-type">${d.subName} · ${d.official}</div>
+        <div class="pp-grid">
+          <div class="pp-cell"><div class="pp-cl">KSI 2024</div><div class="pp-cv red">${d.ksi}</div></div>
+          <div class="pp-cell"><div class="pp-cl">KSI Rate</div><div class="pp-cv amb">${d.rate}/mi</div></div>
+          <div class="pp-cell"><div class="pp-cl">YoY</div><div class="pp-cv ${d.yoy > 0 ? 'red' : 'grn'}">${d.yoy > 0 ? '+' : ''}${d.yoy}%</div></div>
+          <div class="pp-cell"><div class="pp-cl">Complaints</div><div class="pp-cv">${d.totalComplaints}</div></div>
+        </div>
+        <button class="pp-btn" onclick="openDistrictScorecard('${key}');map._popup.remove()">Open Scorecard →</button>
+      </div>
+    `);
+
+    districtLayers[key] = poly;
+  });
+
+  // Build district rank list in panel 2
+  buildDistrictList();
+});
+
+function buildDistrictList() {
+  const sorted = Object.entries(DISTRICTS).sort((a,b) => b[1].ksi - a[1].ksi);
+  document.getElementById('districtRankList').innerHTML = sorted.map(([key, d]) => `
+    <div class="district-row ${currentDistrict === key ? 'active-row' : ''}" id="dr-${key}" onclick="openDistrictScorecard('${key}')">
+      <div class="dr-swatch" style="background:${d.color}"></div>
+      <div class="dr-body">
+        <div class="dr-name">
+          ${d.name}
+          <span style="font-size:10px;font-weight:400;color:#64748b;font-family:'JetBrains Mono',monospace">${d.subName}</span>
+        </div>
+        <div class="dr-meta">${d.official} · ${d.totalComplaints} complaints · ${d.deployedCms.length} active CMs</div>
+      </div>
+      <div class="dr-ksi" style="color:${d.color}">${d.ksi}</div>
+      <div class="dr-badge sev-${d.severity}">${d.severity.toUpperCase()}</div>
+    </div>
+  `).join('');
+}
+
+function setLayer(type) {
+  ['districts','corridors','heatmap'].forEach(t => {
+    document.getElementById('layer'+t.charAt(0).toUpperCase()+t.slice(1)).classList.toggle('active', t === type);
+  });
+  const hints = { districts: 'Click district → Scorecard', corridors: 'Click corridor → Health panel', heatmap: 'Collision density map active' };
+  document.querySelector('.map-hint').textContent = hints[type];
+  if (type === 'districts') {
+    Object.values(districtLayers).forEach(l => l.setStyle({ opacity: 1, fillOpacity: DISTRICTS[Object.keys(districtLayers).find(k => districtLayers[k] === l)].fillOpacity }));
+  } else {
+    Object.values(districtLayers).forEach(l => l.setStyle({ opacity: 0.3, fillOpacity: 0.04 }));
+  }
+}
+
+// ── DISTRICT SCORECARD ────────────────────────────────────────────────────────
+function openDistrictScorecard(key) {
+  const d = DISTRICTS[key];
+  currentDistrict = key;
+  buildDistrictList(); // refresh active state
+
+  // Header
+  document.getElementById('crumbDistrict').textContent = d.name;
+  document.getElementById('distDrawerName').innerHTML = `${d.name} — ${d.subName} <span class="official-badge">${d.official}</span>`;
+  document.getElementById('distCrashCount').textContent = `${d.ksi} KSI · ${d.totalCrashes} total crashes`;
+  document.getElementById('exportModalTitle').textContent = `${d.name} — Council Summary`;
+  document.getElementById('epTitle').textContent = `${d.name} — Safety Scorecard`;
+  document.getElementById('epMeta').textContent = `${d.official} · Generated: March 2024`;
+
+  // Scorecard tab
+  document.getElementById('scKsi').textContent = d.ksi;
+  document.getElementById('scFatal').textContent = d.fatal;
+  document.getElementById('scRate').textContent = d.rate;
+  const yoyEl = document.getElementById('scYoy');
+  yoyEl.textContent = (d.yoy > 0 ? '+' : '') + d.yoy + '%';
+  yoyEl.className = 'stat-val ' + (d.yoy > 0 ? 'red' : 'green');
+  const trendBadge = document.getElementById('scTrendBadge');
+  trendBadge.textContent = (d.yoy > 0 ? '▲ +' : '▼ ') + d.yoy + '% YoY';
+  trendBadge.className = 'sc-badge ' + (d.yoy > 0 ? 'sparkline-badge badge-up' : 'sparkline-badge badge-down');
+
+  // Benchmark bars
+  const cityDelta = ((d.rate - CITY_AVG)/CITY_AVG*100).toFixed(0);
+  const countyDelta = ((d.rate - COUNTY_BENCH)/COUNTY_BENCH*100).toFixed(0);
+  const maxRate = Math.max(d.rate, CITY_AVG, COUNTY_BENCH, 1);
+  document.getElementById('scBenchmarks').innerHTML = `
+    <div class="bench-row">
+      <div class="bench-label">This District</div>
+      <div class="bench-track">
+        <div class="bench-fill-base" style="width:100%"></div>
+        <div class="bench-fill-district" style="width:${(d.rate/maxRate*100).toFixed(0)}%;background:${d.color}"></div>
+      </div>
+      <div class="bench-val" style="color:${d.color}">${d.rate}</div>
+      <div class="bench-delta ${cityDelta > 0 ? 'delta-above' : 'delta-below'}">${cityDelta > 0 ? '+' : ''}${cityDelta}%</div>
+    </div>
+    <div class="bench-row">
+      <div class="bench-label">City Avg</div>
+      <div class="bench-track">
+        <div class="bench-fill-base" style="width:100%"></div>
+        <div class="bench-fill-district" style="width:${(CITY_AVG/maxRate*100).toFixed(0)}%;background:#64748b"></div>
+      </div>
+      <div class="bench-val">${CITY_AVG}</div>
+      <div class="bench-delta delta-equal">Avg</div>
+    </div>
+    <div class="bench-row">
+      <div class="bench-label">County Bench</div>
+      <div class="bench-track">
+        <div class="bench-fill-base" style="width:100%"></div>
+        <div class="bench-fill-district" style="width:${(COUNTY_BENCH/maxRate*100).toFixed(0)}%;background:#94a3b8"></div>
+      </div>
+      <div class="bench-val" style="color:#16a34a">${COUNTY_BENCH}</div>
+      <div class="bench-delta delta-below">−${Math.abs(((COUNTY_BENCH - d.rate)/d.rate*100).toFixed(0))}%</div>
+    </div>
+  `;
+
+  // Sparkline
+  const vals = d.ksi3yr;
+  const minV = Math.min(...vals) - 2;
+  const maxV = Math.max(...vals) + 2;
+  const norm = v => 32 - ((v - minV)/(maxV - minV)) * 28;
+  const xs = [0, 150, 300];
+  const pts = vals.map((v,i) => `${xs[i]},${norm(v)}`).join(' ');
+  document.getElementById('distSpkLine').setAttribute('d', `M${pts.replace(/ /g,' L')}`);
+  document.getElementById('distSpkArea').setAttribute('d', `M0,36 L${pts.replace(/ /g,' L')} L300,36 Z`);
+  [[0,0],[1,1],[2,2]].forEach(([i,di]) => {
+    const el = document.getElementById(`distSpkDot${di+1}`);
+    el.setAttribute('cx', xs[i]);
+    el.setAttribute('cy', norm(vals[i]));
+  });
+
+  // Top corridors
+  document.getElementById('topCorridorsList').innerHTML = d.corridors.map((c,i) => `
+    <div class="corridor-rank-item">
+      <div class="crk-num">${i+1}</div>
+      <div class="crk-body">
+        <div class="crk-name">${c.name}</div>
+        <div class="crk-meta">Within ${d.name} boundary</div>
+        <div class="crk-bar-wrap"><div class="crk-bar" style="width:${c.pct}%"></div></div>
+      </div>
+      <div class="crk-ksi">${c.ksi}</div>
+    </div>
+  `).join('');
+  document.getElementById('dtab-corridors-count').textContent = d.corridors.length;
+
+  // Complaints
+  document.getElementById('distComplaintsList').innerHTML = d.complaints.map(c => `
+    <div class="complaint-item">
+      <div class="complaint-dot ${c.dot}"></div>
+      <div class="complaint-body">
+        <div class="complaint-text">${c.text}</div>
+        <div class="complaint-meta">${c.date} · ${c.type} · <span style="color:#9333ea">${c.tag}</span></div>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('scComplaintTotal').textContent = d.totalComplaints + ' total';
+  document.getElementById('dtab-complaints-count').textContent = d.complaints.length;
+  document.getElementById('complaintsByCategory').innerHTML = d.complaintCats.map(c => `
+    <div class="pcf-row">
+      <div class="pcf-name">${c.name}</div>
+      <div class="pcf-track"><div class="pcf-fill ${c.fill}" style="width:${c.pct}%"></div></div>
+      <div class="pcf-count">${c.count}</div>
+    </div>
+  `).join('');
+
+  // Countermeasures
+  document.getElementById('deployedCmsList').innerHTML = d.deployedCms.map(cm => `
+    <div class="cm-item">
+      <span class="cm-pill ${cm.pill}">${cm.status}</span>
+      <div class="cm-body">
+        <div class="cm-name">${cm.name}</div>
+        <div class="cm-meta">Installed: ${cm.date}</div>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('scDeployedCount').textContent = d.deployedCms.length + ' deployed';
+  document.getElementById('pendingCmsList').innerHTML = d.pendingCms.map(cm => `
+    <div class="cm-item">
+      <span class="cm-pill ${cm.pill}">${cm.status}</span>
+      <div class="cm-body">
+        <div class="cm-name">${cm.name}</div>
+        <div class="cm-meta">Requested: ${cm.requested} · Est. cost: ${cm.est}</div>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('scPendingCount').textContent = d.pendingCms.length + ' pending';
+  document.getElementById('dtab-cms-count').textContent = d.deployedCms.length + d.pendingCms.length;
+
+  // Update AI context
+  document.getElementById('aiCtxTitle').textContent = d.aiNote.slice(0, 60) + '…';
+  document.getElementById('aiCtxText').textContent = d.aiNote;
+  document.getElementById('aiCtxTags').innerHTML = d.aiTags.map(t => `<span class="ctx-tag ${t.cls}">${t.label}</span>`).join('');
+
+  // Load export preview
+  buildExportPreview(d);
+
+  switchDistTab('scorecard');
+  document.getElementById('distOverlay').classList.add('open');
+
+  // Highlight on map
+  Object.entries(districtLayers).forEach(([k, l]) => {
+    if (k === key) {
+      l.setStyle({ weight: 3, dashArray: null });
+      l.bringToFront();
+    } else {
+      l.setStyle({ weight: 1.5, fillOpacity: DISTRICTS[k].fillOpacity * 0.4 });
+    }
+  });
+}
+
+function buildExportPreview(d) {
+  document.getElementById('epStatRow').innerHTML = [
+    { lbl: 'KSI 2024', val: d.ksi, cls: 'red' },
+    { lbl: 'KSI Rate', val: d.rate + '/mi', cls: 'amber' },
+    { lbl: 'YoY', val: (d.yoy > 0 ? '+' : '') + d.yoy + '%', cls: d.yoy > 0 ? 'red' : 'green' },
+  ].map(s => `
+    <div class="ep-stat">
+      <div class="ep-stat-lbl">${s.lbl}</div>
+      <div class="ep-stat-val" style="color:${s.cls === 'red' ? '#dc2626' : s.cls === 'amber' ? '#d97706' : s.cls === 'green' ? '#16a34a' : '#1e293b'}">${s.val}</div>
+    </div>
+  `).join('');
+  document.getElementById('epCorridors').innerHTML = d.corridors.map(c => `
+    <div class="ep-section-row">
+      <span>${c.name}</span>
+      <span class="ep-section-val" style="color:#dc2626">${c.ksi} KSI</span>
+    </div>
+  `).join('');
+  document.getElementById('epCMs').innerHTML = [
+    ...d.deployedCms.map(c => ({ name: c.name, status: 'Deployed', color: '#16a34a' })),
+    ...d.pendingCms.map(c => ({ name: c.name, status: c.status, color: c.status === 'PENDING' ? '#ea580c' : '#2563eb' })),
+  ].slice(0, 4).map(c => `
+    <div class="ep-section-row">
+      <span style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name}</span>
+      <span class="ep-section-val" style="color:${c.color}">${c.status}</span>
+    </div>
+  `).join('');
+}
+
+function closeScorecard() {
+  document.getElementById('distOverlay').classList.remove('open');
+  Object.entries(districtLayers).forEach(([k, l]) => {
+    l.setStyle({ weight: 2, dashArray: '4 3', fillOpacity: DISTRICTS[k].fillOpacity });
+  });
+  currentDistrict = null;
+  buildDistrictList();
+}
+
+function switchDistTab(name) {
+  activeDistTab = name;
+  ['scorecard','corridors','complaints','cms'].forEach(t => {
+    const btn = document.getElementById('dtab-'+t);
+    if (btn) btn.className = 'dist-tab' + (t === name ? ' active' : '');
+    const panel = document.getElementById('dtabpanel-'+t);
+    if (panel) panel.className = 'dist-tab-panel' + (t === name ? ' active' : '');
+  });
+}
+
+// ── EXPORT MODAL ──────────────────────────────────────────────────────────────
+function openExportModal() {
+  if (!currentDistrict) return;
+  document.getElementById('exportModal').classList.add('open');
+}
+
+function closeExportModal() {
+  document.getElementById('exportModal').classList.remove('open');
+}
+
+function openCityExport() {
+  const modal = document.getElementById('exportModal');
+  document.getElementById('exportModalTitle').textContent = 'City of Concord — Safety Summary';
+  document.getElementById('epTitle').textContent = 'City-Wide Safety Scorecard';
+  document.getElementById('epMeta').textContent = 'All Districts · Generated: March 2024';
+  document.getElementById('epStatRow').innerHTML = `
+    <div class="ep-stat"><div class="ep-stat-lbl">City KSI</div><div class="ep-stat-val" style="color:#dc2626">142</div></div>
+    <div class="ep-stat"><div class="ep-stat-lbl">KSI Rate</div><div class="ep-stat-val" style="color:#d97706">6.1</div></div>
+    <div class="ep-stat"><div class="ep-stat-lbl">YoY</div><div class="ep-stat-val" style="color:#dc2626">+12%</div></div>
+  `;
+  document.getElementById('epCorridors').innerHTML = `
+    <div class="ep-section-row"><span>District 1 — Southwest</span><span class="ep-section-val" style="color:#dc2626">38 KSI</span></div>
+    <div class="ep-section-row"><span>District 2 — Northwest</span><span class="ep-section-val" style="color:#d97706">27 KSI</span></div>
+    <div class="ep-section-row"><span>District 3 — Central</span><span class="ep-section-val" style="color:#2563eb">21 KSI</span></div>
+    <div class="ep-section-row"><span>District 4 — East</span><span class="ep-section-val" style="color:#94a3b8">14 KSI</span></div>
+  `;
+  document.getElementById('epCMs').innerHTML = `
+    <div class="ep-section-row"><span>Total deployed (2 yrs)</span><span class="ep-section-val" style="color:#16a34a">7 deployed</span></div>
+    <div class="ep-section-row"><span>Total pending approval</span><span class="ep-section-val" style="color:#ea580c">6 pending</span></div>
+    <div class="ep-section-row"><span>Est. budget needed</span><span class="ep-section-val">$1.13M</span></div>
+  `;
+  modal.classList.add('open');
+}
+
+function triggerDownload() {
+  const btn = document.querySelector('.btn-download');
+  btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Downloaded`;
+  btn.style.background = '#16a34a';
+  setTimeout(() => {
+    btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download PDF`;
+    btn.style.background = '';
+    closeExportModal();
+  }, 1800);
+}
+
+// ── AI CHAT ───────────────────────────────────────────────────────────────────
+function addAIMessage(html) {
+  const area = document.getElementById('aiChatArea');
+  const indicator = document.getElementById('typingIndicator');
+  indicator.classList.add('active');
+  area.scrollTop = area.scrollHeight;
+  setTimeout(() => {
+    indicator.classList.remove('active');
+    const wrap = document.createElement('div');
+    wrap.className = 'msg-wrapper';
+    wrap.innerHTML = `<div class="msg-meta">Safety AI · Just now</div><div class="msg-bubble bubble-ai">${html}</div>`;
+    area.insertBefore(wrap, indicator);
+    area.scrollTop = area.scrollHeight;
+  }, 900 + Math.random() * 600);
+}
+
+function sendMessage() {
+  const input = document.getElementById('aiInput');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  const area = document.getElementById('aiChatArea');
+  const indicator = document.getElementById('typingIndicator');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-wrapper user-msg';
+  wrap.innerHTML = `<div class="msg-meta">You · Just now</div><div class="msg-bubble bubble-user">${text}</div>`;
+  area.insertBefore(wrap, indicator);
+  area.scrollTop = area.scrollHeight;
+  const key = text.toLowerCase().trim();
+  const resp = AI_DISTRICT_RESPONSES[key];
+  if (resp) {
+    addAIMessage(resp());
+  } else {
+    addAIMessage(`I'm analyzing your query about <strong>"${text}"</strong>.<br><br>Based on the current city data, District 1 (Southwest Concord) is the primary area of concern with the highest KSI density and the most active pending countermeasures. Would you like me to open the scorecard for a specific district?`);
+  }
+}
+
+function sendQuick(text) {
+  document.getElementById('aiInput').value = text;
+  sendMessage();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+</script>
+</body>
+</html>

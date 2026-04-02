@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Concord, CA – City Outline</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: 'Segoe UI', sans-serif; background: #0b1623; }
+  #map { width: 100%; height: 100vh; }
+
+  /* Attribution override */
+  .leaflet-control-attribution { font-size: 9px; opacity: 0.6; }
+
+  /* Loading overlay */
+  #loader {
+    position: fixed; inset: 0; z-index: 9999;
+    background: #0b1623;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 14px;
+    color: #c8d8e8; font-size: 13px;
+  }
+  .spin {
+    width: 36px; height: 36px;
+    border: 3px solid #253d56;
+    border-top-color: #3b82f6;
+    border-radius: 50%;
+    animation: rot .8s linear infinite;
+  }
+  @keyframes rot { to { transform: rotate(360deg); } }
+
+  /* Label badge */
+  #city-label {
+    position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+    z-index: 500;
+    background: rgba(11,22,35,.85); backdrop-filter: blur(8px);
+    border: 1px solid #3b82f6;
+    border-radius: 8px; padding: 6px 18px;
+    font-size: 13px; font-weight: 700; color: #f0f4f8;
+    letter-spacing: .3px;
+    display: none;
+  }
+
+  /* Error banner */
+  #error-msg {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    z-index: 500;
+    background: rgba(239,68,68,.15); border: 1px solid #ef4444;
+    border-radius: 8px; padding: 8px 20px;
+    font-size: 12px; color: #ef4444;
+    display: none;
+  }
+</style>
+</head>
+<body>
+
+<div id="loader">
+  <div class="spin"></div>
+  <span>Loading Concord, CA boundary…</span>
+</div>
+
+<div id="city-label">📍 Concord, CA</div>
+<div id="map"></div>
+<div id="error-msg" id="error-msg"></div>
+
+<script>
+// ── Initialise Leaflet map ──────────────────────────────────────────
+const map = L.map('map', {
+  center: [37.9780, -122.0311],
+  zoom: 13,
+  zoomControl: true,
+});
+
+// Dark tile layer (CartoDB Dark Matter)
+L.tileLayer(
+  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+  { attribution: '© OpenStreetMap © CARTO', maxZoom: 19 }
+).addTo(map);
+
+// ── Fetch Concord boundary from Overpass ───────────────────────────
+const OVERPASS = 'https://overpass-api.de/api/interpreter';
+// Query: fetch the administrative boundary relation for Concord city, CA
+const query = `
+[out:json][timeout:30];
+relation["name"="Concord"]["admin_level"="8"]["boundary"="administrative"]["type"="boundary"];
+out geom;
+`;
+
+async function loadBoundary() {
+  try {
+    const res = await fetch(OVERPASS, {
+      method: 'POST',
+      body: 'data=' + encodeURIComponent(query),
+    });
+    if (!res.ok) throw new Error('Overpass request failed');
+    const data = await res.json();
+
+    // Find the Concord, CA relation (filter by state if multiple results)
+    let relation = data.elements.find(el =>
+      el.type === 'relation' &&
+      el.tags &&
+      el.tags.name === 'Concord'
+    );
+
+    if (!relation) throw new Error('Boundary not found');
+
+    // Build GeoJSON from the relation members
+    const geojson = buildGeoJSON(relation);
+    if (!geojson) throw new Error('Could not parse boundary geometry');
+
+    // Draw outline on map
+    const layer = L.geoJSON(geojson, {
+      style: {
+        color: '#3b82f6',
+        weight: 3,
+        opacity: 1,
+        fillColor: '#3b82f6',
+        fillOpacity: 0.08,
+        dashArray: null,
+        lineJoin: 'round',
+      }
+    }).addTo(map);
+
+    // Fit map to boundary
+    map.fitBounds(layer.getBounds(), { padding: [40, 40] });
+
+    // Show label
+    document.getElementById('city-label').style.display = 'block';
+
+  } catch (err) {
+    console.error(err);
+    showError('Could not load boundary: ' + err.message + '. Falling back to polygon approximation.');
+    drawFallback();
+  } finally {
+    document.getElementById('loader').style.display = 'none';
+  }
+}
+
+// Convert Overpass relation geometry → GeoJSON MultiPolygon
+function buildGeoJSON(relation) {
+  try {
+    // Collect outer and inner ways
+    const outers = [];
+    const inners = [];
+
+    for (const member of relation.members || []) {
+      if (member.type !== 'way' || !member.geometry) continue;
+      const ring = member.geometry.map(pt => [pt.lon, pt.lat]);
+      // Close ring if needed
+      if (ring.length > 0) {
+        const first = ring[0], last = ring[ring.length - 1];
+        if (first[0] !== last[0] || first[1] !== last[1]) ring.push(first);
+      }
+      if (member.role === 'inner') inners.push(ring);
+      else outers.push(ring);
+    }
+
+    if (outers.length === 0) return null;
+
+    // Assemble rings into a MultiPolygon
+    // Each outer ring becomes a polygon; inner rings are holes (simplified: assign all inners to first outer)
+    const polygons = outers.map((outer, i) => {
+      const poly = [outer];
+      if (i === 0) inners.forEach(inner => poly.push(inner));
+      return poly;
+    });
+
+    return {
+      type: 'Feature',
+      geometry: {
+        type: 'MultiPolygon',
+        coordinates: polygons,
+      },
+      properties: { name: 'Concord, CA' },
+    };
+  } catch (e) {
+    return null;
+  }
+}
+
+// Fallback: approximate Concord boundary polygon
+function drawFallback() {
+  const coords = [
+    [-122.0780, 37.9430],
+    [-122.0560, 37.9430],
+    [-122.0220, 37.9480],
+    [-121.9900, 37.9560],
+    [-121.9750, 37.9700],
+    [-121.9750, 38.0000],
+    [-121.9900, 38.0180],
+    [-122.0200, 38.0260],
+    [-122.0550, 38.0280],
+    [-122.0780, 38.0180],
+    [-122.0930, 38.0000],
+    [-122.0930, 37.9600],
+    [-122.0780, 37.9430],
+  ];
+
+  const geojson = {
+    type: 'Feature',
+    geometry: {
+      type: 'Polygon',
+      coordinates: [coords],
+    },
+    properties: {},
+  };
+
+  const layer = L.geoJSON(geojson, {
+    style: {
+      color: '#3b82f6',
+      weight: 3,
+      opacity: 1,
+      fillColor: '#3b82f6',
+      fillOpacity: 0.08,
+    }
+  }).addTo(map);
+
+  map.fitBounds(layer.getBounds(), { padding: [40, 40] });
+  document.getElementById('city-label').style.display = 'block';
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 6000);
+}
+
+// ── Start ───────────────────────────────────────────────────────────
+loadBoundary();
+</script>
+</body>
+</html>

@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Concord KSI · Collision Density Intelligence</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+<link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet"/>
+<script src="https://unpkg.com/h3-js@4.1.0/dist/h3-js.umd.js"></script>
+<style>
+  :root {
+    --bg: #0a0c10;
+    --panel: #111318;
+    --border: rgba(255,255,255,0.07);
+    --accent: #ff4d1c;
+    --accent2: #ffb547;
+    --text: #e8eaf0;
+    --muted: #5a5f72;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    overflow: hidden;
+  }
+
+  #app {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    grid-template-rows: 56px 1fr;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  /* ── HEADER ── */
+  #header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 0 24px;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    z-index: 10;
+  }
+
+  .logo-mark {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    flex-shrink: 0;
+    animation: pulse-hex 3s ease-in-out infinite;
+  }
+  @keyframes pulse-hex {
+    0%,100% { opacity:1; transform: scale(1); }
+    50% { opacity:0.7; transform: scale(0.93); }
+  }
+
+  .title-block h1 {
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
+  .title-block p {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .header-stats {
+    margin-left: auto;
+    display: flex;
+    gap: 24px;
+  }
+  .hstat {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+  }
+  .hstat-val {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--accent);
+    font-family: var(--sans);
+  }
+  .hstat-label {
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    z-index: 5;
+  }
+  #sidebar::-webkit-scrollbar { width: 4px; }
+  #sidebar::-webkit-scrollbar-track { background: transparent; }
+  #sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .section {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-title {
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  /* Legend */
+  .legend-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: linear-gradient(to right,
+      #0d1b3e, #1a3a6b, #1e6fa8, #2eaacc,
+      #47d4a8, #a8e63d, #f5c518, #f57c00, #e53935, #b71c1c);
+    margin-bottom: 6px;
+  }
+  .legend-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: var(--muted);
+  }
+
+  /* Filters */
+  .filter-group { margin-bottom: 12px; }
+  .filter-label {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .pill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+  .pill {
+    padding: 4px 10px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    font-size: 10px;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    font-family: var(--mono);
+    transition: all 0.15s;
+    letter-spacing: 0.05em;
+  }
+  .pill.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .pill:hover:not(.active) {
+    border-color: rgba(255,255,255,0.2);
+    color: var(--text);
+  }
+
+  .range-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  input[type=range] {
+    flex: 1;
+    accent-color: var(--accent);
+    height: 2px;
+  }
+  .range-val {
+    font-size: 11px;
+    color: var(--accent2);
+    min-width: 24px;
+    text-align: right;
+  }
+
+  /* Top corridors */
+  .corridor-list { display: flex; flex-direction: column; gap: 8px; }
+  .corridor-item {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px;
+    align-items: center;
+  }
+  .corridor-name {
+    font-size: 10px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .corridor-bar-wrap {
+    grid-column: 1 / -1;
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .corridor-bar {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    transition: width 0.6s ease;
+  }
+  .corridor-count {
+    font-size: 10px;
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  /* Hover panel */
+  #hover-panel {
+    position: absolute;
+    bottom: 28px;
+    left: 336px;
+    width: 300px;
+    background: rgba(10,12,16,0.96);
+    border: 1px solid rgba(255,77,28,0.35);
+    border-radius: 3px;
+    padding: 16px;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(6px);
+    transition: all 0.18s ease;
+    backdrop-filter: blur(12px);
+  }
+  #hover-panel.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+  .hp-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .hp-hex-icon {
+    width: 18px; height: 18px;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    flex-shrink: 0;
+  }
+  .hp-title { font-family: var(--sans); font-size: 13px; font-weight: 700; }
+  .hp-subtitle { font-size: 9px; color: var(--muted); letter-spacing: 0.1em; margin-top: 1px; }
+
+  .hp-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .hp-stat {}
+  .hp-stat-val {
+    font-family: var(--sans);
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+  }
+  .hp-stat-val.red { color: var(--accent); }
+  .hp-stat-val.amber { color: var(--accent2); }
+  .hp-stat-val.green { color: #47d4a8; }
+  .hp-stat-label {
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .hp-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+  }
+  .hp-row:last-child { border-bottom: none; }
+  .hp-row-label { color: var(--muted); }
+  .hp-row-val { color: var(--text); font-weight: 500; }
+
+  .ksi-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    border-radius: 2px;
+    font-weight: 500;
+  }
+  .ksi-critical { background: rgba(229,57,53,0.2); color: #ef5350; border: 1px solid rgba(229,57,53,0.4); }
+  .ksi-high { background: rgba(245,124,0,0.2); color: #ffa726; border: 1px solid rgba(245,124,0,0.4); }
+  .ksi-moderate { background: rgba(168,230,61,0.15); color: #c6e63d; border: 1px solid rgba(168,230,61,0.3); }
+  .ksi-low { background: rgba(71,212,168,0.15); color: #47d4a8; border: 1px solid rgba(71,212,168,0.3); }
+
+  /* Map container */
+  #map { position: relative; width: 100%; height: 100%; }
+  .maplibregl-canvas { border-radius: 0; }
+
+  /* Resolution toggle */
+  #res-toggle {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    display: flex;
+    gap: 4px;
+    z-index: 10;
+    background: rgba(10,12,16,0.9);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 4px;
+  }
+  .res-btn {
+    padding: 5px 12px;
+    font-size: 10px;
+    font-family: var(--mono);
+    letter-spacing: 0.08em;
+    background: transparent;
+    border: none;
+    border-radius: 2px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .res-btn.active {
+    background: var(--accent);
+    color: #fff;
+  }
+
+  /* Loading */
+  #loading {
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 200;
+    transition: opacity 0.5s;
+  }
+  #loading.done { opacity: 0; pointer-events: none; }
+  .spinner {
+    width: 42px; height: 42px;
+    clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+    background: var(--accent);
+    animation: spin 1.2s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">Initialising H3 Grid…</div>
+</div>
+
+<div id="app">
+  <!-- HEADER -->
+  <header id="header">
+    <div class="logo-mark"></div>
+    <div class="title-block">
+      <h1>Concord KSI Intelligence</h1>
+      <p>H3 Hexagonal Collision Density · Live Map · Contra Costa County</p>
+    </div>
+    <div class="header-stats">
+      <div class="hstat">
+        <span class="hstat-val" id="hdr-total">—</span>
+        <span class="hstat-label">Total Collisions</span>
+      </div>
+      <div class="hstat">
+        <span class="hstat-val" id="hdr-ksi" style="color:var(--accent2)">—</span>
+        <span class="hstat-label">KSI Events</span>
+      </div>
+      <div class="hstat">
+        <span class="hstat-val" id="hdr-hexes" style="color:#47d4a8">—</span>
+        <span class="hstat-label">Active Hexagons</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <!-- Legend -->
+    <div class="section">
+      <div class="section-title">KSI Density Scale</div>
+      <div class="legend-bar"></div>
+      <div class="legend-labels">
+        <span>Low</span><span>Moderate</span><span>High</span><span>Critical</span>
+      </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="section">
+      <div class="section-title">Severity Filter</div>
+      <div class="filter-group">
+        <div class="pill-group" id="severity-pills">
+          <button class="pill active" data-val="all">All</button>
+          <button class="pill" data-val="fatal">Fatal</button>
+          <button class="pill" data-val="severe">Severe Inj.</button>
+          <button class="pill" data-val="injury">Injury</button>
+          <button class="pill" data-val="pdo">PDO</button>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">Year Range</span>
+        <div class="range-row">
+          <span style="font-size:9px;color:var(--muted)">2019</span>
+          <input type="range" id="year-filter" min="2019" max="2024" value="2024" step="1"/>
+          <span style="font-size:9px;color:var(--muted)">2024</span>
+          <span class="range-val" id="year-val">All</span>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <span class="filter-label">Min. Collisions / Hex</span>
+        <div class="range-row">
+          <input type="range" id="min-filter" min="1" max="10" value="1" step="1"/>
+          <span class="range-val" id="min-val">1</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PCF breakdown -->
+    <div class="section">
+      <div class="section-title">Primary Collision Factor</div>
+      <div id="pcf-list" class="corridor-list"></div>
+    </div>
+
+    <!-- Top corridors -->
+    <div class="section">
+      <div class="section-title">Top Corridors by KSI</div>
+      <div id="corridor-list" class="corridor-list"></div>
+    </div>
+
+    <!-- Attribution note -->
+    <div class="section" style="margin-top:auto">
+      <div style="font-size:9px;color:var(--muted);line-height:1.7;letter-spacing:0.05em">
+        Synthetic data modelled on SWITRS / TIMS patterns for Concord, CA.<br>
+        Replace dataset with live TIMS export for production use.<br>
+        H3 resolution 8/9 · MapLibre GL JS · Uber H3-js
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAP -->
+  <main style="position:relative;overflow:hidden;">
+    <div id="map"></div>
+
+    <!-- Res toggle -->
+    <div id="res-toggle">
+      <button class="res-btn" data-res="8">RES 8</button>
+      <button class="res-btn active" data-res="9">RES 9</button>
+    </div>
+
+    <!-- Hover panel -->
+    <div id="hover-panel">
+      <div class="hp-header">
+        <div class="hp-hex-icon" id="hp-hex-color"></div>
+        <div>
+          <div class="hp-title" id="hp-corridor">Corridor Name</div>
+          <div class="hp-subtitle" id="hp-hex-id">H3 · ···</div>
+        </div>
+      </div>
+      <div class="hp-grid">
+        <div class="hp-stat">
+          <div class="hp-stat-val red" id="hp-count">—</div>
+          <div class="hp-stat-label">Collisions</div>
+        </div>
+        <div class="hp-stat">
+          <div class="hp-stat-val amber" id="hp-ksi">—</div>
+          <div class="hp-stat-label">KSI Events</div>
+        </div>
+        <div class="hp-stat">
+          <div class="hp-stat-val green" id="hp-ksi-rate">—</div>
+          <div class="hp-stat-label">KSI Rate %</div>
+        </div>
+        <div class="hp-stat">
+          <div class="hp-stat-val" id="hp-risk-badge" style="font-size:13px;margin-top:4px">—</div>
+          <div class="hp-stat-label">Risk Level</div>
+        </div>
+      </div>
+      <div class="hp-row">
+        <span class="hp-row-label">Primary PCF</span>
+        <span class="hp-row-val" id="hp-pcf">—</span>
+      </div>
+      <div class="hp-row">
+        <span class="hp-row-label">Fatal</span>
+        <span class="hp-row-val" id="hp-fatal">—</span>
+      </div>
+      <div class="hp-row">
+        <span class="hp-row-label">Peak Year</span>
+        <span class="hp-row-val" id="hp-year">—</span>
+      </div>
+      <div class="hp-row">
+        <span class="hp-row-label">Night-time %</span>
+        <span class="hp-row-val" id="hp-night">—</span>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+// DATA GENERATION — Concord, CA realistic synthetic
+// ══════════════════════════════════════════════
+const CONCORD = { lat: 37.9780, lon: -122.0311 };
+
+const PCF_TYPES = [
+  'Unsafe Speed', 'Improper Turn', 'DUI', 'Right-of-Way',
+  'Following Too Close', 'Improper Lane Change', 'Pedestrian Violation', 'Traffic Signals'
+];
+
+const HOTSPOTS = [
+  { lat:37.9776, lon:-122.0520, w:0.18, corridor:'Willow Pass Rd / Monument Blvd', pcf:'Improper Turn' },
+  { lat:37.9726, lon:-122.0311, w:0.14, corridor:'Concord Ave / Treat Blvd', pcf:'Right-of-Way' },
+  { lat:37.9869, lon:-122.0286, w:0.12, corridor:'Clayton Rd / Kirker Pass Rd', pcf:'Unsafe Speed' },
+  { lat:37.9644, lon:-122.0157, w:0.09, corridor:'Oak Grove Rd / Treat Blvd', pcf:'Traffic Signals' },
+  { lat:37.9980, lon:-122.0430, w:0.07, corridor:'Galindo St / Concord Blvd', pcf:'DUI' },
+  { lat:37.9750, lon:-122.0600, w:0.08, corridor:'Monument Blvd / I-680', pcf:'Improper Lane Change' },
+  { lat:37.9560, lon:-122.0500, w:0.06, corridor:'Willow Pass Rd / Bailey Rd', pcf:'Following Too Close' },
+  { lat:37.9900, lon:-122.0100, w:0.07, corridor:'Clayton Rd / Ygnacio Valley Rd', pcf:'Unsafe Speed' },
+  { lat:37.9700, lon:-122.0450, w:0.05, corridor:'Salvio St / Mt Diablo St', pcf:'Pedestrian Violation' },
+  { lat:37.9810, lon:-122.0190, w:0.06, corridor:'Ygnacio Valley Rd / Oak Grove', pcf:'Right-of-Way' },
+  { lat:37.9630, lon:-122.0350, w:0.04, corridor:'Concord Blvd / Port Chicago Hwy', pcf:'DUI' },
+  { lat:37.9940, lon:-122.0550, w:0.04, corridor:'Landana Dr / Concord Ave', pcf:'Improper Turn' },
+];
+
+function seededRand(seed) {
+  let s = seed;
+  return () => { s = (s * 16807 + 0) % 2147483647; return (s - 1) / 2147483646; };
+}
+
+function generateData(n = 1200) {
+  const rng = seededRand(42);
+  const gauss = () => {
+    let u=0,v=0;
+    while(!u) u=rng(); while(!v) v=rng();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+  };
+
+  const records = [];
+  const totalW = HOTSPOTS.reduce((a,h)=>a+h.w, 0);
+  const severities = ['fatal','severe','injury','pdo'];
+  const sevWeights = [0.03,0.09,0.26,0.62];
+
+  HOTSPOTS.forEach(hs => {
+    const count = Math.round((hs.w / totalW) * n);
+    for (let i = 0; i < count; i++) {
+      const sevR = rng();
+      let sev = 'pdo', cumW = 0;
+      for (let si = 0; si < severities.length; si++) {
+        cumW += sevWeights[si];
+        if (sevR < cumW) { sev = severities[si]; break; }
+      }
+      const year = 2019 + Math.floor(rng() * 6);
+      records.push({
+        lat: hs.lat + gauss() * 0.005,
+        lon: hs.lon + gauss() * 0.005,
+        severity: sev,
+        year,
+        pcf: rng() < 0.6 ? hs.pcf : PCF_TYPES[Math.floor(rng()*PCF_TYPES.length)],
+        corridor: hs.corridor,
+        night: rng() < 0.32,
+        fatal: sev === 'fatal',
+      });
+    }
+  });
+  return records;
+}
+
+// ══════════════════════════════════════════════
+// H3 AGGREGATION
+// ══════════════════════════════════════════════
+function aggregateToHex(records, resolution, severityFilter, yearMax, minCount) {
+  const hexMap = {};
+
+  records.forEach(r => {
+    if (severityFilter !== 'all' && r.severity !== severityFilter) return;
+    if (yearMax < 2024 && r.year > yearMax) return;
+
+    const hexId = h3.latLngToCell(r.lat, r.lon, resolution);
+    if (!hexMap[hexId]) {
+      hexMap[hexId] = {
+        count: 0, ksi: 0, fatal: 0, pcfs: {}, corridors: {}, years: {}, nights: 0
+      };
+    }
+    const h = hexMap[hexId];
+    h.count++;
+    if (r.severity === 'fatal' || r.severity === 'severe') h.ksi++;
+    if (r.fatal) h.fatal++;
+    h.pcfs[r.pcf] = (h.pcfs[r.pcf] || 0) + 1;
+    h.corridors[r.corridor] = (h.corridors[r.corridor] || 0) + 1;
+    h.years[r.year] = (h.years[r.year] || 0) + 1;
+    if (r.night) h.nights++;
+  });
+
+  return Object.entries(hexMap)
+    .filter(([,v]) => v.count >= minCount)
+    .map(([hexId, v]) => ({
+      hexId,
+      count: v.count,
+      ksi: v.ksi,
+      fatal: v.fatal,
+      ksiRate: Math.round((v.ksi / v.count) * 100),
+      topPcf: Object.entries(v.pcfs).sort((a,b)=>b[1]-a[1])[0]?.[0] || '—',
+      topCorridor: Object.entries(v.corridors).sort((a,b)=>b[1]-a[1])[0]?.[0] || '—',
+      peakYear: Object.entries(v.years).sort((a,b)=>b[1]-a[1])[0]?.[0] || '—',
+      nightPct: Math.round((v.nights / v.count) * 100),
+    }));
+}
+
+function hexToGeoJson(hexData) {
+  const features = hexData.map(d => {
+    const boundary = h3.cellToBoundary(d.hexId);
+    const coords = boundary.map(([lat, lon]) => [lon, lat]);
+    coords.push(coords[0]);
+    return {
+      type: 'Feature',
+      id: d.hexId,
+      properties: { ...d },
+      geometry: { type: 'Polygon', coordinates: [coords] }
+    };
+  });
+  return { type: 'FeatureCollection', features };
+}
+
+// ══════════════════════════════════════════════
+// COLOR SCALE — cool→hot KSI
+// ══════════════════════════════════════════════
+function ksiColor(val, max) {
+  const t = Math.min(val / Math.max(max, 1), 1);
+  const stops = [
+    [13,27,62],   // deep navy
+    [26,58,107],
+    [30,111,168],
+    [46,170,204],
+    [71,212,168], // teal
+    [168,230,61], // lime
+    [245,197,24], // amber
+    [245,124,0],  // orange
+    [229,57,53],  // red
+    [183,28,28],  // dark red
+  ];
+  const idx = t * (stops.length - 1);
+  const lo = Math.floor(idx), hi = Math.ceil(idx);
+  const f = idx - lo;
+  const c = stops[lo].map((v, i) => Math.round(v + f * (stops[hi][i] - v)));
+  return `rgb(${c[0]},${c[1]},${c[2]})`;
+}
+
+function getRiskLevel(ksiRate, ksi) {
+  if (ksi >= 6 || ksiRate >= 40) return 'critical';
+  if (ksi >= 3 || ksiRate >= 20) return 'high';
+  if (ksi >= 1 || ksiRate >= 10) return 'moderate';
+  return 'low';
+}
+
+// ══════════════════════════════════════════════
+// MAP INIT
+// ══════════════════════════════════════════════
+const ALL_RECORDS = generateData(1200);
+let currentResolution = 9;
+let currentSeverity = 'all';
+let currentYear = 2024;
+let currentMin = 1;
+let map;
+
+function updateHeaderStats(hexData) {
+  const total = ALL_RECORDS.length;
+  const ksi = ALL_RECORDS.filter(r => r.severity==='fatal'||r.severity==='severe').length;
+  document.getElementById('hdr-total').textContent = total.toLocaleString();
+  document.getElementById('hdr-ksi').textContent = ksi.toLocaleString();
+  document.getElementById('hdr-hexes').textContent = hexData.length;
+}
+
+function updateSidePcf(hexData) {
+  const pcfTotals = {};
+  hexData.forEach(d => { pcfTotals[d.topPcf] = (pcfTotals[d.topPcf]||0) + d.count; });
+  const sorted = Object.entries(pcfTotals).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const maxV = sorted[0]?.[1] || 1;
+  const el = document.getElementById('pcf-list');
+  el.innerHTML = sorted.map(([name, val]) => `
+    <div class="corridor-item">
+      <span class="corridor-name">${name}</span>
+      <span class="corridor-count">${val}</span>
+      <div class="corridor-bar-wrap">
+        <div class="corridor-bar" style="width:${(val/maxV)*100}%"></div>
+      </div>
+    </div>`).join('');
+}
+
+function updateSideCorridors(hexData) {
+  const cTotals = {};
+  hexData.forEach(d => { cTotals[d.topCorridor] = (cTotals[d.topCorridor]||0) + d.ksi; });
+  const sorted = Object.entries(cTotals).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxV = sorted[0]?.[1] || 1;
+  const el = document.getElementById('corridor-list');
+  el.innerHTML = sorted.map(([name, val]) => `
+    <div class="corridor-item">
+      <span class="corridor-name">${name}</span>
+      <span class="corridor-count">${val} KSI</span>
+      <div class="corridor-bar-wrap">
+        <div class="corridor-bar" style="width:${(val/maxV)*100}%"></div>
+      </div>
+    </div>`).join('');
+}
+
+function rebuildLayer() {
+  const hexData = aggregateToHex(ALL_RECORDS, currentResolution, currentSeverity, currentYear, currentMin);
+  const geojson = hexToGeoJson(hexData);
+  const maxKsi = Math.max(...hexData.map(d => d.ksi), 1);
+
+  // Build color expression
+  const colorExpr = ['case'];
+  hexData.forEach(d => {
+    const col = ksiColor(d.ksi, maxKsi);
+    colorExpr.push(['==', ['get', 'hexId'], d.hexId], col);
+  });
+  colorExpr.push('#0d1b3e');
+
+  const opacityExpr = ['interpolate', ['linear'], ['get', 'count'], 1, 0.5, 20, 0.85];
+
+  if (map.getSource('hexes')) {
+    map.getSource('hexes').setData(geojson);
+    map.setPaintProperty('hex-fill', 'fill-color', colorExpr);
+  } else {
+    map.addSource('hexes', { type: 'geojson', data: geojson });
+    map.addLayer({
+      id: 'hex-fill',
+      type: 'fill',
+      source: 'hexes',
+      paint: {
+        'fill-color': colorExpr,
+        'fill-opacity': opacityExpr,
+      }
+    });
+    map.addLayer({
+      id: 'hex-outline',
+      type: 'line',
+      source: 'hexes',
+      paint: {
+        'line-color': 'rgba(255,255,255,0.06)',
+        'line-width': 0.5,
+      }
+    });
+
+    // Hover interaction
+    let hoveredId = null;
+    const panel = document.getElementById('hover-panel');
+
+    map.on('mousemove', 'hex-fill', e => {
+      if (!e.features.length) return;
+      map.getCanvas().style.cursor = 'crosshair';
+      const f = e.features[0];
+      const p = f.properties;
+
+      if (hoveredId !== p.hexId) {
+        hoveredId = p.hexId;
+        map.setPaintProperty('hex-outline', 'line-color', [
+          'case',
+          ['==', ['get', 'hexId'], hoveredId],
+          'rgba(255,255,255,0.4)',
+          'rgba(255,255,255,0.06)'
+        ]);
+        map.setPaintProperty('hex-outline', 'line-width', [
+          'case', ['==', ['get', 'hexId'], hoveredId], 1.5, 0.5
+        ]);
+      }
+
+      const risk = getRiskLevel(p.ksiRate, p.ksi);
+      const riskClasses = { critical:'ksi-critical', high:'ksi-high', moderate:'ksi-moderate', low:'ksi-low' };
+      const col = ksiColor(p.ksi, maxKsi);
+
+      document.getElementById('hp-hex-color').style.background = col;
+      document.getElementById('hp-corridor').textContent = p.topCorridor;
+      document.getElementById('hp-hex-id').textContent = `H3 · ${p.hexId.slice(0,12)}…`;
+      document.getElementById('hp-count').textContent = p.count;
+      document.getElementById('hp-ksi').textContent = p.ksi;
+      document.getElementById('hp-ksi-rate').textContent = p.ksiRate + '%';
+      document.getElementById('hp-pcf').textContent = p.topPcf;
+      document.getElementById('hp-fatal').textContent = p.fatal;
+      document.getElementById('hp-year').textContent = p.peakYear;
+      document.getElementById('hp-night').textContent = p.nightPct + '%';
+
+      const badge = document.getElementById('hp-risk-badge');
+      badge.innerHTML = `<span class="ksi-badge ${riskClasses[risk]}">${risk.toUpperCase()}</span>`;
+
+      panel.classList.add('visible');
+    });
+
+    map.on('mouseleave', 'hex-fill', () => {
+      map.getCanvas().style.cursor = '';
+      hoveredId = null;
+      map.setPaintProperty('hex-outline', 'line-color', 'rgba(255,255,255,0.06)');
+      map.setPaintProperty('hex-outline', 'line-width', 0.5);
+      panel.classList.remove('visible');
+    });
+  }
+
+  updateHeaderStats(hexData);
+  updateSidePcf(hexData);
+  updateSideCorridors(hexData);
+}
+
+// ══════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════
+window.addEventListener('load', () => {
+  map = new maplibregl.Map({
+    container: 'map',
+    style: {
+      version: 8,
+      sources: {
+        'carto-dark': {
+          type: 'raster',
+          tiles: ['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'],
+          tileSize: 256,
+          attribution: '© OpenStreetMap contributors © CARTO'
+        }
+      },
+      layers: [{ id: 'bg', type: 'raster', source: 'carto-dark' }]
+    },
+    center: [CONCORD.lon, CONCORD.lat],
+    zoom: 12.5,
+    minZoom: 10,
+    maxZoom: 17,
+  });
+
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'bottom-right');
+  map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-right');
+
+  map.on('load', () => {
+    rebuildLayer();
+    document.getElementById('loading').classList.add('done');
+  });
+
+  // Resolution buttons
+  document.querySelectorAll('.res-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.res-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentResolution = parseInt(btn.dataset.res);
+      rebuildLayer();
+    });
+  });
+
+  // Severity pills
+  document.querySelectorAll('#severity-pills .pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('#severity-pills .pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      currentSeverity = pill.dataset.val;
+      rebuildLayer();
+    });
+  });
+
+  // Year range
+  const yearSlider = document.getElementById('year-filter');
+  const yearVal = document.getElementById('year-val');
+  yearSlider.addEventListener('input', () => {
+    currentYear = parseInt(yearSlider.value);
+    yearVal.textContent = currentYear === 2024 ? 'All' : `≤${currentYear}`;
+    rebuildLayer();
+  });
+
+  // Min count
+  const minSlider = document.getElementById('min-filter');
+  const minVal = document.getElementById('min-val');
+  minSlider.addEventListener('input', () => {
+    currentMin = parseInt(minSlider.value);
+    minVal.textContent = currentMin;
+    rebuildLayer();
+  });
+});
+</script>
+</body>
+</html>

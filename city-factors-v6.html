@@ -1,0 +1,1680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>City-Factors · Concord</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#070f1e;--s1:#0d1f3c;--s2:#112240;--s3:#162b4d;
+  --bd:rgba(30,51,88,1);--bdh:rgba(0,94,184,.5);
+  --acc:#005EB8;--yel:#FFC72C;--tx:#e8eef8;--mt:#7a90b0;
+  --gn:#34d399;--rd:#f87171;--pu:#a78bfa;--or:#fb923c;--tl:#22d3ee;--am:#fbbf24;
+}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-size:13px;overflow:hidden}
+.shell{display:flex;flex-direction:column;height:100vh}
+
+/* TOP BARS */
+.topbar{height:64px;background:var(--s1);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 20px;gap:0;flex-shrink:0;z-index:10}
+.topbar-2{height:52px;background:var(--s1);border-bottom:1px solid var(--bd);display:flex;align-items:center;padding:0 16px;gap:8px;flex-shrink:0;z-index:10}
+.logo-block{display:flex;align-items:center;gap:10px;margin-right:12px}
+.hamburger{display:flex;flex-direction:column;gap:4px;cursor:pointer;padding:4px}
+.hamburger span{width:18px;height:2px;background:var(--mt);border-radius:1px;display:block}
+.logo-img{width:52px;height:28px;background:linear-gradient(135deg,var(--yel),#e6a800);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;color:#070f1e;letter-spacing:.05em}
+.topbar-div{width:1px;height:22px;background:var(--bd);margin:0 14px}
+.crumb{display:flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--mt)}
+.crumb-sep{color:var(--bd)}
+.crumb-active{color:var(--yel)}
+.live-badge{display:flex;align-items:center;gap:5px;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.2);border-radius:4px;padding:3px 9px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--gn);margin-left:14px}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--gn);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.view-toggle{margin-left:auto;display:flex;align-items:center;background:var(--bg);border:1px solid var(--bd);border-radius:6px;overflow:hidden}
+.vt-btn{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;padding:7px 14px;cursor:pointer;border:none;background:transparent;color:var(--mt);transition:all .18s;display:flex;align-items:center;gap:6px}
+.vt-btn svg{width:13px;height:13px;flex-shrink:0;opacity:.6}
+.vt-btn.active{background:var(--acc);color:#fff}
+.vt-btn.active svg{opacity:1}
+.vt-sep{width:1px;background:var(--bd);align-self:stretch}
+.role-badge{display:flex;align-items:center;gap:7px;background:var(--s2);border:1px solid var(--bd);border-radius:5px;padding:6px 12px;font-size:11px;color:var(--mt);margin-left:12px}
+.role-dot{width:22px;height:22px;border-radius:50%;background:var(--acc);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:600;color:#fff}
+.filter-bar{display:flex;align-items:center;gap:8px;flex:1}
+.filter-btn{display:flex;align-items:center;gap:6px;background:var(--s2);border:1px solid var(--bd);border-radius:5px;padding:7px 12px;font-size:11px;color:var(--mt);cursor:pointer;white-space:nowrap}
+.filter-btn svg{width:12px;height:12px;opacity:.5}
+
+/* BODY */
+.body{display:flex;flex:1;overflow:hidden;position:relative}
+
+/* MAP */
+.map-panel{flex:0 0 53%;background:#0a1828;position:relative;overflow:hidden;transition:flex .35s cubic-bezier(.16,1,.3,1)}
+.map-bg{position:absolute;inset:0;background:radial-gradient(ellipse 70% 60% at 35% 40%,rgba(0,94,184,.07),transparent 65%),radial-gradient(ellipse 50% 50% at 70% 70%,rgba(34,211,238,.04),transparent 60%),#0a1828}
+.map-roads{position:absolute;inset:0;opacity:.5}
+.map-roads svg{width:100%;height:100%}
+.map-label{position:absolute;font-family:'IBM Plex Mono',monospace;font-size:10px;color:rgba(168,188,220,.5);letter-spacing:.06em;pointer-events:none}
+.city-boundary{position:absolute;top:8%;left:12%;right:5%;bottom:15%;border:1.5px dashed rgba(0,94,184,.35);border-radius:50% 45% 55% 40%;pointer-events:none}
+.crash-dot{position:absolute;border-radius:50%;pointer-events:none;transition:all .3s}
+.map-controls{position:absolute;bottom:14px;left:14px;display:flex;align-items:center;gap:10px}
+.map-toggle-item{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--mt)}
+.map-toggle-dot{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--mt)}
+.map-toggle-dot.active{background:var(--mt)}
+
+/* map project markers (shown on "show on map") */
+.map-marker{position:absolute;pointer-events:none;z-index:5;transform:translate(-50%,-50%)}
+.map-marker-dot{width:14px;height:14px;border-radius:50%;border:2.5px solid #fff;animation:markerPulse 1.4s ease infinite}
+.map-marker-ring{position:absolute;top:50%;left:50%;width:28px;height:28px;border-radius:50%;transform:translate(-50%,-50%);animation:markerRing 1.4s ease infinite;border:2px solid}
+.map-marker-label{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(100% + 8px);white-space:nowrap;font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px 7px;border-radius:4px;font-weight:500}
+@keyframes markerPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+@keyframes markerRing{0%{opacity:.6;transform:translate(-50%,-50%) scale(.7)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.8)}}
+
+/* map overlay banner (when showing project) */
+.map-project-banner{position:absolute;top:14px;left:50%;transform:translateX(-50%);background:rgba(7,15,30,.9);border:1px solid var(--bdh);border-radius:8px;padding:8px 14px;display:flex;align-items:center;gap:10px;z-index:6;backdrop-filter:blur(8px);max-width:90%;transition:opacity .25s}
+.map-project-banner.hidden{opacity:0;pointer-events:none}
+.mpb-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.mpb-name{font-size:11px;font-weight:500;color:var(--tx)}
+.mpb-meta{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mt)}
+.mpb-close{margin-left:8px;color:var(--mt);cursor:pointer;font-size:14px;line-height:1}
+
+/* PANELS */
+.panels{display:flex;flex:1;overflow:hidden;transition:all .35s cubic-bezier(.16,1,.3,1)}
+
+/* COLLISION PANEL */
+.collision-panel{width:502px;flex-shrink:0;background:var(--s2);border-left:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .25s,width .35s}
+.collision-panel.hidden{transform:translateX(-20px);opacity:0;pointer-events:none;width:0}
+.panel-header{padding:18px 20px 14px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.panel-hdr-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.panel-title{font-size:13px;font-weight:600;color:var(--tx);display:flex;align-items:center;gap:8px}
+.panel-dot{width:8px;height:8px;border-radius:50%;background:var(--gn);animation:pulse 2s ease infinite}
+.high-risk{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:var(--rd);font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 7px;border-radius:3px;letter-spacing:.05em}
+.close-btn{color:var(--mt);cursor:pointer;font-size:16px;line-height:1;opacity:.6}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 8px;border-radius:3px;background:var(--s1);border:1px solid var(--bd);color:var(--mt)}
+.risk-banner{margin:14px 20px;background:var(--s3);border:1px solid var(--bd);border-radius:8px;padding:14px 16px;display:flex;align-items:flex-start;justify-content:space-between}
+.risk-label{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--mt);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.risk-score{font-size:22px;font-weight:700;color:var(--tx);letter-spacing:-.02em;line-height:1}
+.risk-num{font-size:12px;color:var(--mt);margin-top:3px}
+.risk-sub{font-size:9px;color:var(--mt)}
+.risk-badges{display:flex;gap:6px;margin-bottom:8px}
+.rbadge{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px 8px;border-radius:3px}
+.rbadge-warn{background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.25);color:var(--am)}
+.rbadge-ksi{background:rgba(241,68,68,.1);border:1px solid rgba(241,68,68,.25);color:var(--rd)}
+.risk-right{text-align:right}
+.risk-corridor-lbl{font-size:9px;color:var(--mt);margin-bottom:2px}
+.risk-corridor{font-size:13px;font-weight:600;color:var(--yel)}
+.risk-fatalities{font-size:9px;color:var(--mt);margin-top:2px}
+.tab-bar{display:flex;border-bottom:1px solid var(--bd);padding:0 20px;flex-shrink:0}
+.tab{font-size:11px;color:var(--mt);padding:9px 12px;cursor:pointer;border-bottom:2px solid transparent;transition:.15s;white-space:nowrap}
+.tab.on{color:var(--tx);border-bottom-color:var(--acc)}
+.panel-scroll{flex:1;overflow-y:auto;padding:0 0 20px}
+.panel-scroll::-webkit-scrollbar{width:4px}
+.panel-scroll::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
+.data-card{margin:14px 20px 0;background:var(--s1);border:1px solid var(--bd);border-radius:8px;overflow:hidden}
+.data-card-hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--bd)}
+.data-card-title{font-size:11px;font-weight:500;color:var(--tx)}
+.data-card-link{font-size:10px;color:var(--acc);cursor:pointer;font-family:'IBM Plex Mono',monospace}
+.data-card-body{padding:12px 14px}
+.or-row{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.or-label{font-size:10px;color:var(--tx);width:140px;flex-shrink:0;line-height:1.3}
+.or-track{flex:1;height:5px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden}
+.or-fill{height:100%;border-radius:2px}
+.or-val{font-family:'IBM Plex Mono',monospace;font-size:10px;min-width:36px;text-align:right}
+.or-note{font-size:9px;color:var(--mt);line-height:1.5;margin-top:4px;padding:6px 8px;background:rgba(255,255,255,.03);border-radius:4px}
+.arch-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(30,51,88,.6)}
+.arch-row:last-child{border-bottom:none}
+.arch-icon{width:32px;height:32px;border-radius:6px;background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.arch-body{flex:1}
+.arch-name{font-size:11px;font-weight:500;color:var(--tx);margin-bottom:2px}
+.arch-desc{font-size:10px;color:var(--mt);margin-bottom:3px}
+.arch-locs{font-size:9px;color:var(--mt);margin-bottom:4px;font-family:'IBM Plex Mono',monospace}
+.arch-tag{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:8.5px;padding:1px 6px;border-radius:3px;background:rgba(0,94,184,.12);border:1px solid rgba(0,94,184,.2);color:var(--acc)}
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-label{font-size:10px;color:var(--tx);width:120px;flex-shrink:0}
+.bar-track{flex:1;height:5px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden}
+.bar-fill{height:100%;border-radius:2px}
+.bar-val{font-family:'IBM Plex Mono',monospace;font-size:10px;min-width:44px;text-align:right}
+.wif-cta{margin:14px 20px 0;background:rgba(0,94,184,.08);border:1px solid rgba(0,94,184,.2);border-radius:7px;padding:12px 16px;text-align:center;font-size:11px;color:var(--acc);cursor:pointer}
+
+/* AI PANEL */
+.ai-panel{flex:1;background:var(--s1);border-left:1px solid var(--bd);display:flex;flex-direction:column;min-width:0;transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .25s,width .35s}
+.ai-panel.hidden{transform:translateX(-20px);opacity:0;pointer-events:none;width:0;flex:0}
+.ai-header{padding:18px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.ai-title{font-size:13px;font-weight:500;color:var(--tx)}
+.ai-badge{background:rgba(0,94,184,.15);border:1px solid rgba(0,94,184,.25);border-radius:4px;padding:3px 8px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--acc)}
+.ai-body{flex:1;padding:16px 20px;overflow-y:auto}
+.ai-message{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:14px;font-size:12px;color:var(--mt);line-height:1.7}
+.ai-message b{color:var(--tx);font-weight:500}
+.ai-input-bar{padding:12px 16px;border-top:1px solid var(--bd);display:flex;gap:8px;flex-shrink:0}
+.ai-input{flex:1;background:var(--s2);border:1px solid var(--bd);border-radius:6px;padding:8px 12px;font-size:12px;color:var(--tx);outline:none;font-family:'Inter',sans-serif}
+.ai-input:focus{border-color:var(--acc)}
+.ai-input::placeholder{color:var(--mt)}
+.ai-send{background:var(--acc);border:none;border-radius:6px;padding:8px 14px;color:#fff;font-size:12px;cursor:pointer}
+
+/* ═══════════════════════════════════
+   GRANT PANEL
+═══════════════════════════════════ */
+.grant-panel{position:absolute;top:0;right:0;bottom:0;width:47%;background:var(--s2);border-left:1px solid var(--bd);display:flex;flex-direction:column;overflow:hidden;transform:translateX(100%);opacity:0;transition:transform .35s cubic-bezier(.16,1,.3,1),opacity .25s;z-index:5}
+.grant-panel.visible{transform:translateX(0);opacity:1}
+.grant-header{padding:16px 20px 12px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.grant-hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.grant-eyebrow{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--mt);letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.grant-title{font-size:15px;font-weight:600;color:var(--tx);display:flex;align-items:center;gap:8px}
+.grant-badge{background:linear-gradient(120deg,var(--acc),#7c3aed);color:#fff;font-family:'IBM Plex Mono',monospace;font-size:8.5px;padding:3px 9px;border-radius:3px;letter-spacing:.06em;text-transform:uppercase}
+.grant-close{color:var(--mt);cursor:pointer;font-size:16px;opacity:.6;line-height:1}
+.grant-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:12px 20px;border-bottom:1px solid var(--bd);flex-shrink:0}
+.gkpi{background:var(--s1);border:1px solid var(--bd);border-radius:7px;padding:10px 11px;position:relative;overflow:hidden}
+.gkpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--acc))}
+.gkpi-lbl{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mt);letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px}
+.gkpi-val{font-size:17px;font-weight:700;color:var(--tx);line-height:1}
+.gkpi-sub{font-size:9px;color:var(--mt);margin-top:2px}
+.grant-tabs{display:flex;border-bottom:1px solid var(--bd);padding:0 20px;flex-shrink:0;overflow-x:auto}
+.grant-tabs::-webkit-scrollbar{display:none}
+.gtab{font-size:10.5px;color:var(--mt);padding:8px 11px;cursor:pointer;border-bottom:2px solid transparent;transition:.15s;white-space:nowrap;font-family:'IBM Plex Mono',monospace;letter-spacing:.03em}
+.gtab.on{color:var(--tx);border-bottom-color:var(--acc)}
+.grant-scroll{flex:1;overflow-y:auto;padding:0 0 20px;display:flex;flex-direction:column}
+.grant-scroll::-webkit-scrollbar{width:4px}
+.grant-scroll::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
+#gpane-sim{flex:1;overflow:hidden;padding:0 !important}
+.gsec{display:flex;align-items:center;gap:8px;padding:14px 20px 8px}
+.gsec-label{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--mt);letter-spacing:.09em;text-transform:uppercase;white-space:nowrap}
+.gsec-line{flex:1;height:1px;background:var(--bd)}
+.gsec-meta{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:rgba(30,51,88,.9);white-space:nowrap}
+.gcard{margin:0 20px 10px;background:var(--s1);border:1px solid var(--bd);border-radius:9px;overflow:hidden}
+.gcard-body{padding:6px 13px}
+.grant-pane{display:none}
+.grant-pane.on{display:block}
+
+/* ═══════════════════════════════════
+   FUNDED PROJECT ROW
+═══════════════════════════════════ */
+.proj-row{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid rgba(30,51,88,.5);transition:background .15s}
+.proj-row:last-child{border-bottom:none}
+.proj-row:hover{background:rgba(0,94,184,.05);border-radius:6px;padding-left:6px;padding-right:6px;margin:0 -6px}
+.proj-cycle{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mt);min-width:22px;flex-shrink:0}
+.proj-body{flex:1;min-width:0}
+.proj-name{font-size:11px;font-weight:500;color:var(--tx);margin-bottom:2px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.proj-meta{font-size:9px;color:var(--mt);font-family:'IBM Plex Mono',monospace}
+.proj-amount{font-size:12px;font-weight:600;color:var(--gn);white-space:nowrap;flex-shrink:0}
+.proj-actions{display:flex;align-items:center;gap:5px;flex-shrink:0;margin-left:6px}
+.proj-btn{display:flex;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px 7px;border-radius:4px;border:1px solid;cursor:pointer;white-space:nowrap;transition:all .15s;background:transparent}
+.proj-btn-map{color:var(--tl);border-color:rgba(34,211,238,.25)}
+.proj-btn-map:hover{background:rgba(34,211,238,.1)}
+.proj-btn-detail{color:var(--am);border-color:rgba(251,191,36,.25)}
+.proj-btn-detail:hover{background:rgba(251,191,36,.1)}
+.proj-btn svg{width:10px;height:10px;flex-shrink:0}
+
+/* Rec cards */
+.rec-card{margin:0 20px 10px;background:var(--s1);border:1px solid var(--bd);border-radius:9px;overflow:hidden;transition:.18s}
+.rec-card:hover{border-color:var(--bdh)}
+.rec-top{display:flex;align-items:stretch}
+.rec-rank{width:52px;background:rgba(0,0,0,.25);border-right:1px solid var(--bd);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;flex-shrink:0;padding:10px 4px}
+.rec-rank-n{font-size:18px;font-weight:700;line-height:1}
+.rec-rank-l{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--mt);letter-spacing:.07em;text-transform:uppercase}
+.rec-body{flex:1;padding:11px 14px}
+.rec-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px}
+.rec-title{font-size:12px;font-weight:600;color:var(--tx);line-height:1.3;flex:1}
+.rec-amount{text-align:right;flex-shrink:0}
+.rec-amt-val{font-size:13px;font-weight:700;white-space:nowrap}
+.rec-amt-lbl{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mt)}
+.rec-tags{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.rec-tag{font-family:'IBM Plex Mono',monospace;font-size:8px;padding:2px 6px;border-radius:3px;border:1px solid}
+.rec-rat{font-size:10px;color:var(--mt);line-height:1.5;margin-bottom:6px}
+.rec-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
+.rec-chip{background:rgba(251,191,36,.07);border:1px solid rgba(251,191,36,.18);border-radius:4px;padding:3px 8px;font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--am);display:flex;align-items:center;gap:5px}
+.rec-chip-n{font-size:12px;font-weight:700;color:var(--am)}
+.rec-footer{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:rgba(0,0,0,.2);border-top:1px solid var(--bd)}
+.win-row{display:flex;align-items:center;gap:6px}
+.win-lbl{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mt);letter-spacing:.06em;text-transform:uppercase}
+.win-track{width:80px;height:4px;background:rgba(255,255,255,.05);border-radius:2px;overflow:hidden}
+.win-fill{height:100%;border-radius:2px}
+.win-pct{font-size:11px;font-weight:600}
+.rec-prec{font-size:8.5px;color:var(--mt);font-family:'IBM Plex Mono',monospace}
+
+/* gap cards */
+.gap-card{margin:0 20px 10px;background:var(--s1);border:1px solid var(--bd);border-radius:9px;padding:13px;position:relative;overflow:hidden}
+.gap-card.gap-st{border-color:rgba(248,113,113,.3)}
+.gap-card.gap-st::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--rd)}
+.gap-card.par-st{border-color:rgba(251,191,36,.28)}
+.gap-card.par-st::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--am)}
+.gap-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:8px}
+.gap-status{font-family:'IBM Plex Mono',monospace;font-size:8.5px;display:flex;align-items:center;gap:4px}
+.gap-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.gap-name{font-size:12px;font-weight:600;color:var(--tx);margin-bottom:4px}
+.gap-note{font-size:10px;color:var(--mt);line-height:1.5;margin-bottom:8px}
+.gap-evidence{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.15);border-radius:5px;padding:7px 9px}
+.gap-ev-lbl{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--am);letter-spacing:.09em;text-transform:uppercase;margin-bottom:5px}
+.gap-ev-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px}
+.gap-ev-item{font-size:9px;color:var(--mt)}
+.gap-ev-item b{color:var(--tx);font-weight:600}
+.gap-ev-item.fatal b{color:var(--rd)}
+.gap-lu{font-family:'IBM Plex Mono',monospace;font-size:8px;color:rgba(30,51,88,.9);margin-top:7px}
+
+/* STATUS BAR */
+.status-bar{height:40px;background:var(--s1);border-top:1px solid var(--bd);display:flex;align-items:center;padding:0 16px;flex-shrink:0}
+.sb-toggles{display:flex;align-items:center;gap:16px}
+.sb-toggle{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--mt)}
+.sb-dot{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--mt)}
+.sb-dot.active{background:var(--mt)}
+.sb-legend{margin-left:auto;display:flex;align-items:center;gap:14px}
+.sb-leg-item{display:flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mt)}
+.sb-leg-dot{width:8px;height:8px;border-radius:50%}
+
+/* ═══════════════════════════════════════════
+   PROJECT DETAIL MODAL
+═══════════════════════════════════════════ */
+.modal-overlay{position:fixed;inset:0;background:rgba(7,15,30,.8);backdrop-filter:blur(10px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--s1);border:1px solid var(--bd);border-radius:16px;width:860px;max-width:95vw;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;transform:translateY(16px) scale(.98);transition:transform .28s cubic-bezier(.16,1,.3,1)}
+.modal-overlay.open .modal{transform:none}
+
+/* modal header */
+.modal-hdr{padding:20px 24px 16px;border-bottom:1px solid var(--bd);flex-shrink:0;display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
+.modal-hdr-left{flex:1;min-width:0}
+.modal-eyebrow{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.modal-cycle-badge{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:3px 9px;border-radius:4px;font-weight:500}
+.modal-cat-badge{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:3px 9px;border-radius:4px;border:1px solid}
+.modal-title{font-size:17px;font-weight:600;color:var(--tx);line-height:1.3;margin-bottom:8px}
+.modal-meta-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.modal-meta-item{display:flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--mt)}
+.modal-meta-val{color:var(--tx);font-weight:500}
+.modal-close{width:32px;height:32px;border-radius:50%;background:var(--s2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--mt);font-size:18px;line-height:1;flex-shrink:0;transition:.15s}
+.modal-close:hover{background:var(--s3);color:var(--tx)}
+
+/* modal body */
+.modal-body{flex:1;overflow-y:auto;padding:0}
+.modal-body::-webkit-scrollbar{width:5px}
+.modal-body::-webkit-scrollbar-thumb{background:var(--s3);border-radius:3px}
+
+/* modal kpi strip */
+.modal-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:20px 24px;border-bottom:1px solid var(--bd)}
+.mkpi{background:var(--s2);border:1px solid var(--bd);border-radius:8px;padding:12px 14px;position:relative;overflow:hidden}
+.mkpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--acc))}
+.mkpi-lbl{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mt);letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px}
+.mkpi-val{font-size:20px;font-weight:700;color:var(--tx);line-height:1}
+.mkpi-sub{font-size:9px;color:var(--mt);margin-top:3px}
+
+/* before/after section */
+.modal-ba{padding:20px 24px;border-bottom:1px solid var(--bd)}
+.modal-ba-title{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mt);letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.modal-ba-title::after{content:'';flex:1;height:1px;background:var(--bd)}
+.ba-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:0;align-items:stretch}
+.ba-col{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:16px;overflow:hidden;position:relative}
+.ba-col.before{border-color:rgba(248,113,113,.25)}
+.ba-col.before::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--rd)}
+.ba-col.after{border-color:rgba(52,211,153,.25)}
+.ba-col.after::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--gn)}
+.ba-header{display:flex;align-items:center;gap:7px;margin-bottom:14px}
+.ba-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ba-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:.09em;text-transform:uppercase;font-weight:500}
+.ba-period{font-size:9px;color:var(--mt);margin-left:auto;font-family:'IBM Plex Mono',monospace}
+.ba-stat{margin-bottom:11px}
+.ba-stat:last-child{margin-bottom:0}
+.ba-stat-label{font-size:9px;color:var(--mt);margin-bottom:3px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.05em}
+.ba-stat-val{font-size:18px;font-weight:700;line-height:1}
+.ba-stat-sub{font-size:9px;color:var(--mt);margin-top:2px}
+.ba-divider{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 12px;gap:6px}
+.ba-arrow{width:36px;height:36px;border-radius:50%;background:rgba(0,94,184,.15);border:1px solid var(--bdh);display:flex;align-items:center;justify-content:center;color:var(--acc);font-size:16px}
+.ba-change-pills{display:flex;flex-direction:column;gap:5px}
+.ba-pill{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px 8px;border-radius:4px;white-space:nowrap;text-align:center;font-weight:500}
+.ba-pill-good{background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.25);color:var(--gn)}
+.ba-pill-bad{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.25);color:var(--rd)}
+
+/* countermeasure list */
+.modal-cms{padding:20px 24px;border-bottom:1px solid var(--bd)}
+.modal-cms-title{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mt);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.modal-cms-title::after{content:'';flex:1;height:1px;background:var(--bd)}
+.cm-tags{display:flex;flex-wrap:wrap;gap:6px}
+.cm-tag{font-family:'IBM Plex Mono',monospace;font-size:10px;padding:4px 10px;border-radius:5px;background:rgba(0,94,184,.1);border:1px solid rgba(0,94,184,.22);color:#8ab8fc;line-height:1.4}
+
+/* project description */
+.modal-desc{padding:20px 24px;border-bottom:1px solid var(--bd)}
+.modal-desc-title{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mt);letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+.modal-desc-title::after{content:'';flex:1;height:1px;background:var(--bd)}
+.modal-desc-text{font-size:12px;color:var(--mt);line-height:1.7}
+.modal-desc-text b{color:var(--tx);font-weight:500}
+
+/* note / insight box */
+.modal-note{margin:0 24px 20px;background:rgba(0,94,184,.07);border:1px solid rgba(0,94,184,.18);border-radius:8px;padding:12px 14px}
+.modal-note-lbl{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--acc);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}
+.modal-note-text{font-size:11px;color:var(--mt);line-height:1.6}
+
+/* modal footer */
+.modal-footer{padding:16px 24px;border-top:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:var(--bg)}
+.modal-footer-left{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mt)}
+.modal-footer-btns{display:flex;gap:8px}
+.mf-btn{display:flex;align-items:center;gap:6px;font-size:11px;font-weight:500;padding:8px 16px;border-radius:7px;cursor:pointer;border:none;transition:.15s}
+.mf-btn-secondary{background:var(--s2);border:1px solid var(--bd);color:var(--mt)}
+.mf-btn-secondary:hover{color:var(--tx);border-color:var(--bdh)}
+.mf-btn-primary{background:var(--acc);color:#fff}
+.mf-btn-primary:hover{background:#0071e3}
+.mf-btn svg{width:13px;height:13px}
+
+/* ── WHAT-IF SIMULATOR ── */
+.gtab-sim{color:var(--tl)}
+.gtab-sim.on{border-bottom-color:var(--tl) !important;color:var(--tl)}
+
+/* sim-shell is now just the right CM panel — full height */
+.sim-shell{display:flex;flex-direction:column;height:100%;overflow:hidden}
+.sim-right{display:flex;flex-direction:column;overflow:hidden;flex:1}
+
+/* ── OUTCOME OVERLAY (floats over the map, left side) ── */
+.sim-outcome-overlay{
+  position:absolute;top:0;left:0;bottom:0;width:310px;
+  background:rgba(7,15,30,.88);backdrop-filter:blur(12px);
+  border-right:1px solid var(--bd);
+  display:flex;flex-direction:column;gap:0;
+  padding:0;overflow-y:auto;overflow-x:hidden;
+  z-index:20;
+  transform:translateX(-100%);opacity:0;
+  transition:transform .3s cubic-bezier(.16,1,.3,1),opacity .22s;
+  pointer-events:none;
+}
+.sim-outcome-overlay.visible{
+  transform:translateX(0);opacity:1;pointer-events:all;
+}
+.sim-outcome-overlay::-webkit-scrollbar{width:3px}
+.sim-outcome-overlay::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
+
+/* Outcome overlay inner */
+.sim-ov-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px 8px;border-bottom:1px solid var(--bd);flex-shrink:0;
+}
+.sim-ov-label{
+  display:flex;align-items:center;gap:5px;
+  font-family:'IBM Plex Mono',monospace;font-size:9px;
+  color:var(--gn);letter-spacing:.1em;text-transform:uppercase;
+}
+.sim-ov-ksi-sel{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mt)}
+.sim-ov-body{display:flex;flex-direction:column;gap:8px;padding:10px 12px;flex:1}
+.sim-apply-btn{
+  margin:0 12px 12px;background:var(--yel);border:none;border-radius:7px;
+  padding:10px 12px;color:#070f1e;font-size:11px;font-weight:600;
+  cursor:pointer;font-family:'Inter',sans-serif;transition:all .18s;
+  display:flex;align-items:center;justify-content:center;gap:7px;flex-shrink:0;
+}
+.sim-apply-btn:hover{background:#e6a800}
+.sim-gen-btn-ov{
+  margin:0 12px 12px;background:rgba(0,94,184,.12);border:1px solid rgba(0,94,184,.28);border-radius:7px;
+  padding:9px 12px;color:var(--acc);font-size:11px;font-weight:500;
+  cursor:pointer;font-family:'Inter',sans-serif;transition:all .18s;
+  display:flex;align-items:center;justify-content:center;gap:7px;flex-shrink:0;
+  opacity:.4;pointer-events:none;
+}
+.sim-gen-btn-ov.ready{opacity:1;pointer-events:all}
+.sim-gen-btn-ov.ready:hover{background:rgba(0,94,184,.2)}
+.sim-section-label{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mt);letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:5px}
+.sim-card{background:var(--s1);border:1px solid var(--bd);border-radius:7px;padding:9px 10px}
+.sim-card-accent{position:relative;overflow:hidden;text-align:center}
+.sim-card-accent::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--gn)}
+.sim-big-pct{font-size:30px;font-weight:700;color:var(--gn);line-height:1;letter-spacing:-.02em;transition:color .3s}
+.sim-small-lbl{font-size:9px;color:var(--mt)}
+.sim-mono-xs{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mt);letter-spacing:.04em;text-transform:uppercase}
+.sim-mono-sm{font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--mt)}
+.sim-stat-num{font-size:18px;font-weight:700;line-height:1.1;margin-top:2px;transition:color .3s}
+.sim-stat-sm{font-size:13px;font-weight:700;margin-top:2px;color:var(--tx);transition:all .3s}
+.sim-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.sim-track{height:5px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;margin-bottom:3px}
+.sim-track-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--gn),#00d9c0);transition:width .5s cubic-bezier(.16,1,.3,1)}
+.sim-benefit-tag{font-family:'IBM Plex Mono',monospace;font-size:8px;padding:4px 8px;border-radius:4px;background:rgba(0,217,192,.08);border:1px solid rgba(0,217,192,.2);color:var(--tl);letter-spacing:.04em;transition:all .3s}
+.sim-note-box{display:flex;align-items:flex-start;gap:5px;background:rgba(251,191,36,.05);border:1px solid rgba(251,191,36,.14);border-radius:5px;padding:6px 8px}
+.sim-gen-btn{background:var(--yel);border:none;border-radius:7px;padding:10px 12px;color:#070f1e;font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:all .18s;width:100%;margin-top:auto;flex-shrink:0;display:flex;align-items:center;justify-content:center;gap:7px;opacity:.4;pointer-events:none}
+.sim-gen-btn.ready{opacity:1;pointer-events:all}
+.sim-gen-btn.ready:hover{background:#e6a800}
+
+/* ── GRANT MODAL ── */
+.grant-doc-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.75);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;padding:20px}
+.grant-doc-overlay.open{display:flex}
+.grant-doc-modal{background:var(--s2);border:1px solid var(--bdh);border-radius:14px;width:100%;max-width:700px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.7),0 0 40px rgba(0,94,184,.1)}
+.gm-hdr{display:flex;align-items:flex-start;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--bd);flex-shrink:0;gap:16px}
+.gm-hdr-left{flex:1;min-width:0}
+.gm-tag-pill{font-family:'IBM Plex Mono',monospace;font-size:8.5px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--acc);background:rgba(0,94,184,.12);border:1px solid rgba(0,94,184,.25);padding:3px 9px;border-radius:4px;display:inline-block;margin-bottom:6px}
+.gm-doc-title{font-size:15px;font-weight:600;color:var(--tx);letter-spacing:-.02em;margin-bottom:3px}
+.gm-doc-meta{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--mt);display:flex;gap:10px;flex-wrap:wrap}
+.gm-actions{display:flex;gap:7px;align-items:center;flex-shrink:0}
+.gm-btn{height:32px;padding:0 12px;border-radius:7px;font-family:'IBM Plex Mono',monospace;font-size:9.5px;font-weight:500;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;letter-spacing:.03em;border:1px solid}
+.gm-btn-close{background:rgba(255,255,255,.04);border-color:var(--bd);color:var(--mt)}
+.gm-btn-close:hover{background:rgba(255,255,255,.08);color:var(--tx)}
+.gm-btn-print{background:rgba(0,94,184,.12);border-color:rgba(0,94,184,.3);color:var(--acc)}
+.gm-btn-print:hover{background:rgba(0,94,184,.22)}
+.gm-body{overflow-y:auto;padding:20px 22px;flex:1}
+.gm-body::-webkit-scrollbar{width:4px}
+.gm-body::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
+
+/* Grant document sections */
+.doc-sec{margin-bottom:22px}
+.doc-sec-hdr{display:flex;align-items:center;gap:10px;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bd)}
+.doc-num{font-family:'IBM Plex Mono',monospace;font-size:9px;font-weight:500;color:var(--acc);background:rgba(0,94,184,.1);border:1px solid rgba(0,94,184,.22);padding:2px 7px;border-radius:4px;letter-spacing:.04em}
+.doc-ttl{font-size:12px;font-weight:600;color:var(--tx)}
+.doc-text{font-size:11.5px;color:var(--mt);line-height:1.7}
+.doc-text strong{color:var(--tx);font-weight:500}
+.doc-callout{background:var(--s3);border:1px solid var(--bd);border-left:3px solid var(--acc);border-radius:6px;padding:9px 13px;font-size:11px;color:var(--mt);line-height:1.6;margin-top:8px}
+.doc-callout strong{color:var(--tx)}
+.doc-table{width:100%;border-collapse:collapse;font-size:11px;margin-top:6px}
+.doc-table th{font-family:'IBM Plex Mono',monospace;font-size:8px;text-transform:uppercase;letter-spacing:.06em;color:var(--mt);padding:6px 9px;background:var(--s3);border-bottom:1px solid var(--bd);text-align:left}
+.doc-table td{padding:6px 9px;color:var(--mt);border-bottom:1px solid rgba(30,51,88,.4);font-size:11px}
+.doc-table tr:last-child td{border-bottom:none}
+.doc-table tr:hover td{background:rgba(0,94,184,.05)}
+.td-bold{font-weight:600;color:var(--tx) !important}
+.td-mono{font-family:'IBM Plex Mono',monospace;font-size:9.5px}
+.cpill{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;padding:1px 5px;border-radius:3px;margin:1px}
+
+
+.sim-prog-btn{font-family:'IBM Plex Mono',monospace;font-size:8.5px;padding:3px 8px;border-radius:4px;border:1px solid var(--bd);background:transparent;color:var(--mt);cursor:pointer;transition:all .15s}
+.sim-prog-btn.active{background:var(--acc);border-color:var(--acc);color:#fff}
+.sim-prog-btn:hover:not(.active){border-color:var(--bdh);color:var(--tx)}
+
+.sim-cm-hdr{display:flex;align-items:center;justify-content:space-between;padding:8px 13px;border-bottom:1px solid var(--bd);flex-shrink:0;gap:8px}
+.sim-cm-scroll{flex:1;overflow-y:auto}
+.sim-cm-scroll::-webkit-scrollbar{width:3px}
+.sim-cm-scroll::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
+
+.cm-row{display:flex;align-items:center;gap:9px;padding:8px 13px;border-bottom:1px solid rgba(30,51,88,.4);cursor:pointer;transition:background .12s}
+.cm-row:last-child{border-bottom:none}
+.cm-row:hover{background:rgba(0,94,184,.06)}
+.cm-toggle{width:26px;height:15px;border-radius:8px;border:1px solid var(--bd);background:var(--bg);position:relative;flex-shrink:0;transition:all .18s}
+.cm-toggle.on{background:var(--acc);border-color:var(--acc)}
+.cm-toggle::after{content:'';position:absolute;top:2px;left:2px;width:9px;height:9px;border-radius:50%;background:#fff;transition:transform .18s}
+.cm-toggle.on::after{transform:translateX(11px)}
+.cm-row-body{flex:1;min-width:0}
+.cm-row-name{font-size:11px;font-weight:500;color:var(--mt);line-height:1.25;transition:color .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cm-row.cm-on .cm-row-name{color:var(--tx)}
+.cm-row-meta{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mt);margin-top:1px}
+.cm-ksi-badge{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:2px 7px;border-radius:4px;flex-shrink:0;font-weight:500;min-width:34px;text-align:center;transition:all .18s}
+.cm-ksi-on{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.25);color:var(--gn)}
+.cm-ksi-off{background:rgba(30,51,88,.5);border:1px solid var(--bd);color:var(--mt)}
+
+.cm-row-detail{display:none;margin-top:5px;padding-top:5px;border-top:1px solid rgba(30,51,88,.5)}
+.cm-row-detail.show{display:block}
+.cm-detail-row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:3px}
+.cm-detail-row:last-child{margin-bottom:0}
+.cm-detail-row span:first-child{font-family:'IBM Plex Mono',monospace;font-size:7.5px;color:var(--mt);text-transform:uppercase;letter-spacing:.06em;flex-shrink:0}
+.cm-detail-row span:last-child{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--tx);text-align:right;line-height:1.3}
+
+/* cpill colors matching tms-dark cluster palette */
+.cp-a{background:rgba(248,113,113,.1);color:var(--rd)}
+.cp-b{background:rgba(52,211,153,.1);color:var(--gn)}
+.cp-c{background:rgba(96,165,250,.1);color:#60a5fa}
+.cp-d{background:rgba(251,191,36,.1);color:var(--am)}
+.cp-e{background:rgba(167,139,250,.1);color:var(--pu)}
+.cp-f{background:rgba(148,163,184,.1);color:var(--mt)}
+
+.sim-cm-footer{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--bd);padding:8px 13px;flex-shrink:0;background:var(--bg);gap:0}
+
+.sim-footer-val{font-size:12px;font-weight:700;color:var(--tx);margin-top:2px;transition:color .3s}
+
+#gpane-sim{overflow:hidden;padding:0 !important}
+#gpane-sim.on{display:flex !important;flex-direction:column}
+.grant-scroll{flex:1;overflow-y:auto;padding:0 0 20px;display:flex;flex-direction:column}
+.grant-scroll::-webkit-scrollbar{width:4px}
+.grant-scroll::-webkit-scrollbar-thumb{background:var(--s3);border-radius:2px}
+
+</style>
+</head>
+<body>
+<div class="shell">
+
+<!-- TOP BAR 1 -->
+<div class="topbar">
+  <div class="logo-block">
+    <div class="hamburger"><span></span><span></span><span></span></div>
+    <div class="logo-img">TMS</div>
+  </div>
+  <div class="topbar-div"></div>
+  <div class="crumb">
+    <span>Concord, CA</span><span class="crumb-sep">›</span>
+    <span>Corridors</span><span class="crumb-sep">›</span>
+    <span class="crumb-active">Clayton Rd</span>
+  </div>
+  <div class="live-badge"><div class="live-dot"></div>Live Data</div>
+  <div class="view-toggle" style="margin-left:auto">
+    <button class="vt-btn active" id="btn-overview" onclick="setView('overview')">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="5" height="5" rx="1"/><rect x="8" y="1" width="5" height="5" rx="1"/><rect x="1" y="8" width="5" height="5" rx="1"/><rect x="8" y="8" width="5" height="5" rx="1"/></svg>
+      Overview
+    </button>
+    <div class="vt-sep"></div>
+    <button class="vt-btn" id="btn-grant" onclick="setView('grant')">
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h10M2 7h7M2 11h5"/><circle cx="11" cy="9.5" r="2.5"/><path d="M10.2 9.5h1.6M11 8.7v1.6"/></svg>
+      Grant Intel
+    </button>
+  </div>
+  <div class="role-badge">
+    <div class="role-dot">TA</div>
+    <span>Traffic Analyst</span>
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" style="opacity:.4"><path d="M2 4l3 3 3-3"/></svg>
+  </div>
+</div>
+
+<!-- TOP BAR 2 -->
+<div class="topbar-2">
+  <div class="filter-bar">
+    <div class="filter-btn"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="5" cy="5" r="4"/><path d="M9 9l2 2"/></svg>Search Location</div>
+    <div class="filter-btn">PCF Category <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l4 4 4-4"/></svg></div>
+    <div class="filter-btn">Weather Conditions <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l4 4 4-4"/></svg></div>
+    <div class="filter-btn">Dark Conditions <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l4 4 4-4"/></svg></div>
+    <div class="filter-btn">Severity <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l4 4 4-4"/></svg></div>
+    <div class="filter-btn">Severity <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4l4 4 4-4"/></svg></div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="body">
+
+  <!-- MAP -->
+  <div class="map-panel" id="map-panel">
+    <div class="map-bg"></div>
+    <svg class="map-roads" viewBox="0 0 960 1040" xmlns="http://www.w3.org/2000/svg" style="position:absolute;inset:0">
+      <path d="M80 200 Q200 180 380 220 Q520 250 680 210 Q820 175 940 190" stroke="rgba(0,94,184,.18)" stroke-width="2.5" fill="none"/>
+      <path d="M60 420 Q180 400 350 430 Q500 455 660 420 Q800 390 950 410" stroke="rgba(0,94,184,.14)" stroke-width="2" fill="none"/>
+      <path d="M60 620 Q220 600 400 635 Q560 665 730 630 Q860 605 950 625" stroke="rgba(0,94,184,.12)" stroke-width="1.5" fill="none"/>
+      <path d="M60 820 Q240 800 420 835 Q580 862 750 830 Q880 807 950 820" stroke="rgba(0,94,184,.1)" stroke-width="1.5" fill="none"/>
+      <path d="M200 60 Q195 260 210 480 Q220 680 205 900" stroke="rgba(0,94,184,.13)" stroke-width="1.5" fill="none"/>
+      <path d="M420 80 Q415 280 430 520 Q440 720 425 940" stroke="rgba(0,94,184,.1)" stroke-width="1.5" fill="none"/>
+      <path d="M640 60 Q635 300 650 540 Q660 740 645 940" stroke="rgba(0,94,184,.1)" stroke-width="1.5" fill="none"/>
+      <path d="M580 20 Q590 200 600 420 Q610 640 595 900" stroke="rgba(255,199,44,.12)" stroke-width="3" fill="none" stroke-dasharray="8 4"/>
+      <path d="M120 480 Q280 460 460 490 Q620 515 800 480 Q880 465 950 472" stroke="rgba(251,191,36,.55)" stroke-width="3" fill="none"/>
+      <path d="M120 480 Q280 460 460 490 Q620 515 800 480 Q880 465 950 472" stroke="rgba(251,191,36,.15)" stroke-width="8" fill="none"/>
+      <path d="M120 100 Q300 250 480 380 Q620 480 780 560" stroke="rgba(0,94,184,.08)" stroke-width="1" fill="none"/>
+    </svg>
+    <div class="city-boundary"></div>
+    <div class="map-label" style="top:9%;left:17%">Bay Point</div>
+    <div class="map-label" style="top:12%;left:6%">Clyde</div>
+    <div class="map-label" style="top:28%;left:32%">CONCORD</div>
+    <div class="map-label" style="top:42%;left:5%">Pacheco</div>
+    <div class="map-label" style="top:55%;left:6%">Pleasant Hill</div>
+    <div class="map-label" style="top:58%;right:8%">Ayers Ranch</div>
+    <div class="map-label" style="bottom:14%;left:5%">Walnut Creek</div>
+    <div class="map-label" style="bottom:12%;right:7%">North Gate</div>
+    <div class="map-label" style="top:44%;left:38%;color:rgba(251,191,36,.7);font-size:11px">Clayton Rd</div>
+    <div class="crash-dot" style="width:9px;height:9px;background:rgba(248,113,113,.75);top:42%;left:52%"></div>
+    <div class="crash-dot" style="width:7px;height:7px;background:rgba(248,113,113,.6);top:38%;left:64%"></div>
+    <div class="crash-dot" style="width:10px;height:10px;background:rgba(248,113,113,.8);top:45%;left:35%"></div>
+    <div class="crash-dot" style="width:6px;height:6px;background:rgba(167,139,250,.65);top:40%;left:70%"></div>
+    <div class="crash-dot" style="width:8px;height:8px;background:rgba(248,113,113,.6);top:50%;left:28%"></div>
+    <div class="crash-dot" style="width:5px;height:5px;background:rgba(251,191,36,.7);top:43%;left:80%"></div>
+    <!-- dynamic markers injected here -->
+    <div id="map-markers"></div>
+
+    <!-- ── OUTCOME OVERLAY (appears over map when What-If Sim is active) ── -->
+    <div class="sim-outcome-overlay" id="sim-outcome-overlay">
+      <!-- Header -->
+      <div class="sim-ov-hdr">
+        <div class="sim-ov-label">
+          <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><circle cx="4" cy="4" r="3.5" stroke="var(--gn)" stroke-width="1"/><path d="M2.2 4l1.3 1.3 2.3-2.3" stroke="var(--gn)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Outcome
+        </div>
+        <div class="sim-ov-ksi-sel" id="ov-ksi-sel">1 CM selected</div>
+      </div>
+      <!-- Body cards -->
+      <div class="sim-ov-body">
+
+        <!-- Big % card -->
+        <div class="sim-card sim-card-accent">
+          <div id="sim-pct" class="sim-big-pct">−28%</div>
+          <div class="sim-small-lbl" style="margin-top:3px">KSI reduction projected</div>
+          <div id="sim-ksi-line" class="sim-mono-sm" style="margin-top:2px;color:var(--mt)">6.6 KSI prevented · BCR 480:1</div>
+        </div>
+
+        <!-- KSI before/after -->
+        <div class="sim-card">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+            <div>
+              <div class="sim-mono-xs">KSI Score</div>
+              <div id="sim-ksi-before" class="sim-stat-num" style="color:var(--rd)">52</div>
+            </div>
+            <div>
+              <div class="sim-mono-xs" style="text-align:right">Projected</div>
+              <div id="sim-ksi-after" class="sim-stat-num" style="color:var(--gn)">37.4</div>
+            </div>
+            <div style="text-align:right">
+              <div class="sim-mono-xs">Confidence</div>
+              <div id="sim-conf-inline" class="sim-stat-num" style="color:var(--tl);font-size:14px">96%</div>
+            </div>
+          </div>
+          <div class="sim-track"><div id="sim-bar" class="sim-track-fill" style="width:72%"></div></div>
+          <div id="sim-bar-label" class="sim-mono-xs" style="margin-top:4px">52 KSI → 37.4 (−28%)</div>
+        </div>
+
+        <!-- Confidence -->
+        <div class="sim-card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+            <div class="sim-mono-xs">Statistical Confidence</div>
+            <div id="sim-conf" class="sim-mono-sm" style="color:var(--gn);font-weight:500">96%</div>
+          </div>
+          <div class="sim-track"><div id="sim-conf-bar" class="sim-track-fill" style="width:96%;background:var(--gn)"></div></div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px">
+            <div class="sim-mono-xs">CMF Source</div>
+            <div class="sim-mono-xs" style="color:var(--tx)">FHWA CMF · VSL</div>
+          </div>
+        </div>
+
+        <!-- Cost / KSI / BCR grid -->
+        <div class="sim-card sim-grid-2">
+          <div>
+            <div class="sim-mono-xs">Project Cost</div>
+            <div id="sim-cost" class="sim-stat-sm">$22,000</div>
+          </div>
+          <div>
+            <div class="sim-mono-xs">KSI Prev/5yr</div>
+            <div id="sim-ksi-prev" class="sim-stat-sm" style="color:var(--gn)">6.6</div>
+          </div>
+          <div>
+            <div class="sim-mono-xs">Cost / KSI</div>
+            <div id="sim-cost-ksi" class="sim-stat-sm">$3,333</div>
+          </div>
+          <div>
+            <div class="sim-mono-xs">BCR</div>
+            <div id="sim-bcr" class="sim-stat-sm" style="color:var(--am)">480:1</div>
+          </div>
+        </div>
+
+        <!-- Benefit tag -->
+        <div id="sim-benefit-tag" class="sim-benefit-tag">PED NIGHTTIME BENEFIT</div>
+
+        <!-- Baseline note -->
+        <div class="sim-note-box">
+          <svg width="8" height="8" viewBox="0 0 8 8" fill="none" style="flex-shrink:0;margin-top:1px"><path d="M4 1v3.5M4 6.5h.01" stroke="var(--am)" stroke-width="1.3" stroke-linecap="round"/></svg>
+          <span id="sim-note" class="sim-mono-xs" style="line-height:1.5">220 baseline · 96% conf · FHWA CMF · VSL <b style="color:var(--am)">$1.6M</b></span>
+        </div>
+
+      </div><!-- /sim-ov-body -->
+
+      <!-- Apply Changes button -->
+      <button class="sim-apply-btn" onclick="applySimChanges()">Apply Changes</button>
+
+      <!-- Generate Grant Package button -->
+      <button id="sim-gen-btn" class="sim-gen-btn-ov" onclick="openGrantModal()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        Generate Grant Package
+      </button>
+      <div id="sim-gen-msg" class="sim-mono-xs" style="display:none;text-align:center;color:var(--gn);margin-bottom:10px">✓ Grant package ready</div>
+
+    </div><!-- /sim-outcome-overlay -->
+
+    <!-- project banner -->
+    <div class="map-project-banner hidden" id="map-banner">
+      <div class="mpb-dot" id="banner-dot"></div>
+      <div>
+        <div class="mpb-name" id="banner-name"></div>
+        <div class="mpb-meta" id="banner-meta"></div>
+      </div>
+      <span class="mpb-close" onclick="clearMapProject()">×</span>
+    </div>
+    <div class="map-controls">
+      <div class="map-toggle-item"><div class="map-toggle-dot"></div>Heatmap</div>
+      <div class="map-toggle-item"><div class="map-toggle-dot active"></div>Severity Points</div>
+      <div class="map-toggle-item"><div class="map-toggle-dot"></div>H3</div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANELS -->
+  <div class="panels" id="panels-wrapper">
+
+    <!-- COLLISION PANEL -->
+    <div class="collision-panel" id="collision-panel">
+      <div class="panel-header">
+        <div class="panel-hdr-row">
+          <div class="panel-title"><span class="panel-dot"></span>Concord Collision Analysis<span class="high-risk">High Risk</span></div>
+          <span class="close-btn">×</span>
+        </div>
+        <div class="chips">
+          <span class="chip">2014–2025</span><span class="chip">1,532 collisions</span>
+          <span class="chip">7 factors</span><span class="chip">275 anomalies</span>
+        </div>
+      </div>
+      <div class="risk-banner">
+        <div>
+          <div class="risk-label">City Risk Score</div>
+          <div class="risk-score">MEDIUM</div>
+          <div class="risk-num">62/100</div>
+          <div class="risk-sub">City risk · Map intelligence</div>
+        </div>
+        <div>
+          <div class="risk-badges">
+            <span class="rbadge rbadge-ksi">KSI 25.1%</span>
+            <span class="rbadge rbadge-warn">Worsening</span>
+          </div>
+          <div class="risk-right">
+            <div class="risk-corridor-lbl">Top corridor</div>
+            <div class="risk-corridor">Clayton Rd</div>
+            <div class="risk-fatalities">8 fatalities</div>
+          </div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab">Overview</div><div class="tab on">Factors</div>
+        <div class="tab">Collision Types</div><div class="tab">Anomalies</div><div class="tab">Infrastructure</div>
+      </div>
+      <div class="panel-scroll">
+        <div class="data-card">
+          <div class="data-card-hdr"><div class="data-card-title">KSI odds ratios — logistic regression</div><div class="data-card-link">Explorer →</div></div>
+          <div class="data-card-body">
+            <div class="or-row"><div class="or-label" style="color:var(--tx)">Improper turn (PCF 06)</div><div class="or-track"><div class="or-fill" style="width:100%;background:var(--or)"></div></div><div class="or-val" style="color:var(--or)">2.84×</div></div>
+            <div class="or-row"><div class="or-label" style="color:var(--tx)">Pedestrian involved</div><div class="or-track"><div class="or-fill" style="width:96%;background:var(--or)"></div></div><div class="or-val" style="color:var(--or)">2.73×</div></div>
+            <div class="or-row"><div class="or-label">Kirker Pass Rd</div><div class="or-track"><div class="or-fill" style="width:84%;background:var(--am)"></div></div><div class="or-val" style="color:var(--am)">2.39×</div></div>
+            <div class="or-row"><div class="or-label">Pedestrian violation</div><div class="or-track"><div class="or-fill" style="width:85%;background:var(--am)"></div></div><div class="or-val" style="color:var(--am)">2.4×</div></div>
+            <div class="or-row"><div class="or-label">Dark conditions</div><div class="or-track"><div class="or-fill" style="width:63%;background:var(--mt)"></div></div><div class="or-val">1.8×</div></div>
+            <div class="or-row" style="margin-bottom:0"><div class="or-label">DUI involvement</div><div class="or-track"><div class="or-fill" style="width:54%;background:var(--mt)"></div></div><div class="or-val">1.54×</div></div>
+            <div class="or-note">Baseline KSI: 25.1%. Improper turn 2.84× and pedestrian involvement 2.73× are the strongest predictors.</div>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-hdr"><div class="data-card-title">4 corridor archetypes</div><div class="data-card-link">Typology →</div></div>
+          <div class="data-card-body" style="padding:8px 14px">
+            <div class="arch-row"><div class="arch-icon">🚦</div><div class="arch-body"><div class="arch-name">Signal-Conflict</div><div class="arch-desc">Broadside + signal violation</div><div class="arch-locs">Concord Ave · Concord Blvd · Clayton Rd</div><span class="arch-tag">24% KSI · 41% broadside</span></div></div>
+            <div class="arch-row"><div class="arch-icon">⚡</div><div class="arch-body"><div class="arch-name">Speed-Severity</div><div class="arch-desc">High speed + dark amplification</div><div class="arch-locs">Treat Blvd · Cowell Rd · Port Chicago</div><span class="arch-tag">38% KSI · Treat Blvd</span></div></div>
+            <div class="arch-row"><div class="arch-icon">🚶</div><div class="arch-body"><div class="arch-name">Multimodal Exposure</div><div class="arch-desc">High VRU + alcohol + dark</div><div class="arch-locs">Monument · Meadow Ln · Grant St</div><span class="arch-tag">VRU 49% (1.7× avg)</span></div></div>
+            <div class="arch-row" style="border-bottom:none"><div class="arch-icon">🔄</div><div class="arch-body"><div class="arch-name">Volume-Conflict</div><div class="arch-desc">High freq · moderate KSI · high H&R</div><div class="arch-locs">Willow Pass · Port Chicago · Market St</div><span class="arch-tag">229 collisions · 27% KSI</span></div></div>
+          </div>
+        </div>
+        <div class="data-card">
+          <div class="data-card-hdr"><div class="data-card-title">Corridor breakdown</div><div class="data-card-link">Corridors →</div></div>
+          <div class="data-card-body">
+            <div class="bar-row"><div class="bar-label">Kirker Pass Rd</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--rd)"></div></div><div class="bar-val" style="color:var(--rd)">43.8%</div></div>
+            <div class="bar-row"><div class="bar-label">Treat Blvd</div><div class="bar-track"><div class="bar-fill" style="width:86%;background:var(--am)"></div></div><div class="bar-val" style="color:var(--am)">37.5%</div></div>
+            <div class="bar-row"><div class="bar-label">Willow Pass Rd</div><div class="bar-track"><div class="bar-fill" style="width:72%;background:var(--am)"></div></div><div class="bar-val" style="color:var(--am)">31.4%</div></div>
+            <div class="bar-row"><div class="bar-label">Clayton Rd</div><div class="bar-track"><div class="bar-fill" style="width:53%;background:var(--gn)"></div></div><div class="bar-val" style="color:var(--gn)">23.3%</div></div>
+          </div>
+        </div>
+        <div class="wif-cta">⚡ What-If Simulator — model interventions</div>
+      </div>
+    </div>
+
+    <!-- AI PANEL -->
+    <div class="ai-panel" id="ai-panel">
+      <div class="ai-header"><div class="ai-title">AI Assistant</div><span class="ai-badge">AI</span></div>
+      <div class="ai-body">
+        <div class="ai-message">Citywide collision severity is primarily driven by <b>signal conflicts and speed-related incidents</b>, with pedestrian and intersection factors contributing secondarily.<br><br>The pattern suggests a <b>system-level issue</b> in traffic behavior and control, rather than isolated hotspots.<br><br>Addressing <b>signal efficiency and speed management</b> would likely have the highest impact.</div>
+      </div>
+      <div class="ai-input-bar">
+        <input class="ai-input" type="text" placeholder="Ask about this corridor…">
+        <button class="ai-send">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GRANT PANEL -->
+  <div class="grant-panel" id="grant-panel">
+    <div class="grant-header">
+      <div class="grant-hdr-top">
+        <div class="grant-title-block">
+          <div class="grant-eyebrow">Grant Intelligence · Concord, CA</div>
+          <div class="grant-title">HSIP C13 Strategy<span class="grant-badge">▶ C13 Planning</span></div>
+        </div>
+        <span class="grant-close" onclick="setView('overview')">×</span>
+      </div>
+    </div>
+    <div class="grant-kpis">
+      <div class="gkpi" style="--kc:#5b9cf6"><div class="gkpi-lbl">HSIP Won</div><div class="gkpi-val">$24.1M</div><div class="gkpi-sub">#5 CA all-time</div></div>
+      <div class="gkpi" style="--kc:#ff6b6b"><div class="gkpi-lbl">Crashes</div><div class="gkpi-val">2,108</div><div class="gkpi-sub">24 killed · 2020–25</div></div>
+      <div class="gkpi" style="--kc:#b47fff"><div class="gkpi-lbl">C13 Target</div><div class="gkpi-val">$10–15M</div><div class="gkpi-sub">6-app portfolio</div></div>
+      <div class="gkpi" style="--kc:#3ecf8e"><div class="gkpi-lbl">CM Gaps</div><div class="gkpi-val">5</div><div class="gkpi-sub">Crash-confirmed</div></div>
+    </div>
+    <div class="grant-tabs">
+      <div class="gtab on" onclick="grantTab(this,'history')">History</div>
+      <div class="gtab" onclick="grantTab(this,'recs')">C13 Recs</div>
+      <div class="gtab" onclick="grantTab(this,'gaps')">Gap Analysis</div>
+      <div class="gtab" onclick="grantTab(this,'intel')">Intelligence</div>
+      <div class="gtab gtab-sim" onclick="grantTab(this,'sim')">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" style="display:inline-block;vertical-align:middle;margin-right:4px"><path d="M1 5h8M5 1l4 4-4 4"/></svg>What-If Sim
+      </div>
+    </div>
+    <div class="grant-scroll" id="grant-scroll">
+
+      <!-- HISTORY PANE -->
+      <div class="grant-pane on" id="gpane-history">
+        <div class="gsec"><span class="gsec-label">Funding Trajectory</span><span class="gsec-line"></span><span class="gsec-meta">Cycles 8–12</span></div>
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:0 20px 12px">
+          <div style="background:var(--s1);border:1px solid var(--bd);border-radius:7px;padding:10px;text-align:center;opacity:.4"><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mt);margin-bottom:4px">CYCLE 8</div><div style="font-size:13px;font-weight:600;color:var(--mt)">—</div><div style="font-size:8px;color:var(--mt);margin-top:2px">Not funded</div></div>
+          <div style="background:var(--s1);border:1px solid rgba(91,156,246,.35);border-radius:7px;padding:10px;text-align:center"><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mt);margin-bottom:4px">CYCLE 9</div><div style="font-size:13px;font-weight:600;color:#5b9cf6">$2.4M</div><div style="font-size:8px;color:var(--mt);margin-top:2px">#23 / 142</div></div>
+          <div style="background:var(--s1);border:1px solid rgba(0,217,192,.35);border-radius:7px;padding:10px;text-align:center"><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mt);margin-bottom:4px">CYCLE 10</div><div style="font-size:13px;font-weight:600;color:#00d9c0">$3.7M</div><div style="font-size:8px;color:var(--mt);margin-top:2px">#15 / 154</div></div>
+          <div style="background:var(--s1);border:1px solid rgba(245,166,35,.35);border-radius:7px;padding:10px;text-align:center"><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mt);margin-bottom:4px">CYCLE 11</div><div style="font-size:13px;font-weight:600;color:#f5a623">$7.9M</div><div style="font-size:8px;color:var(--mt);margin-top:2px">#3 / 159</div></div>
+          <div style="background:var(--s1);border:1px solid rgba(180,127,255,.35);border-radius:7px;padding:10px;text-align:center"><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mt);margin-bottom:4px">CYCLE 12</div><div style="font-size:13px;font-weight:600;color:#b47fff">$8.9M</div><div style="font-size:8px;color:var(--mt);margin-top:2px">#4 / 153</div></div>
+        </div>
+
+        <div class="gsec"><span class="gsec-label">Funded Projects</span><span class="gsec-line"></span><span class="gsec-meta">10 projects · $24.1M</span></div>
+        <div class="gcard">
+          <div class="gcard-body" id="funded-table"></div>
+        </div>
+      </div>
+
+      <!-- RECS PANE -->
+      <div class="grant-pane" id="gpane-recs">
+        <div class="gsec"><span class="gsec-label">C13 Recommendations</span><span class="gsec-line"></span><span class="gsec-meta">Portfolio $10.4–15.5M</span></div>
+        <div class="rec-card"><div class="rec-top"><div class="rec-rank"><div class="rec-rank-n" style="color:#5b9cf6">1</div><div class="rec-rank-l">Priority</div></div><div class="rec-body"><div class="rec-title-row"><div class="rec-title">Citywide BCR Anchor — Signal + HAWK + Lighting</div><div class="rec-amount"><div class="rec-amt-val" style="color:#5b9cf6">$7–11M</div><div class="rec-amt-lbl">Est C13 Award</div></div></div><div class="rec-tags"><span class="rec-tag" style="color:#5b9cf6;border-color:rgba(91,156,246,.3)">BCR Competitive</span><span class="rec-tag" style="color:#b47fff;border-color:rgba(180,127,255,.3)">VRU Rule Eligible</span></div><div class="rec-rat">Signal hardware + HAWK beacons at 5–7 uncontrolled crossings + intersection lighting + protected LT. Largest addressable crash pool.</div><div class="rec-chips"><div class="rec-chip"><span class="rec-chip-n">324</span> signal crashes</div><div class="rec-chip"><span class="rec-chip-n">52</span> uncontrolled ped</div></div></div></div><div class="rec-footer"><div class="win-row"><span class="win-lbl">Win Score</span><div class="win-track"><div class="win-fill" style="width:88%;background:linear-gradient(90deg,#5b9cf6,#00d9c0)"></div></div><span class="win-pct" style="color:#5b9cf6">88%</span></div><div class="rec-prec">📌 Glendale C12: $8.25M</div></div></div>
+        <div class="rec-card"><div class="rec-top"><div class="rec-rank"><div class="rec-rank-n" style="color:#3ecf8e">2</div><div class="rec-rank-l">Priority</div></div><div class="rec-body"><div class="rec-title-row"><div class="rec-title">Monument Blvd — Raised Median & Access Management</div><div class="rec-amount"><div class="rec-amt-val" style="color:#3ecf8e">$3.5–6.5M</div><div class="rec-amt-lbl">Est C13 Award</div></div></div><div class="rec-tags"><span class="rec-tag" style="color:#ff6b6b;border-color:rgba(255,107,107,.3)">New for Concord</span><span class="rec-tag" style="color:#3ecf8e;border-color:rgba(62,207,142,.3)">Highest Avg Grant</span></div><div class="rec-rat">Never applied. Monument Blvd: 200 crashes, 73 broadsides. Highest avg C12 grant at $2.55M.</div><div class="rec-chips"><div class="rec-chip"><span class="rec-chip-n">200</span> total crashes</div><div class="rec-chip"><span class="rec-chip-n">73</span> broadside</div></div></div></div><div class="rec-footer"><div class="win-row"><span class="win-lbl">Win Score</span><div class="win-track"><div class="win-fill" style="width:83%;background:linear-gradient(90deg,#3ecf8e,#00d9c0)"></div></div><span class="win-pct" style="color:#3ecf8e">83%</span></div><div class="rec-prec">📌 Kern County C12: $8.71M</div></div></div>
+        <div class="rec-card"><div class="rec-top"><div class="rec-rank"><div class="rec-rank-n" style="color:#00d9c0">4</div><div class="rec-rank-l">Priority</div></div><div class="rec-body"><div class="rec-title-row"><div class="rec-title">SA-PedCrossing — RRFB + Crosswalk Package (×2)</div><div class="rec-amount"><div class="rec-amt-val" style="color:#00d9c0">$300–700K</div><div class="rec-amt-lbl">Est C13 Award</div></div></div><div class="rec-tags"><span class="rec-tag" style="color:#00d9c0;border-color:rgba(0,217,192,.3)">SA-PedCrossing</span><span class="rec-tag" style="color:#3ecf8e;border-color:rgba(62,207,142,.3)">Proven for Concord</span></div><div class="rec-rat">219 ped crashes, 7 killed. Cap raised to $350K in C12. Concord won C10 and C11.</div><div class="rec-chips"><div class="rec-chip"><span class="rec-chip-n">219</span> ped crashes</div><div class="rec-chip"><span class="rec-chip-n">7</span> killed</div></div></div></div><div class="rec-footer"><div class="win-row"><span class="win-lbl">Win Score</span><div class="win-track"><div class="win-fill" style="width:96%;background:linear-gradient(90deg,#00d9c0,#3ecf8e)"></div></div><span class="win-pct" style="color:#00d9c0">96%</span></div><div class="rec-prec">📌 Concord C11: $250K · Cap now $350K</div></div></div>
+      </div>
+
+      <!-- GAPS PANE -->
+      <div class="grant-pane" id="gpane-gaps">
+        <div class="gsec"><span class="gsec-label">Grant Gaps</span><span class="gsec-line"></span><span class="gsec-meta">Red = never applied</span></div>
+        <div class="gap-card gap-st"><div class="gap-hdr"><span class="gap-status" style="color:var(--rd)"><span class="gap-dot" style="background:var(--rd)"></span>Gap — Never Applied</span><span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--mt)">↑ $2.55M avg</span></div><div class="gap-name">Raised Median & Access Management</div><div class="gap-note">Monument Blvd has 200 crashes — 73 are broadsides. Highest avg C12 grant at $2.55M. Never applied.</div><div class="gap-evidence"><div class="gap-ev-lbl">Concord Crash Evidence · 2020–2025</div><div class="gap-ev-grid"><div class="gap-ev-item"><b>140</b> broadside crashes</div><div class="gap-ev-item fatal"><b>1</b> fatality</div><div class="gap-ev-item"><b>10</b> severe injuries</div></div></div><div class="gap-lu">Last applied: Never</div></div>
+        <div class="gap-card gap-st"><div class="gap-hdr"><span class="gap-status" style="color:var(--rd)"><span class="gap-dot" style="background:var(--rd)"></span>Gap — Never Applied</span><span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--mt)">↑ $629K avg</span></div><div class="gap-name">Pedestrian Refuge Islands</div><div class="gap-note">126 ped crashes at non-signalized locations, 8 fatal — highest fatality count of any gap.</div><div class="gap-evidence"><div class="gap-ev-lbl">Concord Crash Evidence · 2020–2025</div><div class="gap-ev-grid"><div class="gap-ev-item"><b>126</b> ped crashes</div><div class="gap-ev-item fatal"><b>8</b> fatalities</div></div></div><div class="gap-lu">Last applied: Never</div></div>
+        <div class="gap-card par-st"><div class="gap-hdr"><span class="gap-status" style="color:var(--am)"><span class="gap-dot" style="background:var(--am)"></span>Partial — Not Recent</span><span style="font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:var(--mt)">↑ $2.53M avg</span></div><div class="gap-name">Street / Intersection Lighting</div><div class="gap-note">558 night crashes (26.5%), 15 fatal. Last bundled in C11 — three open corridors remain.</div><div class="gap-evidence"><div class="gap-ev-lbl">Concord Crash Evidence · 2020–2025</div><div class="gap-ev-grid"><div class="gap-ev-item"><b>558</b> night crashes</div><div class="gap-ev-item fatal"><b>15</b> fatalities</div></div></div><div class="gap-lu">Last applied: C11</div></div>
+      </div>
+
+      <!-- WHAT-IF SIMULATOR PANE -->
+      <div class="grant-pane" id="gpane-sim" style="display:none">
+        <div class="sim-shell">
+
+          <!-- ── CM list (full width now, outcome moved to map overlay) ── -->
+          <div class="sim-right">
+
+            <!-- Header row: program pills + column label -->
+            <div class="sim-cm-hdr">
+              <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+                <span class="sim-mono-xs" style="margin-right:3px;letter-spacing:.08em">PROGRAM</span>
+                <button id="prog-hsip" class="sim-prog-btn active" onclick="setProg('hsip')">HSIP</button>
+                <button id="prog-atp" class="sim-prog-btn" onclick="setProg('atp')">ATP</button>
+                <button id="prog-caltrans" class="sim-prog-btn" onclick="setProg('caltrans')">CALTRANS</button>
+                <span id="sim-prog-context" class="sim-mono-xs" style="color:var(--mt);margin-left:4px;font-size:7.5px">C13 · BCR target 25+</span>
+              </div>
+              <div class="sim-mono-xs">KSI Red.</div>
+            </div>
+            <!-- Countermeasures sub-header -->
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 13px 5px;border-bottom:1px solid var(--bd);background:rgba(0,0,0,.18);flex-shrink:0">
+              <span class="sim-mono-xs" style="letter-spacing:.1em;color:var(--mt)">COUNTERMEASURES</span>
+              <span class="sim-mono-xs" style="color:rgba(122,144,176,.5);font-size:7.5px">Toggle to simulate</span>
+            </div>
+
+            <!-- Scrollable CM rows -->
+            <div class="sim-cm-scroll" id="sim-cm-list"></div>
+
+            <!-- Footer summary -->
+            <div class="sim-cm-footer">
+              <div>
+                <div class="sim-mono-xs">Project Cost</div>
+                <div id="sim-footer-cost" class="sim-footer-val">$22,000</div>
+              </div>
+              <div>
+                <div class="sim-mono-xs">KSI Prev 5yr</div>
+                <div id="sim-footer-ksi" class="sim-footer-val" style="color:var(--gn)">4.7</div>
+              </div>
+              <div>
+                <div class="sim-mono-xs">Cost/KSI</div>
+                <div id="sim-footer-costksi" class="sim-footer-val">$4,681</div>
+              </div>
+              <div>
+                <div class="sim-mono-xs">BCR</div>
+                <div id="sim-footer-bcr" class="sim-footer-val" style="color:var(--am)">341.8 : 1</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INTEL PANE -->
+      <div class="grant-pane" id="gpane-intel">
+        <div class="gsec"><span class="gsec-label">Strategic Rules</span><span class="gsec-line"></span><span class="gsec-meta">5-cycle synthesis</span></div>
+        <div style="display:flex;gap:8px;margin:0 20px 10px;flex-wrap:wrap">
+          <div style="flex:1;min-width:100px;background:var(--s1);border:1px solid var(--bd);border-radius:7px;padding:10px 12px"><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mt);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">BCR Floor C12</div><div style="font-size:18px;font-weight:700;color:var(--rd)">24+</div><div style="font-size:9px;color:var(--mt)">Avg grant $1.60M</div></div>
+          <div style="flex:1;min-width:100px;background:var(--s1);border:1px solid var(--bd);border-radius:7px;padding:10px 12px"><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mt);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">C13 Target BCR</div><div style="font-size:18px;font-weight:700;color:var(--gn)">25+</div><div style="font-size:9px;color:var(--mt)">Bundle 2–4 CMs</div></div>
+          <div style="flex:1;min-width:100px;background:var(--s1);border:1px solid var(--bd);border-radius:7px;padding:10px 12px"><div style="font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--mt);text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">BCR Apps C12</div><div style="font-size:18px;font-weight:700;color:var(--acc)">81.5%</div><div style="font-size:9px;color:var(--mt)">of funded projects</div></div>
+        </div>
+        <div class="gcard"><div class="gcard-body" style="padding:12px 13px;display:flex;flex-direction:column;gap:9px">
+          <div style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.15);border-radius:6px;padding:10px 12px"><div style="font-size:11px;font-weight:500;color:var(--tx);margin-bottom:4px">⚠ Single-CM apps always fail</div><div style="font-size:10px;color:var(--mt);line-height:1.6">C10 dilemma zone only (BCR 14.33): not funded. C11 signal hardware only (BCR 17.83): not funded. Every funded BCR win bundles 2–4 CMs.</div></div>
+          <div style="background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.15);border-radius:6px;padding:10px 12px"><div style="font-size:11px;font-weight:500;color:var(--tx);margin-bottom:4px">🏆 The winning portfolio formula</div><div style="font-size:10px;color:var(--mt);line-height:1.6">1 BCR anchor ($7–11M) + 1 corridor lighting BCR ($2–4M) + 2× SA-PedCrossing ($350K each) + 2× SA-Bike Safety = <b style="color:var(--gn)">$10.4–16.1M</b></div></div>
+          <div style="background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.15);border-radius:6px;padding:10px 12px"><div style="font-size:11px;font-weight:500;color:var(--tx);margin-bottom:4px">🌿 VRU Rule = dedicated pool</div><div style="font-size:10px;color:var(--mt);line-height:1.6">16 VRU-flagged projects in C12 totaling $43M with less competition. Monument Blvd qualifies. Glendale $8.25M via VRU in C12.</div></div>
+        </div></div>
+      </div>
+    </div><!-- /grant-scroll -->
+  </div><!-- /grant-panel -->
+
+</div><!-- /body -->
+
+<!-- STATUS BAR -->
+<div class="status-bar">
+  <div class="sb-toggles">
+    <div class="sb-toggle"><div class="sb-dot"></div>Heatmap</div>
+    <div class="sb-toggle"><div class="sb-dot active"></div>Severity Points</div>
+    <div class="sb-toggle"><div class="sb-dot"></div>H3</div>
+  </div>
+  <div class="sb-legend">
+    <div class="sb-leg-item"><div class="sb-leg-dot" style="background:#34d399"></div>Visibly Injured</div>
+    <div class="sb-leg-item"><div class="sb-leg-dot" style="background:#f59e0b"></div>Severely Injured</div>
+    <div class="sb-leg-item"><div class="sb-leg-dot" style="background:#f87171"></div>Fatal Injured</div>
+  </div>
+</div>
+
+</div><!-- /shell -->
+
+<!-- ═══════════════════════════════════════════════════════
+     GRANT PACKAGE MODAL
+═══════════════════════════════════════════════════════ -->
+<div class="grant-doc-overlay" id="grant-doc-overlay" onclick="bgGrantDoc(event)">
+  <div class="grant-doc-modal">
+    <div class="gm-hdr">
+      <div class="gm-hdr-left">
+        <div class="gm-tag-pill" id="gm-tag-pill">HSIP GRANT APPLICATION</div>
+        <div class="gm-doc-title" id="gm-doc-title">Clayton Road — Safety Improvement Project</div>
+        <div class="gm-doc-meta">
+          <span id="gm-prog-lbl">HSIP Cycle 13</span>
+          <span>·</span>
+          <span>TMS Insights · Concord, CA</span>
+          <span>·</span>
+          <span id="gm-date-lbl"></span>
+        </div>
+      </div>
+      <div class="gm-actions">
+        <button class="gm-btn gm-btn-print" onclick="window.print()">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Print / Export
+        </button>
+        <button class="gm-btn gm-btn-close" onclick="closeGrantDoc()">✕ Close</button>
+      </div>
+    </div>
+    <div class="gm-body" id="gm-body"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════
+     PROJECT DETAIL MODAL
+═══════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="proj-modal">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-hdr-left">
+        <div class="modal-eyebrow">
+          <span class="modal-cycle-badge" id="m-cycle-badge"></span>
+          <span class="modal-cat-badge" id="m-cat-badge"></span>
+        </div>
+        <div class="modal-title" id="m-title"></div>
+        <div class="modal-meta-row">
+          <div class="modal-meta-item">HSIP Award: <span class="modal-meta-val" id="m-award"></span></div>
+          <div class="modal-meta-item">BCR: <span class="modal-meta-val" id="m-bcr"></span></div>
+          <div class="modal-meta-item">Locations: <span class="modal-meta-val" id="m-locs"></span></div>
+        </div>
+      </div>
+      <div class="modal-close" onclick="closeModal()">×</div>
+    </div>
+    <div class="modal-body">
+      <!-- KPI strip -->
+      <div class="modal-kpis" id="m-kpis"></div>
+      <!-- Before / After -->
+      <div class="modal-ba">
+        <div class="modal-ba-title">Before vs After Installation</div>
+        <div class="ba-grid" id="m-ba"></div>
+      </div>
+      <!-- Countermeasures -->
+      <div class="modal-cms">
+        <div class="modal-cms-title">Countermeasures Installed</div>
+        <div class="cm-tags" id="m-cms"></div>
+      </div>
+      <!-- Description -->
+      <div class="modal-desc">
+        <div class="modal-desc-title">Project Scope</div>
+        <div class="modal-desc-text" id="m-desc"></div>
+      </div>
+      <!-- Note -->
+      <div class="modal-note">
+        <div class="modal-note-lbl">Strategic Note</div>
+        <div class="modal-note-text" id="m-note"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-footer-left" id="m-footer-left"></div>
+      <div class="modal-footer-btns">
+        <button class="mf-btn mf-btn-secondary" onclick="closeModal()">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2l10 10M12 2L2 12"/></svg>
+          Close
+        </button>
+        <button class="mf-btn mf-btn-secondary" id="m-map-btn" onclick="showOnMapFromModal()">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 1C4.79 1 3 2.79 3 5c0 3.25 4 8 4 8s4-4.75 4-8c0-2.21-1.79-4-4-4z"/><circle cx="7" cy="5" r="1.5"/></svg>
+          Show on Map
+        </button>
+        <button class="mf-btn mf-btn-primary">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 1v8M3 5l4 4 4-4"/><path d="M1 11h12"/></svg>
+          Export Report
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── PROJECT DATA ────────────────────────────────────────────────
+const PROJECTS = [
+  {
+    id:'C9-1', cycle:9, cycleColor:'#5b9cf6', cat:'BCR', catColor:'rgba(91,156,246,.2)', catBorder:'rgba(91,156,246,.4)',
+    title:'Traffic Signal Safety Improvements (54 Intersections)',
+    award:'$2,386,976', cost:'$2,460,800', bcr:'15.63', locDesc:'54 signalized intersections',
+    cms:['SI02 Signal Hardware','SI22PB Leading Pedestrian Interval (LPI)'],
+    desc:'Improve signal hardware (lenses, <b>backplates with retroreflective borders</b>, mountings, size, number), upgrade cabinet equipment and controllers, and modify phasing to provide a <b>Leading Pedestrian Interval (LPI)</b>. Targeted the top 54 intersections by collision rate — representing 20% of all city crashes at signalized locations.',
+    note:'Funded at BCR 15.63 — C9 had lowest competition. LPI required a 15% cost exception because it was <15% of project cost; Caltrans approved for ped/bike safety near trails and schools.',
+    kpis:[{label:'HSIP Award',val:'$2.39M',color:'#5b9cf6'},{label:'Total Cost',val:'$2.46M',color:'#7a90b0'},{label:'BCR Score',val:'15.63',color:'#3ecf8e'},{label:'Intersections',val:'54',color:'#fbbf24'}],
+    before:{period:'2013–2017',crashes:474,ksi:'18.4%',fatal:3,severe:22,night:'21%',note:'Signal violations and inadequate retroreflectivity contributing to night-time crash amplification at top 54 intersections.'},
+    after:{period:'2018–2022',crashes:286,ksi:'11.2%',fatal:1,severe:9,night:'16%',note:'LPI and hardware upgrades reduced ped conflicts. Retroreflective borders measurably improved night visibility.'},
+    changes:['-40% total crashes','-39% KSI rate','-67% fatalities'],
+    mapColor:'#5b9cf6',
+    mapMarkers:[{top:'35%',left:'42%',label:'Concord Ave corridor'},{top:'46%',left:'55%',label:'Clayton Rd cluster'},{top:'38%',left:'68%',label:'Market St'},{top:'50%',left:'30%',label:'Monument Blvd'}],
+    footerLeft:'Project ID: H9-04-008 · Crash period: 01/2013–12/2017 · Source: Crossroads Analytics'
+  },
+  {
+    id:'C10-1', cycle:10, cycleColor:'#00d9c0', cat:'BCR', catColor:'rgba(0,217,192,.1)', catBorder:'rgba(0,217,192,.35)',
+    title:'Traffic Signal Improvements (45 Intersections)',
+    award:'$2,171,200', cost:'$2,360,000', bcr:'16.15', locDesc:'45 signalized intersections',
+    cms:['SI02 Signal Hardware','SI17PB Countdown Signals','SI22PB LPI (Leading Pedestrian Interval)'],
+    desc:'Improve traffic signal hardware (lenses, <b>backplates with retroreflective borders</b>, mountings), install <b>pedestrian countdown signal heads</b>, and modify phasing to provide Leading Pedestrian Interval (LPI). Top 45 intersections by collision concentration — building on C9\'s 54-intersection sweep to cover remaining high-risk locations.',
+    note:'Funded at BCR 16.15. C10 had lower competition than later cycles. Same CM bundle as C9 with countdown signals added. 5 of 45 intersections along Willow Pass Rd corridor.',
+    kpis:[{label:'HSIP Award',val:'$2.17M',color:'#00d9c0'},{label:'Total Cost',val:'$2.36M',color:'#7a90b0'},{label:'BCR Score',val:'16.15',color:'#3ecf8e'},{label:'Intersections',val:'45',color:'#fbbf24'}],
+    before:{period:'2015–2019',crashes:474,ksi:'19.8%',fatal:3,severe:28,night:'23%',note:'Countdown signals absent at 45 key intersections. Pedestrian clearance time conflicts contributing to ped-vehicle collisions.'},
+    after:{period:'2020–2024',crashes:310,ksi:'13.5%',fatal:1,severe:11,night:'18%',note:'Countdown signals reduced ped clearance conflicts. Continued LPI expansion from C9 further cut ped KSI.'},
+    changes:['-35% total crashes','-32% KSI rate','-61% fatalities'],
+    mapColor:'#00d9c0',
+    mapMarkers:[{top:'44%',left:'28%',label:'Willow Pass Rd'},{top:'40%',left:'52%',label:'Concord Ave'},{top:'48%',left:'63%',label:'Galindo St'},{top:'36%',left:'40%',label:'Diamond Blvd'}],
+    footerLeft:'Project ID: H10-04-007 · Crash period: 01/2015–12/2019 · Source: Crossroads Analytics'
+  },
+  {
+    id:'C10-2', cycle:10, cycleColor:'#00d9c0', cat:'BCR', catColor:'rgba(0,217,192,.1)', catBorder:'rgba(0,217,192,.35)',
+    title:'Citywide Protected Left-Turn Implementation (9 Intersections)',
+    award:'$1,254,800', cost:'$1,254,800', bcr:'15.54', locDesc:'9 specific intersections',
+    cms:['SI07 Protected Left-Turn Phase','SI08 Mast Arm Conversion','SI04 Dilemma Zone Detection'],
+    desc:'Modify <b>9 intersections</b> with permissive left-turn phasing to provide <b>protected left-turn phasing</b>, eliminating the gap-acceptance conflict where drivers turn across oncoming traffic. Includes mast arm conversion at select locations and advanced dilemma zone detection at high-speed approaches.',
+    note:'Funded at BCR 15.54 — lowest BCR ever funded for Concord. C10 had lower competition. Note: SI04 dilemma zone detection is no longer HSIP-eligible in C13.',
+    kpis:[{label:'HSIP Award',val:'$1.25M',color:'#00d9c0'},{label:'Total Cost',val:'$1.25M',color:'#7a90b0'},{label:'BCR Score',val:'15.54',color:'#3ecf8e'},{label:'Intersections',val:'9',color:'#fbbf24'}],
+    before:{period:'2015–2019',crashes:102,ksi:'22.5%',fatal:0,severe:12,night:'19%',note:'Permissive LT phasing at 9 intersections generating gap-acceptance broadside crashes. Highest crash density at Willow Pass & Sutter.'},
+    after:{period:'2020–2024',crashes:58,ksi:'14.2%',fatal:0,severe:5,night:'15%',note:'Protected LT eliminated gap-acceptance conflicts. Broadside crash rate dropped significantly at all 9 treated intersections.'},
+    changes:['-43% total crashes','-37% KSI rate','0 fatalities (both periods)'],
+    mapColor:'#00d9c0',
+    mapMarkers:[{top:'46%',left:'33%',label:'Willow Pass & Sutter'},{top:'42%',left:'58%',label:'Clayton & Oakland'},{top:'52%',left:'44%',label:'Concord Blvd & Mendocino'}],
+    footerLeft:'Project ID: H10-04-008 · Crash period: 01/2015–12/2019 · Source: Crossroads Analytics'
+  },
+  {
+    id:'C11-1', cycle:11, cycleColor:'#f5a623', cat:'BCR', catColor:'rgba(245,166,35,.1)', catBorder:'rgba(245,166,35,.35)',
+    title:'Streetlighting & Safety Improvement (City-wide)',
+    award:'$7,409,970', cost:'$7,800,000', bcr:'17.83', locDesc:'City-wide · 12 intersections + 22.5mi lighting',
+    cms:['Intersection Lighting','SI22PB LPI','Ped Countdown Signals','RRFB Beacons (3)','HAWK Signals (4)'],
+    desc:'Install new and upgrade existing <b>street and intersection lighting</b> city-wide, upgrade <b>pedestrian countdown heads</b>, add LPI phasing, install <b>3 new RRFB beacons</b> at uncontrolled crossings, and install <b>4 HAWK signals</b> at high-ped-conflict locations. Largest single project in Concord\'s HSIP history.',
+    note:'This is Concord\'s largest grant — $7.4M. BCR 17.83 narrowly competed in C11 but won due to VRU bundle strength. Sets the template for C13\'s anchor application: lighting + HAWK + LPI multi-CM bundle.',
+    kpis:[{label:'HSIP Award',val:'$7.41M',color:'#f5a623'},{label:'Total Cost',val:'$7.80M',color:'#7a90b0'},{label:'BCR Score',val:'17.83',color:'#3ecf8e'},{label:'Night Crashes Targeted',val:'558',color:'#fbbf24'}],
+    before:{period:'2016–2020',crashes:641,ksi:'26.1%',fatal:9,severe:48,night:'28%',note:'Night-time crash amplification (1.8× KSI vs daylight) driven by poor intersection lighting. 4 HAWK locations had zero ped protection.'},
+    after:{period:'2021–2025 est.',crashes:410,ksi:'18.3%',fatal:4,severe:22,night:'21%',note:'Lighting upgrades measurably reduced night KSI amplification. HAWK signals eliminated ped-vehicle conflicts at 4 uncontrolled crossings. RRFB increased ped compliance.'},
+    changes:['-36% total crashes','-30% KSI rate','-56% fatalities','-25% night crash share'],
+    mapColor:'#f5a623',
+    mapMarkers:[{top:'43%',left:'27%',label:'Ygnacio Valley (22.5mi)'},{top:'38%',left:'50%',label:'Concord Ave lighting'},{top:'50%',left:'65%',label:'Clayton Rd lighting'},{top:'55%',left:'38%',label:'Monument Blvd HAWK'},{top:'32%',left:'72%',label:'Willow Pass RRFB'}],
+    footerLeft:'Project ID: H11-04-006 · Crash period: 01/2016–12/2020 · Source: Crossroads Analytics'
+  },
+  {
+    id:'C12-1', cycle:12, cycleColor:'#b47fff', cat:'BCR', catColor:'rgba(180,127,255,.1)', catBorder:'rgba(180,127,255,.35)',
+    title:'Citywide Traffic Signs — 8,000 Fluorescent Signs',
+    award:'$7,782,500', cost:'$7,782,500', bcr:'21.4', locDesc:'425 miles of roadway · city-wide',
+    cms:['Fluorescent Retroreflective Signs','Speed Limit Signs','Warning Signs','Regulatory Signs'],
+    desc:'Install and upgrade <b>8,000+ signs city-wide</b> with new fluorescent retroreflective sheeting across 425 miles of roadway. Replaces aging non-reflective signs with high-visibility fluorescent material that dramatically improves conspicuity at night and in adverse weather, targeting speed- and sign-violation crashes.',
+    note:'C12\'s largest Concord project. City-wide coverage is NOW COMPLETE — retroreflective signs are saturated in C13. Do not repeat this countermeasure in a C13 application.',
+    kpis:[{label:'HSIP Award',val:'$7.78M',color:'#b47fff'},{label:'Signs Installed',val:'8,000+',color:'#7a90b0'},{label:'Road Miles',val:'425mi',color:'#3ecf8e'},{label:'BCR Score',val:'21.4',color:'#fbbf24'}],
+    before:{period:'2018–2022',crashes:833,ksi:'16.8%',fatal:2,severe:50,night:'29%',note:'833 crashes attributable to speed + sign violation PCFs. Non-reflective signs degraded under UV — night visibility poor.'},
+    after:{period:'2023–2027 est.',crashes:610,ksi:'12.4%',fatal:1,severe:31,night:'22%',note:'Fluorescent retroreflective sheeting measurably improved sign visibility. Night crash share down 7pp. Speed-related PCF crashes declining.'},
+    changes:['-27% total crashes','-26% KSI rate','-50% fatalities','-7pp night crash share'],
+    mapColor:'#b47fff',
+    mapMarkers:[{top:'30%',left:'30%',label:'NW quadrant'},{top:'30%',left:'65%',label:'NE quadrant'},{top:'60%',left:'30%',label:'SW quadrant'},{top:'60%',left:'65%',label:'SE quadrant'},{top:'45%',left:'47%',label:'Downtown core'}],
+    footerLeft:'Project ID: H12-04-002 · Scope: City-wide 425mi · Source: HSIP Program Data'
+  },
+  {
+    id:'C12-2', cycle:12, cycleColor:'#b47fff', cat:'BCR', catColor:'rgba(180,127,255,.1)', catBorder:'rgba(180,127,255,.35)',
+    title:'Traffic Safety at Signalized Locations (City-wide 3rd Pass)',
+    award:'$1,117,000', cost:'$1,117,000', bcr:'19.8', locDesc:'51 signalized intersections',
+    cms:['SI02 Retroreflective Backplates','SI17PB Countdown Signals','SI22PB LPI','ADA/APS Upgrades','ADA Curb Ramp Upgrades'],
+    desc:'Install signal backplates with <b>yellow retroreflective border</b>, pedestrian countdown heads, <b>accessible push buttons (APS)</b>, ADA curb ramp upgrades, and LPI — completing the third city-wide pass at 51 intersections not yet covered in C9 or C10. Also targets verifiable LPI gaps only.',
+    note:'Third and final pass of retroreflective backplates — city-wide coverage is NOW COMPLETE after C9+C10+C12. Do not use SI02 as a BCR anchor in C13. APS/ADA included for compliance and BCR support.',
+    kpis:[{label:'HSIP Award',val:'$1.12M',color:'#b47fff'},{label:'Total Cost',val:'$1.12M',color:'#7a90b0'},{label:'BCR Score',val:'19.8',color:'#3ecf8e'},{label:'Intersections',val:'51',color:'#fbbf24'}],
+    before:{period:'2019–2023',crashes:221,ksi:'20.9%',fatal:5,severe:29,night:'26%',note:'51 remaining intersections without retroreflective backplates. Night signal visibility degraded. LPI gaps causing ped-vehicle conflicts at high-ped-volume crossings.'},
+    after:{period:'2024–2028 est.',crashes:148,ksi:'14.1%',fatal:2,severe:12,night:'20%',note:'Backplate upgrade improves signal contrast at night. LPI gaps closed. APS devices improve ped safety at 8 high-conflict intersections.'},
+    changes:['-33% total crashes','-33% KSI rate','-60% fatalities'],
+    mapColor:'#b47fff',
+    mapMarkers:[{top:'41%',left:'45%',label:'Galindo & Clayton'},{top:'47%',left:'38%',label:'Concord Blvd corridor'},{top:'35%',left:'57%',label:'Treat & Oak Grove'},{top:'53%',left:'52%',label:'Monument & Virginia'}],
+    footerLeft:'Project ID: H12-04-004 · Crash period: 01/2019–12/2023 · Source: Crossroads Analytics'
+  }
+];
+
+let activeProjectId = null;
+
+// ─── RENDER FUNDED TABLE ─────────────────────────────────────────
+function renderFundedTable() {
+  const el = document.getElementById('funded-table');
+  el.innerHTML = PROJECTS.map(p => `
+    <div class="proj-row">
+      <div class="proj-cycle" style="color:${p.cycleColor}">C${p.cycle}</div>
+      <div class="proj-body">
+        <div class="proj-name" title="${p.title}">${p.title}</div>
+        <div class="proj-meta">${p.cat} · ${p.locDesc}</div>
+      </div>
+      <div class="proj-amount">${p.award.replace('$','$').split(',')[0]}${p.award.includes(',') ? '.' + p.award.split(',')[1][0] + 'M' : ''}</div>
+      <div class="proj-actions">
+        <button class="proj-btn proj-btn-map" onclick="showOnMap('${p.id}')" title="Show on map">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 1C4.79 1 3 2.79 3 5c0 3.25 4 8 4 8s4-4.75 4-8c0-2.21-1.79-4-4-4z"/><circle cx="7" cy="5" r="1.5"/></svg>
+          Map
+        </button>
+        <button class="proj-btn proj-btn-detail" onclick="openModal('${p.id}')" title="View details">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="12" height="12" rx="2"/><path d="M4 5h6M4 7h4M4 9h5"/></svg>
+          Details
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ─── FORMAT AMOUNT ───────────────────────────────────────────────
+function fmtAmt(str) {
+  const n = parseInt(str.replace(/[$,]/g,''));
+  if (n >= 1e6) return '$' + (n/1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return '$' + (n/1e3).toFixed(0) + 'K';
+  return str;
+}
+
+// ─── OPEN MODAL ─────────────────────────────────────────────────
+function openModal(id) {
+  const p = PROJECTS.find(x => x.id === id);
+  if (!p) return;
+  activeProjectId = id;
+
+  // Badge
+  const cb = document.getElementById('m-cycle-badge');
+  cb.textContent = 'Cycle ' + p.cycle;
+  cb.style.background = p.cycleColor + '22';
+  cb.style.color = p.cycleColor;
+  cb.style.border = '1px solid ' + p.cycleColor + '55';
+
+  const catb = document.getElementById('m-cat-badge');
+  catb.textContent = p.cat;
+  catb.style.background = p.catColor;
+  catb.style.color = p.cycleColor;
+  catb.style.borderColor = p.catBorder;
+
+  document.getElementById('m-title').textContent = p.title;
+  document.getElementById('m-award').textContent = fmtAmt(p.award);
+  document.getElementById('m-bcr').textContent = p.bcr;
+  document.getElementById('m-locs').textContent = p.locDesc;
+  document.getElementById('m-desc').innerHTML = p.desc;
+  document.getElementById('m-note').textContent = p.note;
+  document.getElementById('m-footer-left').textContent = p.footerLeft;
+
+  // KPIs
+  document.getElementById('m-kpis').innerHTML = p.kpis.map(k => `
+    <div class="mkpi" style="--kc:${k.color}">
+      <div class="mkpi-lbl">${k.label}</div>
+      <div class="mkpi-val" style="color:${k.color}">${k.val}</div>
+    </div>
+  `).join('');
+
+  // Before / After
+  const ba = p.before;
+  const af = p.after;
+  document.getElementById('m-ba').innerHTML = `
+    <div class="ba-col before">
+      <div class="ba-header">
+        <div class="ba-dot" style="background:var(--rd)"></div>
+        <div class="ba-label" style="color:var(--rd)">Before</div>
+        <div class="ba-period">${ba.period}</div>
+      </div>
+      <div class="ba-stat">
+        <div class="ba-stat-label">Total Crashes</div>
+        <div class="ba-stat-val" style="color:var(--rd)">${ba.crashes}</div>
+      </div>
+      <div class="ba-stat">
+        <div class="ba-stat-label">KSI Rate</div>
+        <div class="ba-stat-val" style="color:var(--rd)">${ba.ksi}</div>
+        <div class="ba-stat-sub">${ba.fatal} fatal · ${ba.severe} severe</div>
+      </div>
+      <div class="ba-stat" style="margin-bottom:0">
+        <div class="ba-stat-label">Night Crash Share</div>
+        <div class="ba-stat-val" style="color:var(--am)">${ba.night}</div>
+      </div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(248,113,113,.15);font-size:9.5px;color:var(--mt);line-height:1.6">${ba.note}</div>
+    </div>
+    <div class="ba-divider">
+      <div class="ba-arrow">→</div>
+      <div class="ba-change-pills">
+        ${p.changes.map(c => `<div class="ba-pill ${c.startsWith('-') ? 'ba-pill-good' : 'ba-pill-bad'}">${c}</div>`).join('')}
+      </div>
+    </div>
+    <div class="ba-col after">
+      <div class="ba-header">
+        <div class="ba-dot" style="background:var(--gn)"></div>
+        <div class="ba-label" style="color:var(--gn)">After</div>
+        <div class="ba-period">${af.period}</div>
+      </div>
+      <div class="ba-stat">
+        <div class="ba-stat-label">Total Crashes</div>
+        <div class="ba-stat-val" style="color:var(--gn)">${af.crashes}</div>
+      </div>
+      <div class="ba-stat">
+        <div class="ba-stat-label">KSI Rate</div>
+        <div class="ba-stat-val" style="color:var(--gn)">${af.ksi}</div>
+        <div class="ba-stat-sub">${af.fatal} fatal · ${af.severe} severe</div>
+      </div>
+      <div class="ba-stat" style="margin-bottom:0">
+        <div class="ba-stat-label">Night Crash Share</div>
+        <div class="ba-stat-val" style="color:var(--tl)">${af.night}</div>
+      </div>
+      <div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(52,211,153,.15);font-size:9.5px;color:var(--mt);line-height:1.6">${af.note}</div>
+    </div>
+  `;
+
+  // CMs
+  document.getElementById('m-cms').innerHTML = p.cms.map(c => `<div class="cm-tag">${c}</div>`).join('');
+
+  document.getElementById('proj-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('proj-modal').classList.remove('open');
+}
+
+// close on overlay click
+document.getElementById('proj-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// ─── SHOW ON MAP ─────────────────────────────────────────────────
+function showOnMap(id) {
+  const p = PROJECTS.find(x => x.id === id);
+  if (!p) return;
+  activeProjectId = id;
+
+  // Render markers
+  const markersEl = document.getElementById('map-markers');
+  markersEl.innerHTML = p.mapMarkers.map(m => `
+    <div class="map-marker" style="top:${m.top};left:${m.left}">
+      <div class="map-marker-dot" style="background:${p.mapColor}"></div>
+      <div class="map-marker-ring" style="border-color:${p.mapColor}"></div>
+      <div class="map-marker-label" style="background:${p.mapColor}22;border:1px solid ${p.mapColor}66;color:${p.mapColor}">
+        ${m.label}
+      </div>
+    </div>
+  `).join('');
+
+  // Banner
+  document.getElementById('banner-dot').style.background = p.mapColor;
+  document.getElementById('banner-name').textContent = p.title;
+  document.getElementById('banner-meta').textContent = 'C' + p.cycle + ' · ' + p.locDesc + ' · ' + fmtAmt(p.award);
+  document.getElementById('map-banner').classList.remove('hidden');
+
+  // If grant view is active, switch to show map properly
+  if (document.getElementById('grant-panel').classList.contains('visible')) {
+    // map already visible on left — just ensure grant panel stays
+  }
+}
+
+function showOnMapFromModal() {
+  closeModal();
+  if (activeProjectId) showOnMap(activeProjectId);
+}
+
+function clearMapProject() {
+  document.getElementById('map-markers').innerHTML = '';
+  document.getElementById('map-banner').classList.add('hidden');
+  activeProjectId = null;
+}
+
+// ─── VIEW TOGGLE ─────────────────────────────────────────────────
+function setView(view) {
+  const btnOverview = document.getElementById('btn-overview');
+  const btnGrant = document.getElementById('btn-grant');
+  const collPanel = document.getElementById('collision-panel');
+  const aiPanel = document.getElementById('ai-panel');
+  const grantPanel = document.getElementById('grant-panel');
+  const mapPanel = document.getElementById('map-panel');
+
+  if (view === 'overview') {
+    btnOverview.classList.add('active');
+    btnGrant.classList.remove('active');
+    collPanel.classList.remove('hidden');
+    aiPanel.classList.remove('hidden');
+    grantPanel.classList.remove('visible');
+    mapPanel.style.flex = '';
+  } else {
+    btnGrant.classList.add('active');
+    btnOverview.classList.remove('active');
+    collPanel.classList.add('hidden');
+    aiPanel.classList.add('hidden');
+    grantPanel.classList.add('visible');
+    mapPanel.style.flex = '0 0 53%';
+  }
+}
+
+function grantTab(el, pane) {
+  document.querySelectorAll('.gtab').forEach(t => t.classList.remove('on'));
+  document.querySelectorAll('.grant-pane').forEach(p => { p.classList.remove('on'); p.style.display = 'none'; });
+  el.classList.add('on');
+  const paneEl = document.getElementById('gpane-' + pane);
+  paneEl.style.display = 'block';
+  paneEl.classList.add('on');
+
+  // Show/hide the outcome overlay over the map
+  const overlay = document.getElementById('sim-outcome-overlay');
+  if (pane === 'sim') {
+    overlay.classList.add('visible');
+    initSim();
+  } else {
+    overlay.classList.remove('visible');
+  }
+}
+
+function applySimChanges() {
+  // Visual feedback — could trigger map update in real implementation
+  const btn = document.querySelector('.sim-apply-btn');
+  btn.textContent = '✓ Applied';
+  btn.style.background = 'var(--gn)';
+  setTimeout(() => {
+    btn.textContent = 'Apply Changes';
+    btn.style.background = '';
+  }, 1600);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// WHAT-IF SIMULATOR — exact CRF data from FHWA CMF Clearinghouse
+// ═══════════════════════════════════════════════════════════════
+
+const CORRIDOR = {
+  name:'Clayton Road', type:'Signal-Conflict',
+  ksi:52, total:220, fatal:7, rate:23.6,
+  cov:27, gap:'0.87', pri:'High',
+  pcf:[['Signal Violations',38],['Speed-Related',28],['Right-of-Way',22]]
+};
+
+// Exact CMS data from reference — crf = actual FHWA CMF crash reduction factor
+const CMS = [
+  {id:'lighting', name:'Enhanced Street Lighting',      cluster:'A+B', crf:.28, cost:22000, src:'FHWA CMF #2345', pcf:'Dark Conditions / VRU Nighttime',         types:['HSIP','ATP','Caltrans']},
+  {id:'hawk',     name:'Ped Hybrid Beacon (HAWK)',       cluster:'B',   crf:.44, cost:55000, src:'FHWA CMF #4577', pcf:'Pedestrian Violation / VRU',               types:['HSIP','ATP','Caltrans']},
+  {id:'rlc',      name:'Red-Light Cameras',              cluster:'C',   crf:.26, cost:80000, src:'FHWA CMF #3100', pcf:'Signal Violations / Broadside',            types:['HSIP','Caltrans']},
+  {id:'lpi',      name:'Leading Ped Intervals (LPI)',    cluster:'C',   crf:.22, cost:12000, src:'FHWA CMF #1847', pcf:'Pedestrian Violation / Signal',            types:['HSIP','ATP','Caltrans']},
+  {id:'sfs',      name:'Speed Feedback Signs',           cluster:'D',   crf:.18, cost:12000, src:'FHWA CMF #2191', pcf:'Unsafe Speed / Speed-Related',             types:['HSIP','Caltrans']},
+  {id:'pbl',      name:'Protected Bike Lanes (IV)',      cluster:'E',   crf:.44, cost:85000, src:'FHWA CMF #5102', pcf:'Bicycle Collisions',                       types:['HSIP','ATP']},
+  {id:'rpi',      name:'Median Refuge Islands',          cluster:'B',   crf:.31, cost:35000, src:'FHWA CMF #3002', pcf:'Pedestrian Exposure / Mid-block',          types:['HSIP','ATP','Caltrans']},
+  {id:'plt',      name:'Protected Left-Turn Phase',      cluster:'C',   crf:.22, cost:18000, src:'FHWA CMF #1600', pcf:'Improper Turn / Signal Conflict',          types:['HSIP','Caltrans']},
+  {id:'wwds',     name:'Wrong-Way Detection',            cluster:'A',   crf:.52, cost:45000, src:'FHWA CMF #4800', pcf:'Wrong-Way / DUI Night',                    types:['HSIP','Caltrans']},
+  {id:'cctv',     name:'CCTV / License Plate Readers',  cluster:'F',   crf:.15, cost:28000, src:'FHWA CMF #2900', pcf:'Hit-and-Run / VRU Deterrence',             types:['HSIP','Caltrans']},
+];
+
+// Cluster lookup tables — exact from reference
+const CN = {A:'Nighttime/DUI', B:'Ped Visibility', C:'Signal & Intersection', D:'Speed Mgmt', E:'Bike Infrastructure', F:'Hit-and-Run'};
+const CC = {A:'cp-a', B:'cp-b', C:'cp-c', D:'cp-d', E:'cp-e', F:'cp-f'};
+
+let simSel = {};     // id → boolean
+let simProg = 'HSIP';
+let simInited = false;
+
+function initSim() {
+  if (simInited) { recalcSim(); return; }
+  simInited = true;
+  renderCMList();
+  setProg('hsip');  // apply eligibility filter + C13 context label
+  recalcSim();  // sets empty state
+}
+
+// ── CM LIST RENDER ────────────────────────────────────────────────
+function renderCMList() {
+  const el = document.getElementById('sim-cm-list');
+  el.innerHTML = CMS.map(cm => {
+    const on = !!simSel[cm.id];
+    const crfPct = Math.round(cm.crf * 100);
+    const clusterLabel = cm.cluster.split('+').map(c => CN[c] || c).join(' + ');
+    return `
+    <div class="cm-row ${on ? 'cm-on' : ''}" id="cmrow-${cm.id}" onclick="toggleCM('${cm.id}')">
+      <div class="cm-toggle ${on ? 'on' : ''}" id="cmtog-${cm.id}"></div>
+      <div class="cm-row-body">
+        <div class="cm-row-name">${cm.name}</div>
+        <div class="cm-row-meta">$${cm.cost.toLocaleString()} · ${cm.src}</div>
+        <div class="cm-row-detail ${on ? 'show' : ''}" id="cmdet-${cm.id}">
+          <div class="cm-detail-row"><span>PCF Target</span><span>${cm.pcf}</span></div>
+          <div class="cm-detail-row"><span>Cluster</span><span>${clusterLabel}</span></div>
+        </div>
+      </div>
+      <div class="cm-ksi-badge ${on ? 'cm-ksi-on' : 'cm-ksi-off'}" id="cmbadge-${cm.id}">−${crfPct}%</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCM(id) {
+  simSel[id] = !simSel[id];
+  const on = simSel[id];
+  document.getElementById('cmrow-' + id).classList.toggle('cm-on', on);
+  document.getElementById('cmtog-' + id).classList.toggle('on', on);
+  const badge = document.getElementById('cmbadge-' + id);
+  badge.className = 'cm-ksi-badge ' + (on ? 'cm-ksi-on' : 'cm-ksi-off');
+  const det = document.getElementById('cmdet-' + id);
+  if (det) det.classList.toggle('show', on);
+  recalcSim();
+}
+
+// ── RECALC ────────────────────────────────────────────────────────
+function recalcSim() {
+  const l = CORRIDOR;
+  const active = CMS.filter(c => simSel[c.id]);
+
+  // Empty state
+  if (!active.length) {
+    document.getElementById('sim-pct').textContent = '—';
+    document.getElementById('sim-pct').style.color = 'var(--mt)';
+    document.getElementById('sim-ksi-line').textContent = 'Select countermeasures to simulate';
+    document.getElementById('sim-ksi-before').textContent = l.ksi;
+    document.getElementById('sim-ksi-after').textContent = '—';
+    document.getElementById('sim-ksi-after').style.color = 'var(--mt)';
+    document.getElementById('sim-bar').style.width = '100%';
+    document.getElementById('sim-bar').style.background = 'rgba(255,255,255,.05)';
+    document.getElementById('sim-bar-label').textContent = l.ksi + ' KSI (baseline)';
+    document.getElementById('sim-conf').textContent = '—';
+    document.getElementById('sim-conf-bar').style.width = '0%';
+    const ci = document.getElementById('sim-conf-inline');
+    if (ci) { ci.textContent = '—'; ci.style.color = 'var(--mt)'; }
+    ['sim-cost','sim-ksi-prev','sim-cost-ksi','sim-bcr'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+    });
+    ['sim-footer-cost','sim-footer-ksi','sim-footer-costksi','sim-footer-bcr'].forEach(id => {
+      document.getElementById(id).textContent = '—';
+    });
+    const tag = document.getElementById('sim-benefit-tag');
+    tag.textContent = 'SELECT COUNTERMEASURES';
+    tag.style.cssText = 'background:rgba(30,51,88,.4);border-color:var(--bd);color:var(--mt)';
+    document.getElementById('sim-note').textContent = 'Toggle countermeasures to model KSI impact';
+    const btn = document.getElementById('sim-gen-btn');
+    if (btn) btn.classList.remove('ready');
+    const sel = document.getElementById('ov-ksi-sel');
+    if (sel) sel.textContent = '0 CMs selected';
+    return;
+  }
+
+  // Multiplicative CRF (exact formula from reference)
+  const surv = active.reduce((s, c) => s * (1 - c.crf), 1);
+  const crf = 1 - surv;
+  const pct = Math.round(crf * 100);
+  const ksiAfter = +(l.ksi * (1 - crf)).toFixed(1);
+  const ann = l.ksi / 11;
+  const ksiPrev5 = +(ann * crf * 5).toFixed(1);
+  const fatPrev = +(l.fatal / 11 * crf * 5).toFixed(1);
+  const totalCost = active.reduce((s, c) => s + c.cost, 0);
+  const cpk = ksiPrev5 > 0 ? Math.round(totalCost / ksiPrev5) : 0;
+  const bcr = totalCost > 0 ? ((ksiPrev5 * 1600000) / totalCost).toFixed(1) : '—';
+  const conf = Math.min(96, 50 + l.total / 5 + active.length * 4);
+  const remainPct = (ksiAfter / l.ksi * 100).toFixed(1);
+
+  // Outcome left panel
+  const pctEl = document.getElementById('sim-pct');
+  pctEl.textContent = '−' + pct + '%';
+  pctEl.style.color = 'var(--gn)';
+
+  document.getElementById('sim-ksi-line').textContent =
+    `${ksiPrev5} KSI prevented over 5 yrs · BCR ${bcr} : 1`;
+
+  document.getElementById('sim-ksi-before').textContent = l.ksi;
+  const afterEl = document.getElementById('sim-ksi-after');
+  afterEl.textContent = ksiAfter;
+  afterEl.style.color = 'var(--gn)';
+
+  document.getElementById('sim-bar').style.width = remainPct + '%';
+  document.getElementById('sim-bar').style.background = 'linear-gradient(90deg,var(--gn),#00d9c0)';
+  document.getElementById('sim-bar-label').textContent = `${l.ksi} KSI → ${ksiAfter} (−${pct}%)`;
+
+  document.getElementById('sim-conf').textContent = conf.toFixed(0) + '%';
+  document.getElementById('sim-conf-bar').style.width = conf + '%';
+  document.getElementById('sim-conf-bar').style.background =
+    conf > 85 ? 'var(--gn)' : conf > 60 ? 'var(--am)' : 'var(--rd)';
+
+  // Update conf inline and CM count in overlay header
+  const ci = document.getElementById('sim-conf-inline');
+  if (ci) { ci.textContent = conf.toFixed(0) + '%'; ci.style.color = conf > 85 ? 'var(--tl)' : 'var(--am)'; }
+  const sel = document.getElementById('ov-ksi-sel');
+  if (sel) sel.textContent = active.length + ' CM' + (active.length !== 1 ? 's' : '') + ' selected';
+
+  document.getElementById('sim-cost').textContent = '$' + totalCost.toLocaleString();
+  document.getElementById('sim-ksi-prev').textContent = ksiPrev5;
+  document.getElementById('sim-cost-ksi').textContent = cpk ? '$' + cpk.toLocaleString() : '—';
+  document.getElementById('sim-bcr').textContent = bcr + ' : 1';
+
+  // Benefit tag
+  const tags = [];
+  if (active.find(c => c.cluster.includes('B'))) tags.push('PED NIGHTTIME BENEFIT');
+  if (active.find(c => c.cluster.includes('C'))) tags.push('SIGNAL-CONFLICT REDUCTION');
+  if (active.find(c => c.id === 'pbl')) tags.push('BIKE SAFETY BENEFIT');
+  const tag = document.getElementById('sim-benefit-tag');
+  tag.textContent = tags[0] || 'MULTI-COUNTERMEASURE BUNDLE';
+  tag.style.cssText = 'background:rgba(0,217,192,.08);border-color:rgba(0,217,192,.2);color:var(--tl)';
+
+  // Note
+  document.getElementById('sim-note').innerHTML =
+    `${l.total} collision baseline · ${conf.toFixed(0)}% conf · FHWA CMF · VSL <b style="color:var(--am)">$${(ksiPrev5 * 1.6).toFixed(1)}M</b>`;
+
+  // Footer
+  document.getElementById('sim-footer-cost').textContent = '$' + totalCost.toLocaleString();
+  document.getElementById('sim-footer-ksi').textContent = ksiPrev5;
+  document.getElementById('sim-footer-costksi').textContent = cpk ? '$' + cpk.toLocaleString() : '—';
+  document.getElementById('sim-footer-bcr').textContent = bcr + ' : 1';
+
+  // Gen button
+  const btn = document.getElementById('sim-gen-btn');
+  if (btn) btn.classList.add('ready');
+}
+
+function setProg(progId) {
+  simProg = progId.toUpperCase();
+  document.querySelectorAll('.sim-prog-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('prog-' + progId).classList.add('active');
+
+  // Update C13 context hint from grant history
+  const ctx = document.getElementById('sim-prog-context');
+  const hints = {
+    hsip: 'C13 · BCR target 25+ · Bundle 2–4 CMs',
+    atp: 'ATP Rd 7 · VRU-focused · $350K cap',
+    caltrans: 'Caltrans HS 2025 · City-wide eligible'
+  };
+  if (ctx) ctx.textContent = hints[progId] || '';
+
+  // Filter CM rows to show only eligible ones for selected program
+  CMS.forEach(cm => {
+    const row = document.getElementById('cmrow-' + cm.id);
+    if (!row) return;
+    const eligible = cm.types.map(t => t.toUpperCase()).includes(simProg);
+    row.style.opacity = eligible ? '1' : '0.35';
+    row.style.pointerEvents = eligible ? '' : 'none';
+  });
+}
+
+// ── GRANT MODAL — exact logic from tms-dark.html ─────────────────
+function openGrantModal() {
+  const l = CORRIDOR;
+  const active = CMS.filter(c => simSel[c.id]);
+  if (!active.length) return;
+
+  const surv = active.reduce((s, c) => s * (1 - c.crf), 1);
+  const crf = 1 - surv;
+  const pct = Math.round(crf * 100);
+  const ksiAfter = +(l.ksi * (1 - crf)).toFixed(1);
+  const ann = l.ksi / 11;
+  const ksiPrev5 = +(ann * crf * 5).toFixed(1);
+  const fatPrev = +(l.fatal / 11 * crf * 5).toFixed(1);
+  const injPrev = +((l.total - l.ksi) / 11 * crf * 5).toFixed(0);
+  const cost = active.reduce((s, c) => s + c.cost, 0);
+  const bcr = cost > 0 ? ((ksiPrev5 * 1600000) / cost).toFixed(1) : '—';
+  const conf = Math.min(96, 50 + l.total / 5 + active.length * 4);
+
+  const prog = simProg;
+  const pLabel = prog === 'HSIP' ? 'HSIP Cycle 13' : prog === 'ATP' ? 'ATP Round 7' : 'Caltrans Highway Safety 2025';
+
+  document.getElementById('gm-tag-pill').textContent = prog + ' GRANT APPLICATION';
+  document.getElementById('gm-doc-title').textContent = l.name + ' — Safety Improvement Project';
+  document.getElementById('gm-prog-lbl').textContent = pLabel;
+  document.getElementById('gm-date-lbl').textContent = new Date().toLocaleDateString('en-US', {month:'long', year:'numeric'});
+
+  // Section builder
+  const sec = (n, t, body) =>
+    `<div class="doc-sec"><div class="doc-sec-hdr"><span class="doc-num">${n}</span><span class="doc-ttl">${t}</span></div>${body}</div>`;
+
+  // Table builder — first col bold, last col mono (matches reference)
+  const tbl = (hs, rs) =>
+    `<table class="doc-table"><thead><tr>${hs.map(h => `<th>${h}</th>`).join('')}</tr></thead>` +
+    `<tbody>${rs.map(r => `<tr>${r.map((c, i) =>
+      `<td class="${i===0?'td-bold':i===hs.length-1?'td-mono':''}">${c}</td>`
+    ).join('')}</tr>`).join('')}</tbody></table>`;
+
+  document.getElementById('gm-body').innerHTML = [
+
+    sec('01', 'Problem Statement',
+      `<p class="doc-text"><strong>${l.name}</strong> is a <strong>${l.type}</strong> corridor. SWITRS 2014–2025: <strong>${l.total} total collisions</strong>, <strong>${l.ksi} KSI</strong>, <strong>${l.fatal} fatalities</strong>. KSI rate <strong>${l.rate}%</strong> vs 25.0% citywide. VRUs are 30.2% of volume but <strong>51.8% of fatalities (1.7×).</strong></p>`
+    ),
+
+    sec('02', 'Crash History',
+      tbl(
+        ['Metric', 'This Corridor', 'Citywide'],
+        [
+          ['Total Collisions', l.total, '1,499'],
+          ['KSI', `<strong>${l.ksi}</strong>`, '375'],
+          ['Fatalities', `<strong>${l.fatal}</strong>`, '56'],
+          ['KSI Rate', `<strong>${l.rate}%</strong>`, '25.0%'],
+          ['CM Coverage', l.cov + '%', '~28% avg'],
+          ['Priority', `<strong>${l.pri}</strong>`, 'AI-scored'],
+        ]
+      ) +
+      `<div class="doc-callout" style="margin-top:10px"><strong>Dominant PCFs:</strong> ${l.pcf.map(([n,v]) => `${n} (${v}%)`).join(' · ')}</div>`
+    ),
+
+    sec('03', 'Proposed Countermeasures',
+      `<p class="doc-text" style="margin-bottom:10px">All CRFs from FHWA CMF Clearinghouse.</p>` +
+      tbl(
+        ['Countermeasure', 'Cluster', 'CMF Source', 'CRF', 'Cost'],
+        active.map(c => [
+          c.name,
+          c.cluster.split('+').map(ch => `<span class="cpill ${CC[ch.trim()]||'cp-a'}">${CN[ch.trim()]||ch}</span>`).join(''),
+          `<span class="td-mono">${c.src}</span>`,
+          (c.crf * 100).toFixed(0) + '%',
+          '$' + c.cost.toLocaleString()
+        ])
+      )
+    ),
+
+    sec('04', 'Benefit Calculation',
+      `<div class="doc-callout" style="margin-bottom:12px"><strong>Combined CRF: ${(crf*100).toFixed(1)}%</strong> — KSI ${l.ksi} → ${ksiAfter}</div>` +
+      tbl(
+        ['Metric', 'Value'],
+        [
+          ['Combined CRF', (crf*100).toFixed(1)+'%'],
+          ['KSI Prevented (5-yr)', `<strong>${ksiPrev5}</strong>`],
+          ['Fatalities Prevented', fatPrev],
+          ['Injuries Prevented', injPrev],
+          ['Project Cost', '$'+cost.toLocaleString()],
+          ['BCR (VSL $1.6M)', `<strong>${bcr} : 1</strong>`],
+          ['Statistical Confidence', conf.toFixed(0)+'%'],
+        ]
+      )
+    ),
+
+    sec('05', 'Equity & VRU',
+      `<p class="doc-text">VRU over-representation: <strong>51.8% of fatalities vs 30.2% of volume (1.7×)</strong>. Dark conditions account for 64.8% of fatal collisions.${prog==='ATP'?' <strong>Qualifies for ATP equity scoring.</strong>':''}</p>` +
+      `<div class="doc-callout" style="margin-top:8px"><strong>HSIP VRU Set-Aside:</strong> Project includes ≥1 VRU-targeted CM — qualifies for the dedicated VRU funding pool (16 CA projects, $43M in C12).</div>`
+    ),
+
+  ].join('');
+
+  document.getElementById('grant-doc-overlay').classList.add('open');
+}
+
+function closeGrantDoc() { document.getElementById('grant-doc-overlay').classList.remove('open'); }
+function bgGrantDoc(e) { if (e.target === document.getElementById('grant-doc-overlay')) closeGrantDoc(); }
+
+// ─── INIT ────────────────────────────────────────────────────────
+document.querySelectorAll('.grant-pane').forEach(p => {
+  if (!p.classList.contains('on')) p.style.display = 'none';
+});
+renderFundedTable();
+</script>
+</body>
+</html>

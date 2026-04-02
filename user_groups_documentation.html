@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>User Groups — Question Framework Documentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue:        #005EB8;
+    --blue-deep:   #004A94;
+    --yellow:      #FFC72C;
+    --bg-page:     #080F1E;
+    --bg-nav:      #0D1829;
+    --bg-card:     #111F35;
+    --bg-elevated: #162B4D;
+    --text-primary:   #E4ECF7;
+    --text-dim:       #8CA0BE;
+    --text-muted:     #4D6280;
+    --border-yellow:  rgba(255,199,44,0.12);
+    --border-blue:    rgba(0,94,184,0.30);
+    --tr: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    --font-sans: 'Sora', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-size: 15px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── TOP BAR ─────────────────────────────────────────── */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: linear-gradient(135deg, #0D1829, #111F35);
+    border-bottom: 1px solid var(--border-yellow);
+    padding: 0 2.5rem;
+    height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .topbar-logo { display: flex; align-items: center; gap: 10px; }
+  .topbar-logo-icon {
+    width: 28px; height: 28px;
+    background: var(--blue);
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .topbar-logo-icon svg { width: 16px; height: 16px; fill: #fff; }
+  .topbar-brand { font-size: 12px; font-weight: 700; color: var(--text-primary); letter-spacing: 0.2px; }
+  .topbar-divider { width: 1px; height: 20px; background: var(--border-yellow); }
+  .topbar-title { font-size: 12px; font-weight: 500; color: var(--text-dim); }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 10px;
+    font-family: var(--font-mono);
+    font-size: 9px; font-weight: 500;
+    letter-spacing: 0.8px; text-transform: uppercase;
+  }
+  .pill-yellow { background: rgba(255,199,44,0.12); color: var(--yellow); border: 1px solid rgba(255,199,44,0.28); }
+  .pill-blue   { background: rgba(0,94,184,0.18);   color: #5aaeff;       border: 1px solid var(--border-blue); }
+  .status-dot  { width: 6px; height: 6px; border-radius: 50%; background: #00c87a; display: inline-block; }
+
+  /* ── LAYOUT ──────────────────────────────────────────── */
+  .layout { display: flex; min-height: calc(100vh - 56px); }
+
+  /* ── SIDEBAR ─────────────────────────────────────────── */
+  .sidebar {
+    width: 230px; flex-shrink: 0;
+    background: var(--bg-nav);
+    border-right: 1px solid var(--border-yellow);
+    padding: 2rem 0;
+    position: sticky; top: 56px;
+    height: calc(100vh - 56px);
+    overflow-y: auto;
+  }
+  .nav-group-label {
+    font-family: var(--font-mono);
+    font-size: 9px; font-weight: 500;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 1.2rem 1.5rem 0.4rem;
+  }
+  .nav-link {
+    display: block; padding: 0.45rem 1.5rem;
+    font-size: 13px; font-weight: 400;
+    color: var(--text-dim); text-decoration: none;
+    transition: color var(--tr), background var(--tr);
+    border-left: 2px solid transparent;
+  }
+  .nav-link:hover { color: var(--text-primary); background: rgba(255,255,255,0.03); }
+  .nav-link.active { color: var(--yellow); border-left-color: var(--yellow); background: rgba(255,199,44,0.05); font-weight: 500; }
+
+  /* ── MAIN CONTENT ────────────────────────────────────── */
+  .main { flex: 1; padding: 3rem 3.5rem 5rem; max-width: 960px; }
+
+  /* ── HERO ────────────────────────────────────────────── */
+  .hero {
+    margin-bottom: 4rem; padding-bottom: 3rem;
+    border-bottom: 1px solid var(--border-yellow);
+  }
+  .hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 9px; font-weight: 500;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--yellow); margin-bottom: 1rem;
+  }
+  .hero-title { font-size: 36px; font-weight: 700; line-height: 1.2; color: var(--text-primary); margin-bottom: 1rem; }
+  .hero-title span { color: var(--yellow); }
+  .hero-sub { font-size: 15px; font-weight: 400; color: var(--text-dim); max-width: 620px; line-height: 1.7; margin-bottom: 2rem; }
+  .hero-meta { display: flex; gap: 2rem; flex-wrap: wrap; }
+  .hero-meta-item { display: flex; flex-direction: column; gap: 3px; }
+  .hero-meta-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); }
+  .hero-meta-value { font-size: 13px; font-weight: 500; color: var(--text-dim); }
+
+  /* ── SECTION ─────────────────────────────────────────── */
+  section { margin-bottom: 4rem; scroll-margin-top: 80px; }
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 9px; letter-spacing: 2px;
+    text-transform: uppercase; color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+  h2 {
+    font-size: 22px; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 1.25rem; padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-yellow);
+  }
+  h3 { font-size: 15px; font-weight: 600; color: var(--text-primary); margin: 1.75rem 0 0.6rem; }
+  p { color: var(--text-dim); margin-bottom: 0.9rem; font-size: 14px; }
+  strong { color: var(--text-primary); font-weight: 600; }
+
+  /* ── TABLE ───────────────────────────────────────────── */
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+  th {
+    font-family: var(--font-mono);
+    font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--text-muted); padding: 0.65rem 1rem; text-align: left;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border-yellow);
+  }
+  td { font-size: 13px; color: var(--text-dim); padding: 0.7rem 1rem; border-bottom: 1px solid rgba(255,199,44,0.07); }
+  tr:last-child td { border-bottom: none; }
+  tbody tr:hover td { background: rgba(255,255,255,0.02); }
+  .table-wrap {
+    background: var(--bg-card);
+    border: 1px solid var(--border-yellow);
+    border-radius: 10px; overflow: hidden; margin: 1rem 0;
+  }
+
+  /* ── CARDS ───────────────────────────────────────────── */
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border-yellow);
+    border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem;
+    transition: border-color var(--tr);
+  }
+  .card:hover { border-color: rgba(255,199,44,0.25); }
+  .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 0.75rem; }
+  .card-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .card-body { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+  .card-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+  /* ── BADGE ───────────────────────────────────────────── */
+  .badge {
+    display: inline-block; font-family: var(--font-mono);
+    font-size: 9px; letter-spacing: 0.8px;
+    text-transform: uppercase; font-weight: 500;
+    padding: 2px 8px; border-radius: 5px; vertical-align: middle;
+  }
+  .badge-ops     { background: rgba(255,100,100,0.15); color: #ff7b7b; border: 1px solid rgba(255,100,100,0.28); }
+  .badge-analysis{ background: rgba(0,94,184,0.18);   color: #5aaeff; border: 1px solid var(--border-blue); }
+  .badge-strategy{ background: rgba(255,199,44,0.12); color: var(--yellow); border: 1px solid rgba(255,199,44,0.28); }
+  .badge-new     { background: rgba(0,200,112,0.15); color: #4dd68c; border: 1px solid rgba(0,200,112,0.25); }
+
+  /* ── USER GROUP HEADER BANNER ────────────────────────── */
+  .group-banner {
+    border-radius: 10px; padding: 1.1rem 1.5rem;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.75rem;
+  }
+  .group-banner.ops     { background: rgba(255,100,100,0.07); border: 1px solid rgba(255,100,100,0.25); }
+  .group-banner.analysis{ background: rgba(0,94,184,0.10);    border: 1px solid rgba(0,94,184,0.35); }
+  .group-banner.strategy{ background: rgba(255,199,44,0.07);  border: 1px solid rgba(255,199,44,0.28); }
+  .group-banner-left { display: flex; align-items: center; gap: 12px; }
+  .group-banner-icon {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .ops     .group-banner-icon { background: rgba(255,100,100,0.15); }
+  .analysis .group-banner-icon { background: rgba(0,94,184,0.18); }
+  .strategy .group-banner-icon { background: rgba(255,199,44,0.12); }
+  .group-banner-name { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+  .group-banner-sub  { font-size: 12px; color: var(--text-dim); margin-top: 1px; }
+  .group-banner-right { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+
+  /* ── VALUE CALLOUT ───────────────────────────────────── */
+  .value-callout {
+    display: flex; gap: 12px; align-items: flex-start;
+    border-radius: 8px; padding: 0.9rem 1.2rem; margin-bottom: 1.5rem;
+  }
+  .value-callout.ops     { background: rgba(255,100,100,0.06); border: 1px solid rgba(255,100,100,0.18); }
+  .value-callout.analysis{ background: rgba(0,94,184,0.08);   border: 1px solid rgba(0,94,184,0.25); }
+  .value-callout.strategy{ background: rgba(255,199,44,0.06); border: 1px solid rgba(255,199,44,0.22); }
+  .value-callout-label {
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: 1.5px;
+    text-transform: uppercase; font-weight: 500; flex-shrink: 0; margin-top: 1px;
+  }
+  .ops     .value-callout-label { color: #ff7b7b; }
+  .analysis .value-callout-label { color: #5aaeff; }
+  .strategy .value-callout-label { color: var(--yellow); }
+  .value-callout-body { font-size: 12px; color: var(--text-dim); line-height: 1.6; }
+
+  /* ── SPATIAL LEVEL BLOCK ─────────────────────────────── */
+  .level-block {
+    background: var(--bg-card); border: 1px solid var(--border-yellow);
+    border-radius: 12px; overflow: hidden; margin-bottom: 1rem;
+  }
+  .level-block-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 0.9rem 1.3rem;
+    background: var(--bg-elevated);
+    border-bottom: 1px solid var(--border-yellow);
+  }
+  .level-badge {
+    width: 26px; height: 26px; border-radius: 6px;
+    background: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .level-badge.city   { background: #005EB8; }
+  .level-badge.corridor{ background: #007A5E; }
+  .level-badge.intersection{ background: #9B5CE5; }
+  .level-block-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+  .level-block-sub   { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-top: 1px; }
+
+  .level-block-body { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; }
+  .stage-col { padding: 1rem 1.1rem; border-right: 1px solid var(--border-yellow); }
+  .stage-col:last-child { border-right: none; }
+  .stage-col-label {
+    font-family: var(--font-mono); font-size: 8px; letter-spacing: 1.5px;
+    text-transform: uppercase; font-weight: 500; margin-bottom: 0.6rem;
+  }
+  .stage-col-label.overview  { color: #4dd68c; }
+  .stage-col-label.type      { color: #5aaeff; }
+  .stage-col-label.factors   { color: var(--yellow); }
+  .stage-col-label.anomalies { color: #ff7b7b; }
+
+  .stage-col ul { list-style: none; }
+  .stage-col ul li {
+    font-size: 11.5px; color: var(--text-dim); padding: 3px 0;
+    display: flex; align-items: flex-start; gap: 7px; line-height: 1.45;
+  }
+  .stage-col ul li::before {
+    content: ''; width: 4px; height: 4px; border-radius: 50%;
+    background: var(--text-muted); flex-shrink: 0; margin-top: 5px;
+  }
+  .stage-col.overview  ul li::before { background: #4dd68c; }
+  .stage-col.type      ul li::before { background: #5aaeff; }
+  .stage-col.factors   ul li::before { background: var(--yellow); }
+  .stage-col.anomalies ul li::before { background: #ff7b7b; }
+
+  /* ── CALLOUT ─────────────────────────────────────────── */
+  .callout {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: rgba(0,94,184,0.1); border: 1px solid var(--border-blue);
+    border-radius: 10px; padding: 1.1rem 1.3rem; margin: 1.25rem 0;
+  }
+  .callout-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+  .callout-body { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+  .callout-body strong { color: #5aaeff; }
+  .callout-yellow { background: rgba(255,199,44,0.07); border-color: rgba(255,199,44,0.25); }
+  .callout-yellow .callout-body strong { color: var(--yellow); }
+
+  /* ── PRINCIPLE GRID (Stage Legend) ───────────────────── */
+  .stage-legend { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: 1.5rem 0; }
+  .stage-legend-card {
+    background: var(--bg-card); border: 1px solid var(--border-yellow);
+    border-radius: 10px; padding: 1rem 1.1rem;
+  }
+  .stage-legend-num  { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; font-weight: 500; margin-bottom: 0.4rem; }
+  .stage-legend-name { font-size: 12px; font-weight: 600; color: var(--text-primary); margin-bottom: 0.3rem; }
+  .stage-legend-q    { font-size: 11px; color: var(--text-dim); }
+  .sl-overview  .stage-legend-num { color: #4dd68c; }
+  .sl-type      .stage-legend-num { color: #5aaeff; }
+  .sl-factors   .stage-legend-num { color: var(--yellow); }
+  .sl-anomalies .stage-legend-num { color: #ff7b7b; }
+
+  /* ── SPATIAL MODEL TABLE ─────────────────────────────── */
+  .spatial-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+  .spatial-card {
+    background: var(--bg-card); border: 1px solid var(--border-yellow);
+    border-radius: 10px; padding: 1.1rem 1.25rem;
+  }
+  .spatial-card-label {
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: 1.5px;
+    text-transform: uppercase; margin-bottom: 0.5rem;
+  }
+  .spatial-card-label.city   { color: #5aaeff; }
+  .spatial-card-label.corridor { color: #4dd68c; }
+  .spatial-card-label.intersection { color: #b47bff; }
+  .spatial-card-name { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 0.3rem; }
+  .spatial-card-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+  /* ── USER ROLE CARDS ─────────────────────────────────── */
+  .role-overview { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+  .role-card-big {
+    background: var(--bg-card); border: 1px solid var(--border-yellow);
+    border-radius: 12px; padding: 1.25rem 1.3rem;
+  }
+  .role-card-icon { font-size: 22px; margin-bottom: 0.6rem; }
+  .role-card-name { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 0.2rem; }
+  .role-card-roles { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 0.5rem; }
+  .role-card-roles.ops     { color: #ff7b7b; }
+  .role-card-roles.analysis { color: #5aaeff; }
+  .role-card-roles.strategy { color: var(--yellow); }
+  .role-card-desc { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+
+  /* ── DIVIDER ─────────────────────────────────────────── */
+  .divider { height: 1px; background: var(--border-yellow); margin: 2rem 0; }
+
+  /* ── FOOTER ──────────────────────────────────────────── */
+  .doc-footer {
+    margin-top: 5rem; padding-top: 2rem;
+    border-top: 1px solid var(--border-yellow);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 1rem;
+  }
+  .doc-footer-left { font-size: 12px; color: var(--text-muted); }
+  .doc-footer-right { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); }
+
+  /* ── HAMBURGER ───────────────────────────────────────── */
+  .topbar-hamburger {
+    display: none; background: none; border: none; cursor: pointer;
+    padding: 6px; border-radius: 6px; color: var(--text-dim);
+    transition: background var(--tr), color var(--tr); margin-right: 4px; flex-shrink: 0;
+  }
+  .topbar-hamburger:hover { background: rgba(255,255,255,0.07); color: var(--text-primary); }
+  .topbar-hamburger svg { display: block; width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+
+  .sidebar-close {
+    display: none; position: absolute; top: 12px; right: 12px;
+    background: rgba(255,255,255,0.06); border: none; cursor: pointer;
+    border-radius: 6px; padding: 5px; color: var(--text-dim);
+    transition: background var(--tr), color var(--tr);
+  }
+  .sidebar-close:hover { background: rgba(255,255,255,0.14); color: var(--text-primary); }
+  .sidebar-close svg { display: block; width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+
+  .sidebar-backdrop {
+    display: none; position: fixed; inset: 0; z-index: 149;
+    background: rgba(8,15,30,0.75); backdrop-filter: blur(2px);
+    opacity: 0; transition: opacity 0.25s ease;
+  }
+  .sidebar-backdrop.visible { opacity: 1; }
+
+  /* ── RESPONSIVE ──────────────────────────────────────── */
+  @media (max-width: 960px) {
+    .main { padding: 2.5rem 2.5rem 4rem; }
+    .hero-title { font-size: 30px; }
+    .level-block-body { grid-template-columns: 1fr 1fr; }
+    .stage-col { border-bottom: 1px solid var(--border-yellow); }
+    .stage-col:nth-child(2n) { border-right: none; }
+    .stage-col:nth-last-child(-n+2) { border-bottom: none; }
+    .card-grid { grid-template-columns: 1fr 1fr; }
+    .role-overview { grid-template-columns: 1fr 1fr; }
+    .stage-legend { grid-template-columns: 1fr 1fr; }
+    .spatial-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 768px) {
+    .topbar { padding: 0 1.25rem; }
+    .topbar-hamburger { display: flex; align-items: center; justify-content: center; }
+    .topbar-divider, .topbar-title { display: none; }
+    .sidebar {
+      position: fixed; top: 0; left: 0; height: 100vh; width: 260px; z-index: 150;
+      transform: translateX(-100%);
+      transition: transform 0.28s cubic-bezier(0.4,0,0.2,1); padding-top: 3rem;
+    }
+    .sidebar.open { transform: translateX(0); }
+    .sidebar-close { display: block; }
+    .sidebar-backdrop { display: block; }
+    .layout { display: block; }
+    .main { padding: 2rem 1.25rem 4rem; max-width: 100%; }
+    .hero { margin-bottom: 3rem; padding-bottom: 2rem; }
+    .hero-title { font-size: 26px; }
+    .card-grid { grid-template-columns: 1fr; }
+    .role-overview { grid-template-columns: 1fr; }
+    .stage-legend { grid-template-columns: 1fr 1fr; }
+    .level-block-body { grid-template-columns: 1fr; }
+    .stage-col { border-right: none; border-bottom: 1px solid var(--border-yellow); }
+    .stage-col:last-child { border-bottom: none; }
+    .pill-blue { display: none; }
+  }
+
+  @media (max-width: 480px) {
+    .main { padding: 1.5rem 1rem 3.5rem; }
+    .hero-title { font-size: 22px; }
+    h2 { font-size: 18px; }
+    .stage-legend { grid-template-columns: 1fr; }
+    .doc-footer { flex-direction: column; gap: 0.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="topbar-left">
+    <button class="topbar-hamburger" id="sidebarToggle" aria-label="Open navigation" aria-expanded="false">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <span class="topbar-brand">UX Exploration</span>
+    </div>
+    <div class="topbar-divider"></div>
+    <span class="topbar-title">Question Framework Documentation</span>
+  </div>
+  <div class="topbar-right">
+    <span class="pill pill-yellow"><span class="status-dot"></span>Live</span>
+    <span class="pill pill-blue">FY 2025–26</span>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="layout">
+
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <button class="sidebar-close" id="sidebarClose" aria-label="Close navigation">
+      <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="nav-group-label">Overview</div>
+    <a class="nav-link active" href="#introduction">Introduction</a>
+    <a class="nav-link" href="#spatial-model">Spatial Model</a>
+    <a class="nav-link" href="#users">User Groups</a>
+    <a class="nav-link" href="#stage-legend">Stage Legend</a>
+
+    <div class="nav-group-label">Operations</div>
+    <a class="nav-link" href="#ops-city">City Level</a>
+    <a class="nav-link" href="#ops-corridor">Corridor Level</a>
+    <a class="nav-link" href="#ops-intersection">Intersection Level</a>
+
+    <div class="nav-group-label">Analysis</div>
+    <a class="nav-link" href="#analysis-city">City Level</a>
+    <a class="nav-link" href="#analysis-corridor">Corridor Level</a>
+    <a class="nav-link" href="#analysis-intersection">Intersection Level</a>
+
+    <div class="nav-group-label">Strategy</div>
+    <a class="nav-link" href="#strategy-city">City Level</a>
+    <a class="nav-link" href="#strategy-corridor">Corridor Level</a>
+    <a class="nav-link" href="#strategy-intersection">Intersection Level</a>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-eyebrow">Product Documentation · Road Safety Analytics Platform</div>
+      <h1 class="hero-title">User Groups<br/><span>Question Framework</span></h1>
+      <p class="hero-sub">
+        This document defines the structured question framework used across the road safety analytics platform. Questions are organised by user group and spatial level, following a progressive analytical flow: Overview → Type → Factors → Anomalies.
+      </p>
+      <div class="hero-meta">
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Audience</span>
+          <span class="hero-meta-value">Operations · Analysis · Strategy</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Spatial Levels</span>
+          <span class="hero-meta-value">City · Corridor · Intersection</span>
+        </div>
+        <div class="hero-meta-item">
+          <span class="hero-meta-label">Period</span>
+          <span class="hero-meta-value">FY 2025–26</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- INTRODUCTION -->
+    <section id="introduction">
+      <div class="section-label">01 · Introduction</div>
+      <h2>Objective</h2>
+      <p>
+        The question framework structures how different user groups interrogate road safety data. Each question is mapped to a <strong>user group</strong>, a <strong>spatial level</strong>, and a <strong>stage</strong> — ensuring that insights flow progressively from macro city-wide awareness down to granular intersection-level root causes.
+      </p>
+      <div class="callout callout-yellow">
+        <span class="callout-icon">⚡</span>
+        <div class="callout-body">
+          <strong>Core Flow:</strong> Every question set follows the same analytical progression — Overview → Type → Factors → Anomalies — applied at each spatial level and tailored to the needs of each user group.
+        </div>
+      </div>
+    </section>
+
+    <!-- SPATIAL MODEL -->
+    <section id="spatial-model">
+      <div class="section-label">02 · Architecture</div>
+      <h2>Spatial Drill-Down Model</h2>
+      <p>The system connects three levels of analysis, each building on the previous. Users move from identifying where problems exist to understanding exactly why they occur.</p>
+
+      <div class="spatial-grid">
+        <div class="spatial-card">
+          <div class="spatial-card-label city">City</div>
+          <div class="spatial-card-name">Identifies where problems exist</div>
+          <div class="spatial-card-desc">Macro-level awareness of crash density, hotspots, and systemic trends across the city. Entry point for all investigations.</div>
+        </div>
+        <div class="spatial-card">
+          <div class="spatial-card-label corridor">Corridor</div>
+          <div class="spatial-card-name">Explains how problems behave</div>
+          <div class="spatial-card-desc">Segment-level patterns, road-specific behaviours, and corridor ranking by risk contribution and severity.</div>
+        </div>
+        <div class="spatial-card">
+          <div class="spatial-card-label intersection">Intersection</div>
+          <div class="spatial-card-name">Reveals why they occur</div>
+          <div class="spatial-card-desc">Granular diagnosis of individual locations — collision patterns, causal factors, and outlier behaviour relative to nearby points.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- USERS -->
+    <section id="users">
+      <div class="section-label">03 · User Groups</div>
+      <h2>Users</h2>
+      <p>Three distinct user groups interact with the platform, each with a different analytical purpose and decision-making remit.</p>
+
+      <div class="role-overview">
+        <div class="role-card-big">
+          <div class="role-card-icon">🚔</div>
+          <div class="role-card-name">Operations</div>
+          <div class="role-card-roles ops">Police · Corridor Director</div>
+          <div class="role-card-desc">Monitoring and immediate action. Focused on fast identification of problem areas, behaviour-driven risk awareness, and prioritisation of response.</div>
+        </div>
+        <div class="role-card-big">
+          <div class="role-card-icon">🔬</div>
+          <div class="role-card-name">Analysis</div>
+          <div class="role-card-roles analysis">Safety Analyst · Engineer</div>
+          <div class="role-card-desc">Diagnosis and solution design. Deep root-cause identification, reliable correlation across variables, and confidence in analytical conclusions.</div>
+        </div>
+        <div class="role-card-big">
+          <div class="role-card-icon">🏛</div>
+          <div class="role-card-name">Strategy</div>
+          <div class="role-card-roles strategy">City Director · Elected Official</div>
+          <div class="role-card-desc">Prioritisation and investment decisions. Clear justification for funding, alignment between safety data and city planning.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STAGE LEGEND -->
+    <section id="stage-legend">
+      <div class="section-label">04 · Framework</div>
+      <h2>Question Stage Legend</h2>
+      <p>Each spatial level is interrogated through four progressive stages. The same four stages apply to every user group and every level, ensuring consistency across the entire framework.</p>
+
+      <div class="stage-legend">
+        <div class="stage-legend-card sl-overview">
+          <div class="stage-legend-num">Stage 01</div>
+          <div class="stage-legend-name">Overview</div>
+          <div class="stage-legend-q">What is happening?</div>
+        </div>
+        <div class="stage-legend-card sl-type">
+          <div class="stage-legend-num">Stage 02</div>
+          <div class="stage-legend-name">Type</div>
+          <div class="stage-legend-q">What kind of problem is this?</div>
+        </div>
+        <div class="stage-legend-card sl-factors">
+          <div class="stage-legend-num">Stage 03</div>
+          <div class="stage-legend-name">Factors</div>
+          <div class="stage-legend-q">Why is this happening?</div>
+        </div>
+        <div class="stage-legend-card sl-anomalies">
+          <div class="stage-legend-num">Stage 04</div>
+          <div class="stage-legend-name">Anomalies</div>
+          <div class="stage-legend-q">Where should attention go?</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────────────── OPERATIONS ── -->
+    <section id="ops">
+      <div class="section-label">05 · User Group</div>
+      <h2>Operations — Monitoring → Immediate Action</h2>
+
+      <div class="group-banner ops">
+        <div class="group-banner-left">
+          <div class="group-banner-icon">🚔</div>
+          <div>
+            <div class="group-banner-name">Operations</div>
+            <div class="group-banner-sub">Police · Corridor Director</div>
+          </div>
+        </div>
+        <div class="group-banner-right">
+          <span class="badge badge-ops">Monitoring</span>
+          <span class="badge badge-ops">Immediate Action</span>
+        </div>
+      </div>
+
+      <div class="value-callout ops">
+        <span class="value-callout-label">Value Enabled</span>
+        <div class="value-callout-body">Fast identification of problem areas · Behaviour-driven risk awareness · Immediate prioritisation of action</div>
+      </div>
+
+      <!-- City -->
+      <div id="ops-city" class="level-block" style="scroll-margin-top:80px;">
+        <div class="level-block-header">
+          <div class="level-badge city">C</div>
+          <div>
+            <div class="level-block-title">City Level</div>
+            <div class="level-block-sub">Macro awareness · Hotspot identification</div>
+          </div>
+        </div>
+        <div class="level-block-body">
+          <div class="stage-col overview">
+            <div class="stage-col-label overview">Overview</div>
+            <ul>
+              <li>Which areas have the highest crash density?</li>
+              <li>Which zones are emerging vs. persistent hotspots?</li>
+              <li>How has risk shifted over time?</li>
+              <li>Which areas require continuous monitoring?</li>
+            </ul>
+          </div>
+          <div class="stage-col type">
+            <div class="stage-col-label type">Type</div>
+            <ul>
+              <li>What collision types dominate these hotspots?</li>
+              <li>Which types are increasing fastest?</li>
+              <li>Are pedestrian crashes concentrated in specific areas?</li>
+              <li>Do specific types repeat across locations?</li>
+            </ul>
+          </div>
+          <div class="stage-col factors">
+            <div class="stage-col-label factors">Factors</div>
+            <ul>
+              <li>What behaviours are driving crashes (speed, alcohol, violations)?</li>
+              <li>Are these behaviours time-dependent?</li>
+              <li>Do the same factors repeat across hotspots?</li>
+              <li>Are factors geographically clustered?</li>
+            </ul>
+          </div>
+          <div class="stage-col anomalies">
+            <div class="stage-col-label anomalies">Anomalies</div>
+            <ul>
+              <li>Which areas show sudden spikes?</li>
+              <li>Which locations transitioned from low to high risk?</li>
+              <li>Where do patterns behave abnormally?</li>
+              <li>Which hotspots persist despite attention?</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Corridor -->
+      <div id="ops-corridor" class="level-block" style="scroll-margin-top:80px;">
+        <div class="level-block-header">
+          <div class="level-badge corridor">R</div>
+          <div>
+            <div class="level-block-title">Corridor Level</div>
+            <div class="level-block-sub">Segment risk · Behavioural patterns</div>
+          </div>
+        </div>
+        <div class="level-block-body">
+          <div class="stage-col overview">
+            <div class="stage-col-label overview">Overview</div>
+            <ul>
+              <li>Which corridors contribute most to crashes?</li>
+              <li>Which corridors are worsening over time?</li>
+              <li>Is risk concentrated or evenly distributed?</li>
+            </ul>
+          </div>
+          <div class="stage-col type">
+            <div class="stage-col-label type">Type</div>
+            <ul>
+              <li>Which crash types dominate each segment?</li>
+              <li>Do patterns shift along the corridor?</li>
+            </ul>
+          </div>
+          <div class="stage-col factors">
+            <div class="stage-col-label factors">Factors</div>
+            <ul>
+              <li>Do behaviours vary across segments?</li>
+              <li>Are crashes linked to infrastructure gaps?</li>
+            </ul>
+          </div>
+          <div class="stage-col anomalies">
+            <div class="stage-col-label anomalies">Anomalies</div>
+            <ul>
+              <li>Which segments deviate from corridor behaviour?</li>
+              <li>Where are localised spikes occurring?</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Intersection -->
+      <div id="ops-intersection" class="level-block" style="scroll-margin-top:80px;">
+        <div class="level-block-header">
+          <div class="level-badge intersection">I</div>
+          <div>
+            <div class="level-block-title">Intersection Level</div>
+            <div class="level-block-sub">Point-level monitoring · Immediate response</div>
+          </div>
+        </div>
+        <div class="level-block-body">
+          <div class="stage-col overview">
+            <div class="stage-col-label overview">Overview</div>
+            <ul>
+              <li>How frequently do crashes occur here?</li>
+              <li>Is this location improving or worsening?</li>
+            </ul>
+          </div>
+          <div class="stage-col type">
+            <div class="stage-col-label type">Type</div>
+            <ul>
+              <li>What exact collision patterns exist at this point?</li>
+            </ul>
+          </div>
+          <div class="stage-col factors">
+            <div class="stage-col-label factors">Factors</div>
+            <ul>
+              <li>What behaviours consistently cause crashes here?</li>
+            </ul>
+          </div>
+          <div class="stage-col anomalies">
+            <div class="stage-col-label anomalies">Anomalies</div>
+            <ul>
+              <li>Is this location an outlier vs. nearby intersections?</li>
+              <li>Is this part of a larger cluster?</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────────────── ANALYSIS ── -->
+    <section id="analysis">
+      <div class="section-label">06 · User Group</div>
+      <h2>Analysis — Diagnosis → Root-Cause Explanation</h2>
+
+      <div class="group-banner analysis">
+        <div class="group-banner-left">
+          <div class="group-banner-icon">🔬</div>
+          <div>
+            <div class="group-banner-name">Analysis</div>
+            <div class="group-banner-sub">Safety Analyst · Engineer</div>
+          </div>
+        </div>
+        <div class="group-banner-right">
+          <span class="badge badge-analysis">Diagnosis</span>
+          <span class="badge badge-analysis">Root-Cause</span>
+        </div>
+      </div>
+
+      <div class="value-callout analysis">
+        <span class="value-callout-label">Value Enabled</span>
+        <div class="value-callout-body">Deep root-cause identification · Reliable correlation across variables · Confidence in analytical conclusions</div>
+      </div>
+
+      <!-- City -->
+      <div id="analysis-city" class="level-block" style="scroll-margin-top:80px;">
+        <div class="level-block-header">
+          <div class="level-badge city">C</div>
+          <div>
+            <div class="level-block-title">City Level</div>
+            <div class="level-block-sub">Long-term trends · Statistical distribution</div>
+          </div>
+        </div>
+        <div class="level-block-body">
+          <div class="stage-col overview">
+            <div class="stage-col-label overview">Overview</div>
+            <ul>
+              <li>What long-term trends exist across the city?</li>
+              <li>Which areas consistently show high risk?</li>
+              <li>How does the overall safety picture compare year-on-year?</li>
+            </ul>
+          </div>
+          <div class="stage-col type">
+            <div class="stage-col-label type">Type</div>
+            <ul>
+              <li>What collision types dominate spatially?</li>
+              <li>How are crash patterns distributed across districts?</li>
+              <li>Which types are statistically over-represented?</li>
+            </ul>
+          </div>
+          <div class="stage-col factors">
+            <div class="stage-col-label factors">Factors</div>
+            <ul>
+              <li>What factors correlate strongly with KSI outcomes?</li>
+              <li>How do multiple variables interact to elevate risk?</li>
+              <li>Which environmental or temporal factors amplify severity?</li>
+            </ul>
+          </div>
+          <div class="stage-col anomalies">
+            <div class="stage-col-label anomalies">Anomalies</div>
+            <ul>
+              <li>Which areas deviate statistically from expected patterns?</li>
+              <li>Are anomalies consistent over time or episodic?</li>
+              <li>Do outliers share common underlying causes?</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Corridor -->
+      <div id="analysis-corridor" class="level-block" style="scroll-margin-top:80px;">
+        <div class="level-block-header">
+          <div class="level-badge corridor">R</div>
+          <div>
+            <div class="level-block-title">Corridor Level</div>
+            <div class="level-block-sub">Comparative analysis · Infrastructure correlation</div>
+          </div>
+        </div>
+        <div class="level-block-body">
+          <div class="stage-col overview">
+            <div class="stage-col-label overview">Overview</div>
+            <ul>
+              <li>How does this corridor compare to similar corridors?</li>
+              <li>Which segments contribute most to overall risk?</li>
+            </ul>
+          </div>
+          <div class="stage-col type">
+            <div class="stage-col-label type">Type</div>
+            <ul>
+              <li>Are there hidden temporal patterns in crash types?</li>
+              <li>Which segment-type combinations are most diagnostic?</li>
+            </ul>
+          </div>
+          <div class="stage-col factors">
+            <div class="stage-col-label factors">Factors</div>
+            <ul>
+              <li>What infrastructure or operational factors drive risk?</li>
+              <li>How do behaviours interact with physical road design?</li>
+            </ul>
+          </div>
+          <div class="stage-col anomalies">
+            <div class="stage-col-label anomalies">Anomalies</div>
+            <ul>
+              <li>Which segments behave unexpectedly relative to corridor norms?</li>
+              <li>Are anomalies explainable by a single causal factor?</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Intersection -->
+      <div id="analysis-intersection" class="level-block" style="scroll-margin-top:80px;">
+        <div class="level-block-header">
+          <div class="level-badge intersection">I</div>
+          <div>
+            <div class="level-block-title">Intersection Level</div>
+            <div class="level-block-sub">Statistical significance · Causal stability</div>
+          </div>
+        </div>
+        <div class="level-block-body">
+          <div class="stage-col overview">
+            <div class="stage-col-label overview">Overview</div>
+            <ul>
+              <li>What is the statistical significance of this location's crash rate?</li>
+              <li>How does it compare to similar intersections citywide?</li>
+            </ul>
+          </div>
+          <div class="stage-col type">
+            <div class="stage-col-label type">Type</div>
+            <ul>
+              <li>What combination of collision types defines this intersection?</li>
+              <li>Does this match known high-risk patterns?</li>
+            </ul>
+          </div>
+          <div class="stage-col factors">
+            <div class="stage-col-label factors">Factors</div>
+            <ul>
+              <li>What combination of factors causes crashes at this point?</li>
+              <li>Are causal factors stable or shifting over time?</li>
+            </ul>
+          </div>
+          <div class="stage-col anomalies">
+            <div class="stage-col-label anomalies">Anomalies</div>
+            <ul>
+              <li>Is this intersection's behaviour an artefact or a genuine signal?</li>
+              <li>Does it cluster with nearby high-risk points?</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─────────────────────────────────────── STRATEGY ── -->
+    <section id="strategy">
+      <div class="section-label">07 · User Group</div>
+      <h2>Strategy — Prioritisation → Investment Decisions</h2>
+
+      <div class="group-banner strategy">
+        <div class="group-banner-left">
+          <div class="group-banner-icon">🏛</div>
+          <div>
+            <div class="group-banner-name">Strategy</div>
+            <div class="group-banner-sub">City Director · Elected Official</div>
+          </div>
+        </div>
+        <div class="group-banner-right">
+          <span class="badge badge-strategy">Prioritisation</span>
+          <span class="badge badge-strategy">Investment</span>
+        </div>
+      </div>
+
+      <div class="value-callout strategy">
+        <span class="value-callout-label">Value Enabled</span>
+        <div class="value-callout-body">Clear prioritisation of high-impact areas · Strong justification for investment · Alignment between data and planning</div>
+      </div>
+
+      <!-- City -->
+      <div id="strategy-city" class="level-block" style="scroll-margin-top:80px;">
+        <div class="level-block-header">
+          <div class="level-badge city">C</div>
+          <div>
+            <div class="level-block-title">City Level</div>
+            <div class="level-block-sub">KPI tracking · Systemic risk · Investment allocation</div>
+          </div>
+        </div>
+        <div class="level-block-body">
+          <div class="stage-col overview">
+            <div class="stage-col-label overview">Overview</div>
+            <ul>
+              <li>Is the city improving on key safety indicators over time?</li>
+              <li>Which areas contribute most to overall risk burden?</li>
+              <li>Where are the largest gaps between current and target performance?</li>
+            </ul>
+          </div>
+          <div class="stage-col type">
+            <div class="stage-col-label type">Type</div>
+            <ul>
+              <li>Which crash types drive the most fatalities and serious injuries?</li>
+              <li>Where should type-specific interventions be focused?</li>
+            </ul>
+          </div>
+          <div class="stage-col factors">
+            <div class="stage-col-label factors">Factors</div>
+            <ul>
+              <li>What systemic issues are driving risk at scale?</li>
+              <li>Which factor clusters are most amenable to intervention?</li>
+              <li>Where will behaviour-change programmes have the greatest impact?</li>
+            </ul>
+          </div>
+          <div class="stage-col anomalies">
+            <div class="stage-col-label anomalies">Anomalies</div>
+            <ul>
+              <li>Which areas require urgent intervention vs. planned investment?</li>
+              <li>Where will investment yield the highest safety return?</li>
+              <li>Which persistent hotspots have resisted previous efforts?</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Corridor -->
+      <div id="strategy-corridor" class="level-block" style="scroll-margin-top:80px;">
+        <div class="level-block-header">
+          <div class="level-badge corridor">R</div>
+          <div>
+            <div class="level-block-title">Corridor Level</div>
+            <div class="level-block-sub">Return on investment · Capital justification</div>
+          </div>
+        </div>
+        <div class="level-block-body">
+          <div class="stage-col overview">
+            <div class="stage-col-label overview">Overview</div>
+            <ul>
+              <li>Which corridors offer the highest return on safety investment?</li>
+              <li>Where can improvements be implemented quickly and cost-effectively?</li>
+            </ul>
+          </div>
+          <div class="stage-col type">
+            <div class="stage-col-label type">Type</div>
+            <ul>
+              <li>Which crash types on this corridor are most preventable?</li>
+              <li>What intervention types are best matched to the dominant pattern?</li>
+            </ul>
+          </div>
+          <div class="stage-col factors">
+            <div class="stage-col-label factors">Factors</div>
+            <ul>
+              <li>What systemic corridor-level issues justify capital investment?</li>
+              <li>How do infrastructure gaps compare in cost vs. impact?</li>
+            </ul>
+          </div>
+          <div class="stage-col anomalies">
+            <div class="stage-col-label anomalies">Anomalies</div>
+            <ul>
+              <li>Which corridor segments are underperforming relative to investment already made?</li>
+              <li>Where are the highest-leverage quick wins?</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Intersection -->
+      <div id="strategy-intersection" class="level-block" style="scroll-margin-top:80px;">
+        <div class="level-block-header">
+          <div class="level-badge intersection">I</div>
+          <div>
+            <div class="level-block-title">Intersection Level</div>
+            <div class="level-block-sub">Point prioritisation · Engineering vs. enforcement</div>
+          </div>
+        </div>
+        <div class="level-block-body">
+          <div class="stage-col overview">
+            <div class="stage-col-label overview">Overview</div>
+            <ul>
+              <li>Why is this location a priority relative to others?</li>
+              <li>What is the expected impact of intervention here?</li>
+            </ul>
+          </div>
+          <div class="stage-col type">
+            <div class="stage-col-label type">Type</div>
+            <ul>
+              <li>What intervention type is best matched to the collision pattern?</li>
+            </ul>
+          </div>
+          <div class="stage-col factors">
+            <div class="stage-col-label factors">Factors</div>
+            <ul>
+              <li>What causal factors are addressable through engineering or enforcement?</li>
+              <li>How does cost of intervention compare to expected benefit?</li>
+            </ul>
+          </div>
+          <div class="stage-col anomalies">
+            <div class="stage-col-label anomalies">Anomalies</div>
+            <ul>
+              <li>How does this compare to similar investments made elsewhere?</li>
+              <li>Is the risk profile stable enough to justify long-term investment?</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <div class="doc-footer">
+      <div class="doc-footer-left">Road Safety Analytics Platform · User Groups Question Framework · FY 2025–26</div>
+      <div class="doc-footer-right">Version 1.0 · Confidential</div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const sections = document.querySelectorAll('section[id], div[id].level-block');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  document.querySelectorAll('section[id]').forEach(s => observer.observe(s));
+
+  const sidebar   = document.getElementById('sidebar');
+  const backdrop  = document.getElementById('sidebarBackdrop');
+  const toggleBtn = document.getElementById('sidebarToggle');
+  const closeBtn  = document.getElementById('sidebarClose');
+
+  function openSidebar()  { sidebar.classList.add('open'); backdrop.classList.add('visible'); toggleBtn.setAttribute('aria-expanded','true'); document.body.style.overflow='hidden'; }
+  function closeSidebar() { sidebar.classList.remove('open'); backdrop.classList.remove('visible'); toggleBtn.setAttribute('aria-expanded','false'); document.body.style.overflow=''; }
+
+  if (toggleBtn) toggleBtn.addEventListener('click', openSidebar);
+  if (closeBtn)  closeBtn.addEventListener('click', closeSidebar);
+  if (backdrop)  backdrop.addEventListener('click', closeSidebar);
+  navLinks.forEach(link => { link.addEventListener('click', () => { if (window.innerWidth <= 768) closeSidebar(); }); });
+</script>
+</body>
+</html>

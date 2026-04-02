@@ -1,0 +1,1762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Corridor Explorer — TMS Insights · Concord</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{font-family:'Inter',ui-sans-serif,system-ui,sans-serif;background:#f8fafc;color:#0f172a;-webkit-font-smoothing:antialiased;min-height:100vh;overflow:hidden}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:2px}
+
+/* ── APP SHELL ────────────────────────────────── */
+.app-shell{display:grid;grid-template-columns:1fr 360px 340px;grid-template-rows:48px 1fr;height:100vh;gap:0}
+
+/* ── TOP BAR ─────────────────────────────────── */
+.topbar{grid-column:1/-1;background:#fff;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:16px;padding:0 20px;z-index:100}
+.topbar-logo{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#0f172a}
+.topbar-logo svg{color:#9333ea}
+.topbar-sep{width:1px;height:20px;background:#e2e8f0}
+.topbar-label{font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em;font-family:'JetBrains Mono',monospace}
+.topbar-crumb{font-size:12px;color:#475569;display:flex;align-items:center;gap:6px}
+.topbar-crumb span{color:#9333ea;font-weight:500}
+.topbar-right{margin-left:auto;display:flex;align-items:center;gap:8px}
+.topbar-chip{display:inline-flex;align-items:center;gap:5px;border-radius:9999px;padding:3px 10px;font-size:11px;font-weight:500;border:1px solid}
+.chip-live{background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.2);color:#16a34a}
+.chip-flow{background:rgba(147,51,234,.08);border-color:rgba(147,51,234,.2);color:#9333ea}
+.topbar-avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#9333ea,#7c3aed);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:#fff}
+
+/* ── PANEL LABELS ────────────────────────────── */
+.panel-label-bar{display:flex;align-items:center;gap:8px;padding:8px 14px 0}
+.panel-num{font-size:10px;font-family:'JetBrains Mono',monospace;color:#94a3b8;background:#f1f5f9;border-radius:4px;padding:1px 6px;text-transform:uppercase;letter-spacing:.04em}
+.panel-title{font-size:11px;font-weight:500;color:#64748b}
+
+/* ── PANEL 1: MAP ────────────────────────────── */
+.panel-map{background:#fff;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;overflow:hidden}
+.map-header{padding:12px 16px 10px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.map-header-left{display:flex;flex-direction:column;gap:1px}
+.map-label{font-size:10px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em}
+.map-subtitle{font-size:12px;font-weight:600;color:#1e293b;display:flex;align-items:center;gap:5px}
+.map-subtitle svg{color:#9333ea}
+.map-sel-badge{font-size:11px;font-family:'JetBrains Mono',monospace;color:#9333ea;font-weight:500;background:#faf5ff;border:1px solid #e9d5ff;border-radius:6px;padding:2px 8px;white-space:nowrap}
+#map{flex:1;min-height:0}
+.map-footer{display:flex;gap:10px;flex-wrap:wrap;align-items:center;padding:7px 14px;border-top:1px solid #f1f5f9;background:#f8fafc;flex-shrink:0}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b}
+.leg-dot{width:8px;height:8px;border-radius:50%}
+.leg-dot.c{background:#dc2626}.leg-dot.h{background:#d97706}.leg-dot.m{background:#3b82f6}.leg-dot.l{background:#94a3b8}
+.map-hint{margin-left:auto;font-size:10px;color:#94a3b8;font-family:'JetBrains Mono',monospace}
+
+/* ── PANEL 2: CORRIDOR HEALTH ────────────────── */
+.panel-health{background:#f8fafc;border-right:1px solid #e2e8f0;display:flex;flex-direction:column;overflow:hidden}
+.panel-health-inner{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+
+/* Tab bar inside Panel 2 */
+.ph-tabs{display:flex;gap:2px;background:#f1f5f9;border-radius:8px;padding:3px;flex-shrink:0}
+.ph-tab{flex:1;padding:6px 0;border-radius:6px;font-size:11px;font-weight:500;font-family:'JetBrains Mono',monospace;text-align:center;cursor:pointer;color:#64748b;background:transparent;border:none;transition:all .12s;text-transform:uppercase;letter-spacing:.04em}
+.ph-tab.active{background:#fff;color:#0f172a;box-shadow:0 1px 2px rgba(0,0,0,.07),0 1px 3px rgba(0,0,0,.1)}
+.ph-tab:hover:not(.active){color:#334155}
+
+/* Section cards inside Panel 2 */
+.sec-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.sec-hdr{padding:12px 16px 11px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between}
+.sec-hdr-left{display:flex;flex-direction:column;gap:2px}
+.sec-hdr-label{font-size:10px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em}
+.sec-hdr-title{font-size:13px;font-weight:600;color:#1e293b;display:flex;align-items:center;gap:6px}
+.sec-hdr-title svg{color:#9333ea;flex-shrink:0}
+
+/* Identity card */
+.identity-badge{display:inline-flex;align-items:center;border-radius:9999px;padding:2px 8px;font-size:10px;font-weight:500;border:1px solid;white-space:nowrap}
+.typ-signal{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.25);color:#ef4444}
+.typ-speed{background:rgba(249,115,22,.1);border-color:rgba(249,115,22,.25);color:#f97316}
+.typ-multi{background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.25);color:#a855f7}
+.typ-volume{background:rgba(59,130,246,.1);border-color:rgba(59,130,246,.25);color:#3b82f6}
+
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid #f1f5f9}
+.stat-cell{padding:14px 12px;border-right:1px solid #f1f5f9;text-align:center}
+.stat-cell:last-child{border-right:none}
+.stat-lbl{font-size:9px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em}
+.stat-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600;color:#0f172a;margin-top:4px;line-height:1}
+.stat-val.red{color:#dc2626}.stat-val.amber{color:#d97706}.stat-val.green{color:#16a34a}.stat-val.purple{color:#9333ea}
+
+/* Sparkline */
+.sparkline-wrap{padding:14px 16px;border-top:1px solid #f1f5f9}
+.sparkline-lbl-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.sparkline-lbl{font-size:10px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em}
+.sparkline-badge{font-size:10px;font-family:'JetBrains Mono',monospace;font-weight:500;padding:2px 8px;border-radius:9999px;border:1px solid}
+.badge-up{background:rgba(220,38,38,.08);border-color:rgba(220,38,38,.2);color:#dc2626}
+.badge-down{background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.2);color:#16a34a}
+svg.sparkline-svg{width:100%;height:40px;overflow:visible}
+
+/* Risk Clock */
+.risk-clock-wrap{padding:14px 16px;border-top:1px solid #f1f5f9}
+.risk-clock-grid{display:grid;grid-template-columns:repeat(24,1fr);gap:2px;margin-top:8px}
+.rch{height:20px;border-radius:2px;background:#f1f5f9}
+.peak-label{font-size:10px;font-family:'JetBrains Mono',monospace;color:#ef4444;margin-top:7px;font-weight:500}
+
+/* PCF bars */
+.pcf-section{padding:14px 16px;border-top:1px solid #f1f5f9}
+.pcf-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.pcf-row:last-child{margin-bottom:0}
+.pcf-name{font-size:11px;color:#475569;width:100px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcf-track{flex:1;height:6px;background:#f1f5f9;border-radius:3px;overflow:hidden}
+.pcf-fill{height:100%;border-radius:3px;transition:width .5s ease}
+.fill-red{background:#ef4444}.fill-amber{background:#f59e0b}.fill-blue{background:#3b82f6}
+.pcf-count{font-family:'JetBrains Mono',monospace;font-size:11px;color:#94a3b8;width:24px;text-align:right;flex-shrink:0}
+
+/* Infrastructure */
+.infra-section{padding:14px 16px;border-top:1px solid #f1f5f9;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.infra-col-lbl{font-size:9px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.infra-item{display:flex;align-items:center;gap:7px;font-size:11px;margin-bottom:6px;color:#475569}
+.infra-item:last-child{margin-bottom:0}
+.infra-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-green{background:#16a34a}.dot-red{background:#dc2626}
+
+/* Violation / Complaints */
+.two-col-section{padding:14px 16px;border-top:1px solid #f1f5f9;display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.mini-col-lbl{font-size:9px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.mini-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid #f1f5f9}
+.mini-row:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.mini-key{color:#64748b}
+.mini-val{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:500;color:#1e293b}
+.mini-val.red{color:#dc2626}
+
+/* Anomaly card */
+.anomaly-wrap{padding:14px 16px;background:linear-gradient(135deg,#fefce8,#fffbeb);border-top:1px solid #fde68a}
+.anomaly-hdr{display:flex;align-items:center;gap:6px;font-size:10px;font-weight:500;color:#d97706;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.anomaly-title{font-size:13px;font-weight:600;color:#1e293b;margin-bottom:5px}
+.anomaly-meta{font-size:11px;color:#64748b;line-height:1.6}
+.severity-pill{display:inline-flex;align-items:center;border-radius:9999px;padding:2px 10px;font-size:10px;font-weight:600;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#dc2626;margin-top:8px;font-family:'JetBrains Mono',monospace}
+
+/* CM Recs */
+.cm-rec-item{padding:12px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:12px}
+.cm-rec-item:last-child{border-bottom:none}
+.cm-rec-rank{width:22px;height:22px;border-radius:50%;background:#9333ea;color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:'JetBrains Mono',monospace}
+.cm-rec-body{flex:1;min-width:0}
+.cm-rec-name{font-size:12px;font-weight:500;color:#1e293b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cm-rec-impact{font-size:10px;font-family:'JetBrains Mono',monospace;color:#16a34a;margin-top:2px}
+.cm-rec-bar-wrap{margin-top:5px;height:3px;background:#f1f5f9;border-radius:2px;overflow:hidden}
+.cm-rec-bar{height:100%;background:#9333ea;border-radius:2px}
+
+/* Action buttons */
+.action-buttons{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border-top:1px solid #f1f5f9}
+.btn-primary{width:100%;padding:11px 16px;background:#9333ea;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-primary:hover{background:#7c3aed}
+.btn-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn-ghost{padding:9px 10px;background:#fff;border:1px solid #e2e8f0;border-radius:7px;font-size:11px;font-weight:500;color:#64748b;cursor:pointer;transition:all .12s;font-family:'Inter',sans-serif;display:flex;align-items:center;justify-content:center;gap:5px}
+.btn-ghost:hover{border-color:#94a3b8;color:#1e293b}
+
+/* Factor cross-tab */
+.factor-tab-content{display:none;animation:fadeIn .2s ease}
+.factor-tab-content.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.factor-table{width:100%;border-collapse:collapse;font-size:11px}
+.factor-table th{padding:9px 14px;text-align:left;font-size:10px;font-weight:500;color:#64748b;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;background:#f8fafc}
+.factor-table td{padding:10px 14px;border-bottom:1px solid #f8fafc;color:#475569;vertical-align:middle}
+.factor-table tr:last-child td{border-bottom:none}
+.factor-table tr:hover td{background:#f8fafc}
+.ftd-mono{font-family:'JetBrains Mono',monospace;font-size:11px;color:#1e293b;font-weight:500}
+.ftd-bar{display:flex;align-items:center;gap:6px}
+.ftd-track{flex:1;height:4px;background:#f1f5f9;border-radius:2px;overflow:hidden}
+.ftd-fill{height:100%;border-radius:2px;background:#9333ea}
+.ftd-pct{font-family:'JetBrains Mono',monospace;font-size:9px;color:#94a3b8;width:28px;text-align:right}
+.factor-condition-row{display:flex;flex-wrap:wrap;gap:6px;padding:12px 16px;border-top:1px solid #f1f5f9}
+.fchip{display:inline-flex;align-items:center;border-radius:9999px;padding:3px 10px;font-size:10px;font-weight:500;border:1px solid;font-family:'JetBrains Mono',monospace}
+.fchip-red{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);color:#dc2626}
+.fchip-amber{background:rgba(217,119,6,.08);border-color:rgba(217,119,6,.2);color:#d97706}
+.fchip-blue{background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.2);color:#2563eb}
+.fchip-purple{background:rgba(147,51,234,.08);border-color:rgba(147,51,234,.2);color:#9333ea}
+
+/* ── PANEL 3: AI CONTEXT ─────────────────────── */
+.panel-ai{background:#fff;display:flex;flex-direction:column;overflow:hidden}
+.ai-header{padding:12px 16px 10px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.ai-header-left{display:flex;flex-direction:column;gap:2px}
+.ai-label{font-size:10px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.07em}
+.ai-subtitle{font-size:13px;font-weight:600;color:#1e293b;display:flex;align-items:center;gap:6px}
+.ai-subtitle svg{color:#9333ea}
+.ai-status{display:flex;align-items:center;gap:5px;font-size:10px;color:#16a34a;font-family:'JetBrains Mono',monospace}
+.ai-dot{width:6px;height:6px;border-radius:50%;background:#16a34a;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Auto-loaded anomaly context */
+.ai-context-card{background:linear-gradient(135deg,#faf5ff,#f5f3ff);border-bottom:1px solid #e9d5ff;padding:14px 16px;flex-shrink:0;animation:fadeIn .3s ease}
+.ai-ctx-label{font-size:10px;font-weight:500;color:#9333ea;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.ai-ctx-title{font-size:13px;font-weight:600;color:#1e293b;margin-bottom:5px}
+.ai-ctx-text{font-size:11px;color:#475569;line-height:1.65}
+.ai-ctx-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.ctx-tag{display:inline-flex;align-items:center;border-radius:9999px;padding:2px 8px;font-size:9px;font-weight:500;border:1px solid;font-family:'JetBrains Mono',monospace}
+.ctx-tag-red{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);color:#dc2626}
+.ctx-tag-amber{background:rgba(217,119,6,.08);border-color:rgba(217,119,6,.2);color:#d97706}
+.ctx-tag-blue{background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.2);color:#2563eb}
+
+/* Chat messages */
+.ai-chat-area{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+.msg-wrapper{display:flex;flex-direction:column;gap:4px;animation:fadeIn .2s ease}
+.msg-wrapper.user-msg{align-items:flex-end}
+.msg-meta{font-size:9px;color:#94a3b8;font-family:'JetBrains Mono',monospace;padding:0 4px}
+.msg-bubble{max-width:90%;padding:10px 13px;border-radius:10px;font-size:12px;line-height:1.65}
+.bubble-user{background:#9333ea;color:#fff;border-bottom-right-radius:3px}
+.bubble-ai{background:#f8fafc;border:1px solid #e2e8f0;color:#1e293b;border-bottom-left-radius:3px}
+.bubble-ai strong{color:#0f172a}
+
+/* AI typing indicator */
+.typing-indicator{display:none;align-items:center;gap:4px;padding:4px 0}
+.typing-indicator.active{display:flex}
+.typing-dot{width:5px;height:5px;border-radius:50%;background:#94a3b8;animation:bounce .8s infinite}
+.typing-dot:nth-child(2){animation-delay:.15s}
+.typing-dot:nth-child(3){animation-delay:.3s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-4px)}}
+
+/* Chat input */
+.ai-input-area{padding:12px 16px;border-top:1px solid #f1f5f9;flex-shrink:0;background:#fff}
+.ai-input-row{display:flex;gap:8px;align-items:center}
+.ai-input{flex:1;padding:9px 13px;border:1px solid #e2e8f0;border-radius:8px;font-size:12px;font-family:'Inter',sans-serif;color:#1e293b;background:#f8fafc;outline:none;resize:none;min-height:38px;max-height:80px;transition:border-color .15s}
+.ai-input:focus{border-color:#c4b5fd;background:#fff;box-shadow:0 0 0 2px rgba(168,85,247,.06)}
+.ai-input::placeholder{color:#94a3b8}
+.ai-send{width:36px;height:36px;background:#9333ea;color:#fff;border:none;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s;flex-shrink:0}
+.ai-send:hover{background:#7c3aed}
+.ai-send:disabled{background:#e2e8f0;cursor:not-allowed}
+.ai-quick-prompts{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.quick-btn{padding:4px 10px;background:#fff;border:1px solid #e2e8f0;border-radius:9999px;font-size:10px;color:#64748b;cursor:pointer;transition:all .12s;font-family:'JetBrains Mono',monospace;white-space:nowrap}
+.quick-btn:hover{border-color:#c4b5fd;color:#9333ea;background:#faf5ff}
+
+/* Empty states */
+.panel-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;padding:24px;text-align:center}
+.empty-icon-wrap{width:44px;height:44px;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center}
+.empty-title{font-size:13px;font-weight:500;color:#94a3b8}
+.empty-sub{font-size:11px;color:#cbd5e1;line-height:1.65;font-family:'JetBrains Mono',monospace}
+
+/* Popup */
+.leaflet-popup-content-wrapper{border-radius:10px!important;border:1px solid #e2e8f0!important;box-shadow:0 4px 18px rgba(0,0,0,.13)!important;padding:0!important;font-family:'Inter',sans-serif!important}
+.leaflet-popup-content{margin:0!important;padding:0!important}
+.leaflet-popup-tip{background:#fff!important}
+.pp{padding:12px 13px;min-width:175px}
+.pp-name{font-size:12px;font-weight:600;color:#1e293b;margin-bottom:2px}
+.pp-type{font-size:10px;color:#64748b;margin-bottom:8px}
+.pp-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.pp-cell{background:#f8fafc;border-radius:6px;padding:4px 8px}
+.pp-cl{font-size:9px;color:#94a3b8;text-transform:uppercase;letter-spacing:.04em}
+.pp-cv{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:#0f172a;margin-top:1px}
+.pp-cv.red{color:#dc2626}.pp-cv.amb{color:#d97706}
+.pp-btn{width:100%;margin-top:8px;padding:6px 0;background:#9333ea;color:#fff;border:none;border-radius:7px;font-size:11px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;transition:background .15s}
+.pp-btn:hover{background:#7c3aed}
+
+/* Scrollbar for panels */
+.panel-health-inner::-webkit-scrollbar,.ai-chat-area::-webkit-scrollbar{width:3px}
+.panel-health-inner::-webkit-scrollbar-thumb,.ai-chat-area::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:2px}
+
+/* ── INTERSECTION PROFILE OVERLAY ────────────────── */
+.int-profile-overlay{position:fixed;inset:0;z-index:500;pointer-events:none;display:flex;justify-content:flex-end}
+.int-profile-overlay.open{pointer-events:auto}
+.int-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.28);opacity:0;transition:opacity .25s ease}
+.int-profile-overlay.open .int-backdrop{opacity:1}
+.int-drawer{position:relative;width:740px;height:100vh;background:#f8fafc;border-left:1px solid #e2e8f0;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .3s cubic-bezier(.22,1,.36,1);box-shadow:-8px 0 40px rgba(0,0,0,.12);overflow:hidden}
+.int-profile-overlay.open .int-drawer{transform:translateX(0)}
+
+.int-drawer-header{background:#fff;border-bottom:1px solid #e2e8f0;padding:14px 20px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.int-close-btn{width:28px;height:28px;border-radius:6px;border:1px solid #e2e8f0;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#64748b;transition:all .12s;flex-shrink:0}
+.int-close-btn:hover{background:#f1f5f9;color:#1e293b;border-color:#94a3b8}
+.int-drawer-title-group{flex:1}
+.int-drawer-eyebrow{font-size:10px;font-weight:500;color:#9333ea;text-transform:uppercase;letter-spacing:.07em;font-family:'JetBrains Mono',monospace;margin-bottom:2px}
+.int-drawer-name{font-size:15px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:8px}
+.int-drawer-name .sev-badge{font-size:11px;font-weight:600;padding:2px 9px;border-radius:9999px;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.25);color:#dc2626;font-family:'JetBrains Mono',monospace}
+.int-header-right{display:flex;align-items:center;gap:8px}
+.int-begin-grant{padding:8px 14px;background:#9333ea;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s;white-space:nowrap}
+.int-begin-grant:hover{background:#7c3aed}
+
+/* Drawer body tabs */
+.int-drawer-tabs{display:flex;gap:0;background:#fff;border-bottom:1px solid #e2e8f0;padding:0 20px;flex-shrink:0}
+.int-tab{padding:10px 14px;font-size:11px;font-weight:500;color:#94a3b8;border:none;background:transparent;cursor:pointer;border-bottom:2px solid transparent;transition:all .12s;font-family:'Inter',sans-serif;white-space:nowrap;display:flex;align-items:center;gap:6px}
+.int-tab.active{color:#9333ea;border-bottom-color:#9333ea}
+.int-tab:hover:not(.active){color:#475569}
+.int-tab-count{font-size:9px;font-family:'JetBrains Mono',monospace;background:#f1f5f9;border-radius:9999px;padding:1px 6px;color:#64748b}
+.int-tab.active .int-tab-count{background:#f5f3ff;color:#9333ea}
+
+/* Drawer scroll body */
+.int-drawer-body{flex:1;overflow-y:auto;padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.int-drawer-body::-webkit-scrollbar{width:3px}
+.int-drawer-body::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:2px}
+.int-tab-panel{display:none}
+.int-tab-panel.active{display:flex;flex-direction:column;gap:14px}
+
+/* Intersection profile cards */
+.ip-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.ip-card-hdr{padding:11px 16px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;justify-content:space-between}
+.ip-card-label{font-size:10px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em}
+.ip-card-title{font-size:12px;font-weight:600;color:#1e293b;display:flex;align-items:center;gap:6px;margin-top:1px}
+.ip-card-title svg{color:#9333ea;flex-shrink:0}
+.ip-card-badge{font-size:9px;font-family:'JetBrains Mono',monospace;padding:1px 7px;border-radius:4px;background:#f1f5f9;color:#64748b}
+
+/* Collision records table */
+.collision-table{width:100%;border-collapse:collapse;font-size:11px}
+.collision-table th{padding:8px 12px;text-align:left;font-size:9px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid #e2e8f0;background:#f8fafc;white-space:nowrap}
+.collision-table td{padding:9px 12px;border-bottom:1px solid #f8fafc;color:#475569;vertical-align:middle}
+.collision-table tr:last-child td{border-bottom:none}
+.collision-table tr:hover td{background:#f8fafc}
+.sev-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:5px;flex-shrink:0}
+.sev-fatal{background:#dc2626}.sev-injury{background:#d97706}.sev-pdo{background:#3b82f6}
+.mono-sm{font-family:'JetBrains Mono',monospace;font-size:10px;color:#1e293b;font-weight:500}
+.pcf-chip{display:inline-flex;padding:1px 6px;border-radius:4px;font-size:9px;font-weight:500;font-family:'JetBrains Mono',monospace;background:#f1f5f9;color:#475569;border:1px solid #e2e8f0}
+
+/* Infrastructure proximity grid */
+.infra-proximity-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.infra-prox-item{padding:10px 14px;border-bottom:1px solid #f1f5f9;border-right:1px solid #f1f5f9;display:flex;align-items:center;gap:10px}
+.infra-prox-item:nth-child(even){border-right:none}
+.infra-prox-item:nth-last-child(-n+2){border-bottom:none}
+.infra-prox-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.icon-green{background:rgba(22,163,74,.1);color:#16a34a}
+.icon-red{background:rgba(220,38,38,.1);color:#dc2626}
+.icon-amber{background:rgba(217,119,6,.1);color:#d97706}
+.icon-blue{background:rgba(37,99,235,.1);color:#2563eb}
+.infra-prox-name{font-size:11px;font-weight:500;color:#1e293b}
+.infra-prox-dist{font-size:10px;font-family:'JetBrains Mono',monospace;color:#94a3b8;margin-top:1px}
+.infra-prox-status{font-size:9px;font-weight:500;padding:1px 7px;border-radius:9999px;margin-top:2px;display:inline-block}
+.status-present{background:rgba(22,163,74,.1);color:#16a34a}
+.status-missing{background:rgba(220,38,38,.08);color:#dc2626}
+.status-degraded{background:rgba(217,119,6,.08);color:#d97706}
+
+/* Complaints list */
+.complaint-item{padding:10px 14px;border-bottom:1px solid #f8fafc;display:flex;align-items:flex-start;gap:10px}
+.complaint-item:last-child{border-bottom:none}
+.complaint-dot{width:7px;height:7px;border-radius:50%;margin-top:3px;flex-shrink:0}
+.comp-open{background:#d97706}.comp-resolved{background:#16a34a}
+.complaint-body{flex:1}
+.complaint-text{font-size:11px;color:#1e293b;font-weight:500;margin-bottom:2px}
+.complaint-meta{font-size:10px;color:#94a3b8;font-family:'JetBrains Mono',monospace}
+
+/* Countermeasures deployed/modelled */
+.cm-deployed-item{padding:11px 14px;border-bottom:1px solid #f8fafc;display:flex;align-items:flex-start;gap:10px}
+.cm-deployed-item:last-child{border-bottom:none}
+.cm-status-pill{font-size:9px;font-weight:600;padding:2px 8px;border-radius:9999px;border:1px solid;white-space:nowrap;font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.pill-deployed{background:rgba(22,163,74,.08);border-color:rgba(22,163,74,.2);color:#16a34a}
+.pill-modelled{background:rgba(147,51,234,.08);border-color:rgba(147,51,234,.2);color:#9333ea}
+.pill-planned{background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.2);color:#2563eb}
+.cm-deployed-body{flex:1}
+.cm-deployed-name{font-size:12px;font-weight:500;color:#1e293b;margin-bottom:2px}
+.cm-deployed-meta{font-size:10px;color:#64748b;font-family:'JetBrains Mono',monospace}
+.cm-before-after{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;margin-top:8px;background:#f8fafc;border-radius:7px;padding:8px 10px}
+.ba-cell{text-align:center}
+.ba-label{font-size:9px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em}
+.ba-val{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:600;margin-top:2px}
+.ba-before{color:#dc2626}.ba-after{color:#16a34a}
+.ba-arrow{font-size:14px;color:#9333ea}
+
+/* AI analysis */
+.ai-analysis-wrap{padding:14px 16px;background:linear-gradient(135deg,#faf5ff,#f5f3ff);border-radius:0 0 12px 12px}
+.ai-analysis-label{font-size:10px;font-weight:500;color:#9333ea;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.ai-analysis-text{font-size:12px;color:#1e293b;line-height:1.75}
+.ai-analysis-text strong{color:#0f172a}
+.ai-analysis-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px}
+
+/* Grant CTA footer */
+.int-drawer-footer{background:#fff;border-top:1px solid #e2e8f0;padding:14px 20px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.grant-footer-left{display:flex;flex-direction:column;gap:2px}
+.grant-footer-label{font-size:10px;font-weight:500;color:#94a3b8;text-transform:uppercase;letter-spacing:.06em}
+.grant-footer-hint{font-size:11px;color:#475569}
+.btn-begin-grant{padding:10px 18px;background:#9333ea;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:500;font-family:'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .15s;white-space:nowrap}
+.btn-begin-grant:hover{background:#7c3aed;box-shadow:0 4px 12px rgba(147,51,234,.3)}
+.btn-begin-grant svg{flex-shrink:0}
+
+/* Intersection click badge on map */
+.int-marker{cursor:pointer!important}
+
+/* Proximity radius control */
+.radius-control{display:flex;align-items:center;gap:8px;padding:10px 14px;border-bottom:1px solid #f1f5f9;background:#f8fafc}
+.radius-label{font-size:10px;font-weight:500;color:#64748b;font-family:'JetBrains Mono',monospace}
+.radius-select{padding:3px 8px;border:1px solid #e2e8f0;border-radius:5px;font-size:10px;font-family:'JetBrains Mono',monospace;color:#1e293b;background:#fff;outline:none;cursor:pointer}
+.radius-hint{font-size:9px;color:#94a3b8;margin-left:auto;font-family:'JetBrains Mono',monospace}
+
+/* What-if modelled badge row */
+.whatif-row{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid #f8fafc;background:rgba(147,51,234,.03)}
+.whatif-row:last-child{border-bottom:none}
+.whatif-cm-name{font-size:11px;font-weight:500;color:#1e293b;flex:1}
+.whatif-impact{font-size:10px;font-family:'JetBrains Mono',monospace;color:#9333ea;font-weight:500}
+.whatif-track{width:80px;height:4px;background:#f1f5f9;border-radius:2px;overflow:hidden}
+.whatif-fill{height:100%;border-radius:2px;background:#9333ea;opacity:.6}
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+      TMS Insights
+    </div>
+    <div class="topbar-sep"></div>
+    <div class="topbar-crumb">
+      Concord, CA &rsaquo; Corridors &rsaquo; <span id="crumbCorridor">—</span>
+    </div>
+    <div class="topbar-right">
+      <span class="topbar-chip chip-live">
+        <svg width="6" height="6" viewBox="0 0 6 6"><circle cx="3" cy="3" r="3" fill="currentColor"/></svg>
+        Live Data
+      </span>
+      <span class="topbar-chip chip-flow">Flow 1 — Analyst</span>
+      <div class="topbar-avatar">JD</div>
+    </div>
+  </div>
+
+  <!-- PANEL 1: MAP -->
+  <div class="panel-map">
+    <div class="map-header">
+      <div class="map-header-left">
+        <div class="map-label">Panel 01 &middot; City Map</div>
+        <div class="map-subtitle">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/></svg>
+          Concord, CA — Safety Corridors
+        </div>
+      </div>
+      <div class="map-sel-badge" id="mapSelBadge">No selection</div>
+    </div>
+    <div id="map"></div>
+    <div class="map-footer">
+      <div class="leg-item"><div class="leg-dot c"></div>Critical</div>
+      <div class="leg-item"><div class="leg-dot h"></div>High</div>
+      <div class="leg-item"><div class="leg-dot m"></div>Medium</div>
+      <div class="leg-item"><div class="leg-dot l"></div>Low</div>
+      <span class="map-hint">Click marker → Panel 3 loads</span>
+    </div>
+  </div>
+
+  <!-- PANEL 2: CORRIDOR HEALTH -->
+  <div class="panel-health">
+    <div class="map-header" style="flex-shrink:0">
+      <div class="map-header-left">
+        <div class="map-label">Panel 03 &middot; Corridor Health</div>
+        <div class="map-subtitle" id="p2CorridorName">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+          Select a corridor
+        </div>
+      </div>
+      <div id="p2TypeBadge"></div>
+    </div>
+
+    <!-- Empty state -->
+    <div class="panel-empty" id="p2Empty">
+      <div class="empty-icon-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+      </div>
+      <div class="empty-title">No corridor selected</div>
+      <div class="empty-sub">Click any corridor marker<br>on the map to load health data</div>
+    </div>
+
+    <!-- Active content -->
+    <div id="p2Content" style="display:none;flex:1;overflow:hidden;display:none;flex-direction:column;gap:0">
+
+      <!-- Tabs -->
+      <div style="padding:12px 14px;flex-shrink:0;border-bottom:1px solid #f1f5f9">
+        <div class="ph-tabs">
+          <button class="ph-tab active" id="tabOverview" onclick="switchTab('overview')">Overview</button>
+          <button class="ph-tab" id="tabFactors" onclick="switchTab('factors')">Factors</button>
+          <button class="ph-tab" id="tabInfra" onclick="switchTab('infra')">Infra</button>
+        </div>
+      </div>
+
+      <div class="panel-health-inner" id="p2Scrollable">
+
+        <!-- OVERVIEW TAB -->
+        <div id="tabContentOverview" class="factor-tab-content active">
+
+          <!-- KSI Trend Card -->
+          <div class="sec-card">
+            <div class="sec-hdr">
+              <div class="sec-hdr-left">
+                <div class="sec-hdr-label">KSI Trend Card</div>
+                <div class="sec-hdr-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                  Safety Severity
+                </div>
+              </div>
+              <span class="sparkline-badge badge-up" id="ksiTrendBadge">+14%</span>
+            </div>
+            <div class="stat-grid">
+              <div class="stat-cell">
+                <div class="stat-lbl">KSI Total</div>
+                <div class="stat-val red" id="statKsi">—</div>
+              </div>
+              <div class="stat-cell">
+                <div class="stat-lbl">Fatalities</div>
+                <div class="stat-val red" id="statFatal">—</div>
+              </div>
+              <div class="stat-cell">
+                <div class="stat-lbl">Crashes</div>
+                <div class="stat-val amber" id="statTotal">—</div>
+              </div>
+              <div class="stat-cell">
+                <div class="stat-lbl">Per Mile</div>
+                <div class="stat-val amber" id="statRate">—</div>
+              </div>
+            </div>
+            <div class="sparkline-wrap">
+              <div class="sparkline-lbl-row">
+                <span class="sparkline-lbl">3-Year KSI Trend</span>
+                <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#94a3b8">2022 → 2024</span>
+              </div>
+              <svg class="sparkline-svg" id="sparklineSvg" viewBox="0 0 300 36" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="spkGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#ef4444" stop-opacity=".15"/>
+                    <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
+                  </linearGradient>
+                </defs>
+                <path id="spkArea" fill="url(#spkGrad)" stroke="none"/>
+                <path id="spkLine" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <circle id="spkDot1" r="3" fill="#ef4444"/>
+                <circle id="spkDot2" r="3" fill="#ef4444"/>
+                <circle id="spkDot3" r="3" fill="#ef4444"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- PCF Breakdown Card -->
+          <div class="sec-card">
+            <div class="sec-hdr">
+              <div class="sec-hdr-left">
+                <div class="sec-hdr-label">PCF Breakdown Card</div>
+                <div class="sec-hdr-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                  Crash Pattern (PCF)
+                </div>
+              </div>
+              <span style="font-size:9px;font-family:'JetBrains Mono',monospace;color:#94a3b8;background:#f1f5f9;padding:1px 6px;border-radius:4px">TOP 3</span>
+            </div>
+            <div class="pcf-section" id="pcfList"></div>
+          </div>
+
+          <!-- Risk Clock Card -->
+          <div class="sec-card">
+            <div class="sec-hdr">
+              <div class="sec-hdr-left">
+                <div class="sec-hdr-label">Risk Clock Card</div>
+                <div class="sec-hdr-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  Time-of-Day Risk
+                </div>
+              </div>
+              <span style="font-size:9px;font-family:'JetBrains Mono',monospace;color:#ef4444;background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.2);padding:1px 6px;border-radius:4px" id="peakWindow">4PM–7PM</span>
+            </div>
+            <div class="risk-clock-wrap">
+              <div style="display:flex;justify-content:space-between;font-size:9px;font-family:'JetBrains Mono',monospace;color:#94a3b8;margin-bottom:4px">
+                <span>12A</span><span>6A</span><span>12P</span><span>6P</span><span>12A</span>
+              </div>
+              <div class="risk-clock-grid" id="riskClockGrid"></div>
+              <div class="peak-label" id="peakLabel">⚠ Peak Risk: 4 PM – 7 PM</div>
+            </div>
+          </div>
+
+          <!-- Violations + Complaints -->
+          <div class="sec-card">
+            <div class="sec-hdr">
+              <div class="sec-hdr-left">
+                <div class="sec-hdr-label">Violations · Complaints</div>
+                <div class="sec-hdr-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                  Driver Behavior &amp; Community
+                </div>
+              </div>
+            </div>
+            <div class="two-col-section">
+              <div>
+                <div class="mini-col-lbl">Violations / Month</div>
+                <div class="mini-row"><span class="mini-key">Speeding</span><span class="mini-val red" id="vSpeed">—</span></div>
+                <div class="mini-row"><span class="mini-key">Red Light</span><span class="mini-val" id="vRedLight">—</span></div>
+                <div class="mini-row"><span class="mini-key">Camera Det.</span><span class="mini-val" id="vCamera">—</span></div>
+              </div>
+              <div>
+                <div class="mini-col-lbl">Resident Complaints</div>
+                <div class="mini-row"><span class="mini-key">Speeding</span><span class="mini-val red" id="cSpeed">—</span></div>
+                <div class="mini-row"><span class="mini-key">Unsafe cross.</span><span class="mini-val" id="cCross">—</span></div>
+                <div class="mini-row"><span class="mini-key">Signal timing</span><span class="mini-val" id="cSignal">—</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Anomaly -->
+          <div class="sec-card">
+            <div class="sec-hdr">
+              <div class="sec-hdr-left">
+                <div class="sec-hdr-label">Top Anomaly Card</div>
+                <div class="sec-hdr-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                  AI-Detected Anomaly
+                </div>
+              </div>
+            </div>
+            <div class="anomaly-wrap">
+              <div class="anomaly-hdr">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Unusual Pattern Detected
+              </div>
+              <div class="anomaly-title" id="anomalyTitle">Rear-end crashes + wet pavement</div>
+              <div class="anomaly-meta" id="anomalyMeta">Severity score: <strong>82</strong> &middot; Location cluster: East segment</div>
+              <div class="severity-pill">Severity: <span id="anomalySev" style="margin-left:4px">82</span></div>
+            </div>
+          </div>
+
+          <!-- Recommended CMs -->
+          <div class="sec-card">
+            <div class="sec-hdr">
+              <div class="sec-hdr-left">
+                <div class="sec-hdr-label">Recommended Countermeasures</div>
+                <div class="sec-hdr-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+                  AI Ranked by Safety Impact
+                </div>
+              </div>
+            </div>
+            <div id="cmRecList"></div>
+            <div class="action-buttons">
+              <button class="btn-primary" onclick="triggerAICountermeasures()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2v6a2 2 0 0 0 .245.96l5.51 10.08A2 2 0 0 1 18 22H6a2 2 0 0 1-1.755-2.96l5.51-10.08A2 2 0 0 0 10 8V2"/><path d="M6.453 15h11.094"/><path d="M8.5 2h7"/></svg>
+                Open Countermeasure Panel
+              </button>
+              <div class="btn-row">
+                <button class="btn-ghost" onclick="triggerWhatIf()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                  What-If Sim
+                </button>
+                <button class="btn-ghost" onclick="triggerExport()">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Export Brief
+                </button>
+              </div>
+              <button class="btn-ghost" style="width:100%;border-color:#e9d5ff;color:#9333ea;background:#faf5ff" onclick="openTopIntersection()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+                View Top Intersection Profile →
+              </button>
+            </div>
+          </div>
+
+        </div><!-- /tabContentOverview -->
+
+        <!-- FACTORS TAB -->
+        <div id="tabContentFactors" class="factor-tab-content">
+          <div class="sec-card">
+            <div class="sec-hdr">
+              <div class="sec-hdr-left">
+                <div class="sec-hdr-label">Factor Cross-Tab</div>
+                <div class="sec-hdr-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/></svg>
+                  Crash Factor Breakdown
+                </div>
+              </div>
+              <span style="font-size:9px;font-family:'JetBrains Mono',monospace;color:#9333ea;background:#faf5ff;border:1px solid #e9d5ff;padding:1px 6px;border-radius:4px">2022–2024</span>
+            </div>
+            <table class="factor-table" id="factorTable">
+              <thead>
+                <tr>
+                  <th>Factor</th>
+                  <th>Count</th>
+                  <th>KSI</th>
+                  <th>Share</th>
+                </tr>
+              </thead>
+              <tbody id="factorTableBody"></tbody>
+            </table>
+            <div class="factor-condition-row" id="conditionChips"></div>
+          </div>
+
+          <div class="sec-card" style="margin-top:0">
+            <div class="sec-hdr">
+              <div class="sec-hdr-left">
+                <div class="sec-hdr-label">Rear-End Deep Dive</div>
+                <div class="sec-hdr-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                  Contributing Conditions
+                </div>
+              </div>
+            </div>
+            <div style="padding:14px 16px;display:flex;flex-direction:column;gap:10px" id="rearEndDeepDive"></div>
+          </div>
+        </div><!-- /tabContentFactors -->
+
+        <!-- INFRA TAB -->
+        <div id="tabContentInfra" class="factor-tab-content">
+          <div class="sec-card">
+            <div class="sec-hdr">
+              <div class="sec-hdr-left">
+                <div class="sec-hdr-label">Infrastructure Status Card</div>
+                <div class="sec-hdr-title">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                  Design Gaps
+                </div>
+              </div>
+            </div>
+            <div class="infra-section" id="infraList"></div>
+          </div>
+        </div><!-- /tabContentInfra -->
+
+      </div><!-- /p2Scrollable -->
+    </div><!-- /p2Content -->
+  </div><!-- /panel-health -->
+
+  <!-- PANEL 3: AI CONTEXT + CHAT -->
+  <div class="panel-ai">
+    <div class="ai-header">
+      <div class="ai-header-left">
+        <div class="ai-label">Panel 04 &middot; AI Context</div>
+        <div class="ai-subtitle">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+          Safety Intelligence
+        </div>
+      </div>
+      <div class="ai-status">
+        <div class="ai-dot"></div>
+        AI Ready
+      </div>
+    </div>
+
+    <!-- Empty state -->
+    <div class="panel-empty" id="p3Empty">
+      <div class="empty-icon-wrap">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+      </div>
+      <div class="empty-title">AI context loads automatically</div>
+      <div class="empty-sub">Select a corridor to auto-load<br>the top anomaly and begin chat</div>
+    </div>
+
+    <!-- Active AI panel -->
+    <div id="p3Content" style="display:none;flex:1;overflow:hidden;flex-direction:column">
+
+      <!-- Auto-loaded anomaly context -->
+      <div class="ai-context-card" id="aiContextCard">
+        <div class="ai-ctx-label">
+          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          Auto-Loaded · Top Anomaly
+        </div>
+        <div class="ai-ctx-title" id="ctxAnomalyTitle">Rear-end crashes + wet pavement</div>
+        <div class="ai-ctx-text" id="ctxAnomalyText">
+          AI detected an unusual clustering of rear-end collisions correlated with wet pavement conditions in the East segment. Severity score <strong>82/100</strong>. Pattern peaks between 4–7 PM.
+        </div>
+        <div class="ai-ctx-tags">
+          <span class="ctx-tag ctx-tag-red">Rear-End · 42 crashes</span>
+          <span class="ctx-tag ctx-tag-amber">Wet Pavement · 68%</span>
+          <span class="ctx-tag ctx-tag-blue">East Segment</span>
+        </div>
+      </div>
+
+      <!-- Chat messages -->
+      <div class="ai-chat-area" id="chatArea">
+        <div class="msg-wrapper">
+          <div class="msg-meta">AI Assistant · now</div>
+          <div class="msg-bubble bubble-ai" id="aiWelcomeMsg">
+            I've loaded the <strong>Willow Pass Rd</strong> corridor context. I can see a significant rear-end crash pattern correlated with wet pavement in the East segment. What would you like to investigate?
+          </div>
+        </div>
+        <div class="typing-indicator" id="typingIndicator">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+      </div>
+
+      <!-- Input area -->
+      <div class="ai-input-area">
+        <div class="ai-quick-prompts">
+          <button class="quick-btn" onclick="sendQuick('why rear-end?')">why rear-end?</button>
+          <button class="quick-btn" onclick="sendQuick('peak hour breakdown')">peak hour breakdown</button>
+          <button class="quick-btn" onclick="sendQuick('best countermeasures')">best countermeasures</button>
+          <button class="quick-btn" onclick="sendQuick('compare to citywide')">compare to citywide</button>
+        </div>
+        <div class="ai-input-row">
+          <textarea class="ai-input" id="chatInput" placeholder="Ask about this corridor…" rows="1" onkeydown="handleKey(event)"></textarea>
+          <button class="ai-send" id="sendBtn" onclick="sendMessage()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          </button>
+        </div>
+      </div>
+    </div><!-- /p3Content -->
+  </div><!-- /panel-ai -->
+
+</div><!-- /app-shell -->
+
+<!-- ── INTERSECTION PROFILE OVERLAY ────────────────────────────────── -->
+<div class="int-profile-overlay" id="intProfileOverlay">
+  <div class="int-backdrop" onclick="closeIntersectionProfile()"></div>
+  <div class="int-drawer" id="intDrawer">
+
+    <!-- Drawer header -->
+    <div class="int-drawer-header">
+      <button class="int-close-btn" onclick="closeIntersectionProfile()" title="Close profile">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+      <div class="int-drawer-title-group">
+        <div class="int-drawer-eyebrow">
+          <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:3px"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+          Intersection Profile
+        </div>
+        <div class="int-drawer-name" id="intDrawerName">
+          — <span class="sev-badge" id="intSevBadge">—</span>
+        </div>
+      </div>
+      <div class="int-header-right">
+        <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#94a3b8" id="intCrashCount">—</span>
+        <button class="int-begin-grant" onclick="triggerGrantPackage()">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+          Begin Grant Package
+        </button>
+      </div>
+    </div>
+
+    <!-- Drawer tabs -->
+    <div class="int-drawer-tabs">
+      <button class="int-tab active" id="itab-collisions" onclick="switchIntTab('collisions')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l14.14 14.14"/></svg>
+        Collisions <span class="int-tab-count" id="itab-collisions-count">0</span>
+      </button>
+      <button class="int-tab" id="itab-infra" onclick="switchIntTab('infra')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        Infrastructure <span class="int-tab-count" id="itab-infra-count">0</span>
+      </button>
+      <button class="int-tab" id="itab-complaints" onclick="switchIntTab('complaints')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Complaints <span class="int-tab-count" id="itab-complaints-count">0</span>
+      </button>
+      <button class="int-tab" id="itab-cms" onclick="switchIntTab('cms')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/></svg>
+        Countermeasures <span class="int-tab-count" id="itab-cms-count">0</span>
+      </button>
+      <button class="int-tab" id="itab-analysis" onclick="switchIntTab('analysis')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        AI Analysis
+      </button>
+    </div>
+
+    <!-- Drawer body -->
+    <div class="int-drawer-body" id="intDrawerBody">
+
+      <!-- TAB: COLLISIONS -->
+      <div class="int-tab-panel active" id="itabpanel-collisions">
+        <div class="ip-card">
+          <div class="ip-card-hdr">
+            <div>
+              <div class="ip-card-label">Collision Records</div>
+              <div class="ip-card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M4.93 4.93l14.14 14.14"/></svg>
+                All Crashes at This Location
+              </div>
+            </div>
+            <span class="ip-card-badge" id="collisionBadge">2020–2024</span>
+          </div>
+          <div style="overflow-x:auto">
+            <table class="collision-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Severity</th>
+                  <th>PCF</th>
+                  <th>MVIW</th>
+                  <th>Lighting</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody id="collisionTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Crash summary stats -->
+        <div class="ip-card">
+          <div class="ip-card-hdr">
+            <div>
+              <div class="ip-card-label">Location Summary</div>
+              <div class="ip-card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+                Crash Pattern Breakdown
+              </div>
+            </div>
+          </div>
+          <div class="stat-grid" id="intStatGrid">
+            <!-- populated by JS -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: INFRASTRUCTURE -->
+      <div class="int-tab-panel" id="itabpanel-infra">
+        <div class="ip-card">
+          <div class="ip-card-hdr">
+            <div>
+              <div class="ip-card-label">Infrastructure Inventory</div>
+              <div class="ip-card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                Within Proximity Radius
+              </div>
+            </div>
+          </div>
+          <div class="radius-control">
+            <span class="radius-label">Radius:</span>
+            <select class="radius-select" id="radiusSelect" onchange="updateRadius(this.value)">
+              <option value="50">50 ft</option>
+              <option value="100" selected>100 ft</option>
+              <option value="150">150 ft</option>
+              <option value="250">250 ft</option>
+            </select>
+            <span class="radius-hint" id="infraCountHint">— items in range</span>
+          </div>
+          <div class="infra-proximity-grid" id="infraProximityGrid"></div>
+        </div>
+      </div>
+
+      <!-- TAB: COMPLAINTS -->
+      <div class="int-tab-panel" id="itabpanel-complaints">
+        <div class="ip-card">
+          <div class="ip-card-hdr">
+            <div>
+              <div class="ip-card-label">Resident Feedback</div>
+              <div class="ip-card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Complaints Tagged to This Location
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:#d97706"><span style="width:7px;height:7px;border-radius:50%;background:#d97706;display:inline-block"></span>Open</span>
+              <span style="display:flex;align-items:center;gap:4px;font-size:10px;color:#16a34a"><span style="width:7px;height:7px;border-radius:50%;background:#16a34a;display:inline-block"></span>Resolved</span>
+            </div>
+          </div>
+          <div id="complaintsList"></div>
+        </div>
+      </div>
+
+      <!-- TAB: COUNTERMEASURES -->
+      <div class="int-tab-panel" id="itabpanel-cms">
+        <!-- Deployed CMs -->
+        <div class="ip-card">
+          <div class="ip-card-hdr">
+            <div>
+              <div class="ip-card-label">Deployed Countermeasures</div>
+              <div class="ip-card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                Already Deployed
+              </div>
+            </div>
+            <span class="ip-card-badge ip-card-badge" style="background:rgba(22,163,74,.1);color:#16a34a;border:1px solid rgba(22,163,74,.2)">WITH BEFORE/AFTER</span>
+          </div>
+          <div id="deployedCmsList"></div>
+        </div>
+
+        <!-- What-if Modelled CMs -->
+        <div class="ip-card">
+          <div class="ip-card-hdr">
+            <div>
+              <div class="ip-card-label">What-If Simulator</div>
+              <div class="ip-card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+                Modelled Countermeasures
+              </div>
+            </div>
+            <span class="ip-card-badge" style="background:rgba(147,51,234,.08);color:#9333ea;border:1px solid rgba(147,51,234,.2)">SIMULATED</span>
+          </div>
+          <div id="modelledCmsList"></div>
+          <div style="padding:11px 14px;border-top:1px solid #f1f5f9;background:#faf5ff">
+            <div style="display:flex;justify-content:space-between;align-items:center;font-size:11px">
+              <span style="color:#475569">Combined projected KSI reduction:</span>
+              <span style="font-family:'JetBrains Mono',monospace;font-weight:600;color:#9333ea" id="combinedKsiReduction">—</span>
+            </div>
+            <div style="margin-top:6px;height:4px;background:#f1f5f9;border-radius:2px;overflow:hidden">
+              <div id="combinedKsiBar" style="height:100%;background:#9333ea;border-radius:2px;width:0%;transition:width .6s ease"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: AI ANALYSIS -->
+      <div class="int-tab-panel" id="itabpanel-analysis">
+        <div class="ip-card">
+          <div class="ip-card-hdr">
+            <div>
+              <div class="ip-card-label">AI-Generated Analysis</div>
+              <div class="ip-card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                Intersection Intelligence Report
+              </div>
+            </div>
+            <div class="ai-status">
+              <div class="ai-dot"></div>
+              <span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:#16a34a">AI Ready</span>
+            </div>
+          </div>
+          <div class="ai-analysis-wrap" id="aiAnalysisContent">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Grant readiness card -->
+        <div class="ip-card">
+          <div class="ip-card-hdr">
+            <div>
+              <div class="ip-card-label">Grant Readiness</div>
+              <div class="ip-card-title">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                HSIP Eligibility Checklist
+              </div>
+            </div>
+            <span id="grantReadinessScore" class="ip-card-badge" style="background:rgba(22,163,74,.1);color:#16a34a;border:1px solid rgba(22,163,74,.2)">6/7 READY</span>
+          </div>
+          <div id="grantChecklist" style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /int-drawer-body -->
+
+    <!-- Footer CTA -->
+    <div class="int-drawer-footer">
+      <div class="grant-footer-left">
+        <div class="grant-footer-label">Grant Application Starting Point</div>
+        <div class="grant-footer-hint">Opens What-If Simulator pre-populated with this intersection's data</div>
+      </div>
+      <button class="btn-begin-grant" onclick="triggerGrantPackage()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
+        Begin Grant Package
+      </button>
+    </div>
+
+  </div><!-- /int-drawer -->
+</div><!-- /int-profile-overlay -->
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────────────────────
+const CORRIDORS = {
+  willowPass: {
+    name: 'Willow Pass Rd',
+    type: 'Urban Arterial',
+    typClass: 'typ-signal',
+    lat: 37.9780, lng: -122.0311, risk: 'c',
+    ksi: 47, fatal: 8, total: 312, rate: '14.2',
+    ksi3yr: [32, 41, 47],
+    pcf: [
+      { name: 'Rear-End', count: 42, pct: 68, fill: 'fill-red' },
+      { name: 'Left Turn', count: 18, pct: 29, fill: 'fill-amber' },
+      { name: 'Pedestrian', count: 9, pct: 15, fill: 'fill-blue' },
+    ],
+    riskHours: [1,1,0,0,0,1,2,3,4,3,3,4,5,4,3,5,9,10,8,6,4,3,2,1],
+    peakWindow: '4PM–7PM', peakLabel: '⚠ Peak Risk: 4 PM – 7 PM',
+    violations: { speed: '2,180', redLight: '340', camera: '890' },
+    complaints: { speed: 14, cross: 9, signal: 6 },
+    anomaly: { title: 'Rear-end crashes + wet pavement', meta: 'Severity score: 82 · Location cluster: East segment', sev: 82 },
+    cms: [
+      { name: 'Leading Pedestrian Interval', impact: '−18% KSI', pct: 82 },
+      { name: 'Enhanced Lighting', impact: '−12% KSI', pct: 55 },
+      { name: 'Speed Feedback Sign', impact: '−9% KSI', pct: 41 },
+    ],
+    infra: {
+      present: ['Traffic Signals', 'Street Lighting', 'Bike Lanes'],
+      missing: ['Pedestrian Refuge', 'Protected Left Turn', 'Speed Cameras'],
+    },
+    factors: [
+      { factor: 'Unsafe Speed', count: 89, ksi: 18, pct: 72 },
+      { factor: 'DUI/Alcohol', count: 24, ksi: 11, pct: 20 },
+      { factor: 'Improper Turn', count: 31, ksi: 7, pct: 25 },
+      { factor: 'Pedestrian Err.', count: 19, ksi: 9, pct: 16 },
+    ],
+    conditions: ['Wet Pavement · 68%', 'Dusk / Dawn · 34%', 'No Lighting · 22%', 'Fog · 11%'],
+    rearEndFactors: [
+      { label: 'Tailgating / following too close', pct: 58, color: '#ef4444' },
+      { label: 'Wet pavement — reduced braking', pct: 42, color: '#f59e0b' },
+      { label: 'Inattention / phone distraction', pct: 31, color: '#9333ea' },
+      { label: 'Sudden signal phase change', pct: 24, color: '#3b82f6' },
+    ],
+  },
+  balfour: {
+    name: 'Balfour Rd',
+    type: 'Suburban Collector',
+    typClass: 'typ-speed',
+    lat: 37.9621, lng: -121.9955, risk: 'h',
+    ksi: 28, fatal: 3, total: 189, rate: '8.9',
+    ksi3yr: [22, 25, 28],
+    pcf: [
+      { name: 'Speed-Related', count: 55, pct: 78, fill: 'fill-red' },
+      { name: 'Rear-End', count: 21, pct: 30, fill: 'fill-amber' },
+      { name: 'Sideswipe', count: 12, pct: 17, fill: 'fill-blue' },
+    ],
+    riskHours: [0,0,0,0,1,2,4,5,3,2,2,2,3,2,3,4,6,7,5,4,3,2,1,0],
+    peakWindow: '5PM–8PM', peakLabel: '⚠ Peak Risk: 5 PM – 8 PM',
+    violations: { speed: '1,340', redLight: '120', camera: '430' },
+    complaints: { speed: 22, cross: 4, signal: 3 },
+    anomaly: { title: 'Speed clustering at Balfour/Delta junction', meta: 'Severity score: 71 · Location cluster: West segment', sev: 71 },
+    cms: [
+      { name: 'Speed Feedback Sign', impact: '−14% KSI', pct: 65 },
+      { name: 'Dynamic Speed Board', impact: '−11% KSI', pct: 50 },
+      { name: 'Rumble Strips', impact: '−7% KSI', pct: 33 },
+    ],
+    infra: {
+      present: ['Traffic Signals', 'Street Lighting'],
+      missing: ['Bike Lanes', 'Pedestrian Refuge', 'Protected Left Turn', 'Speed Cameras'],
+    },
+    factors: [
+      { factor: 'Unsafe Speed', count: 110, ksi: 14, pct: 82 },
+      { factor: 'Lane Change', count: 32, ksi: 6, pct: 24 },
+      { factor: 'DUI/Alcohol', count: 18, ksi: 5, pct: 14 },
+      { factor: 'Fatigue', count: 12, ksi: 3, pct: 9 },
+    ],
+    conditions: ['Night/No Light · 44%', 'High Speed · 78%', 'No Median · 55%'],
+    rearEndFactors: [
+      { label: 'Excessive speed on arterial', pct: 78, color: '#ef4444' },
+      { label: 'Lane change aggression', pct: 32, color: '#f59e0b' },
+      { label: 'Poor sight lines at curves', pct: 21, color: '#3b82f6' },
+    ],
+  },
+  clayton: {
+    name: 'Clayton Rd',
+    type: 'Multi-Modal Corridor',
+    typClass: 'typ-multi',
+    lat: 37.9501, lng: -121.9342, risk: 'm',
+    ksi: 14, fatal: 1, total: 98, rate: '5.1',
+    ksi3yr: [16, 15, 14],
+    pcf: [
+      { name: 'Pedestrian', count: 28, pct: 55, fill: 'fill-red' },
+      { name: 'Bicycle', count: 14, pct: 28, fill: 'fill-amber' },
+      { name: 'Left Turn', count: 10, pct: 20, fill: 'fill-blue' },
+    ],
+    riskHours: [0,0,0,0,0,1,3,4,3,2,2,2,2,2,2,3,5,6,5,3,2,1,1,0],
+    peakWindow: '4PM–7PM', peakLabel: '⚠ Peak Risk: 4 PM – 7 PM',
+    violations: { speed: '430', redLight: '90', camera: '210' },
+    complaints: { speed: 6, cross: 18, signal: 12 },
+    anomaly: { title: 'Pedestrian conflicts at Kirker junction', meta: 'Severity score: 63 · Location cluster: Central segment', sev: 63 },
+    cms: [
+      { name: 'HAWK Pedestrian Signal', impact: '−21% KSI', pct: 90 },
+      { name: 'Leading Ped Interval', impact: '−15% KSI', pct: 68 },
+      { name: 'Raised Crosswalk', impact: '−10% KSI', pct: 45 },
+    ],
+    infra: {
+      present: ['Traffic Signals', 'Bike Lanes', 'Street Lighting'],
+      missing: ['Pedestrian Refuge', 'HAWK Signal', 'Speed Cameras'],
+    },
+    factors: [
+      { factor: 'Fail to Yield', count: 48, ksi: 9, pct: 65 },
+      { factor: 'Pedestrian Err.', count: 28, ksi: 5, pct: 38 },
+      { factor: 'Bicycle Conflict', count: 19, ksi: 2, pct: 26 },
+      { factor: 'Signal Phase', count: 14, ksi: 3, pct: 19 },
+    ],
+    conditions: ['Crosswalk Unmarked · 42%', 'Dusk/Dawn · 38%', 'School Hours · 29%'],
+    rearEndFactors: [
+      { label: 'Failure to yield to pedestrians', pct: 65, color: '#ef4444' },
+      { label: 'Unmarked crossings', pct: 42, color: '#f59e0b' },
+      { label: 'School hour volume surge', pct: 29, color: '#3b82f6' },
+    ],
+  },
+};
+
+const AI_RESPONSES = {
+  'why rear-end?': (c) => `
+    <strong>Rear-end crash analysis for ${c.name}:</strong><br><br>
+    The ${c.rearEndFactors[0].pct}% dominant factor is <strong>${c.rearEndFactors[0].label}</strong>, correlated with the ${c.riskHours.indexOf(Math.max(...c.riskHours)) >= 16 ? 'evening' : 'morning'} peak window.<br><br>
+    Wet pavement conditions reduce effective braking distance by ~40%, compounding tailgating behavior. The East segment geometry — with a 6% downgrade — amplifies this effect.<br><br>
+    <strong>Top countermeasure:</strong> Leading Pedestrian Interval + pavement friction treatment. Estimated KSI reduction: 18–22%.
+  `,
+  'peak hour breakdown': (c) => `
+    <strong>Time-of-day crash pattern for ${c.name}:</strong><br><br>
+    Peak risk window: <strong>${c.peakWindow}</strong> — accounting for ~38% of all KSI crashes.<br><br>
+    Contributing factors during peak hours: school dismissal volume surge, reduced lighting at dusk, and high through-traffic on the arterial. Signal timing gaps at the Willow/Grant intersection create a 4-second window of conflict.<br><br>
+    <strong>Recommendation:</strong> Adjusted signal coordination + enforcement deployment during peak window.
+  `,
+  'best countermeasures': (c) => `
+    <strong>Ranked countermeasures for ${c.name}:</strong><br><br>
+    1. <strong>${c.cms[0].name}</strong> — ${c.cms[0].impact} (BCR: 4.2×)<br>
+    2. <strong>${c.cms[1].name}</strong> — ${c.cms[1].impact} (BCR: 3.1×)<br>
+    3. <strong>${c.cms[2].name}</strong> — ${c.cms[2].impact} (BCR: 2.4×)<br><br>
+    Combined package estimated KSI reduction: <strong>31%</strong> over 5 years. HSIP-eligible. Estimated project cost: $840K. Ready to open the full countermeasure simulator?
+  `,
+  'compare to citywide': (c) => `
+    <strong>${c.name} vs. Concord citywide benchmarks:</strong><br><br>
+    KSI rate: <strong>${c.rate}/mile</strong> vs. citywide avg 6.1/mile — <span style="color:#dc2626">${(parseFloat(c.rate)/6.1*100-100).toFixed(0)}% above average</span><br><br>
+    VRU fatality share: 51.8% citywide vs. ${c.name}'s 68% — significantly worse.<br>
+    KSI trend: Citywide +20.7% over 3 years; this corridor +${Math.round((c.ksi3yr[2]/c.ksi3yr[0]-1)*100)}%.<br><br>
+    <strong>Conclusion:</strong> ${c.name} is a Tier 1 priority corridor requiring immediate intervention.
+  `,
+};
+
+let currentCorridor = null;
+let activeTab = 'overview';
+let map, markers = {};
+
+// ── MAP INIT ─────────────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  map = L.map('map', { zoomControl: false, attributionControl: false }).setView([37.9650, -122.0000], 12);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+  const riskColor = { c: '#dc2626', h: '#d97706', m: '#3b82f6', l: '#94a3b8' };
+
+  Object.entries(CORRIDORS).forEach(([key, c]) => {
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="width:14px;height:14px;border-radius:50%;background:${riskColor[c.risk]};border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)"></div>`,
+      iconSize: [14, 14], iconAnchor: [7, 7]
+    });
+
+    const marker = L.marker([c.lat, c.lng], { icon })
+      .addTo(map)
+      .bindPopup(`
+        <div class="pp">
+          <div class="pp-name">${c.name}</div>
+          <div class="pp-type">${c.type}</div>
+          <div class="pp-grid">
+            <div class="pp-cell"><div class="pp-cl">KSI</div><div class="pp-cv red">${c.ksi}</div></div>
+            <div class="pp-cell"><div class="pp-cl">Crashes</div><div class="pp-cv amb">${c.total}</div></div>
+            <div class="pp-cell"><div class="pp-cl">Fatalities</div><div class="pp-cv red">${c.fatal}</div></div>
+            <div class="pp-cell"><div class="pp-cl">Rate/mi</div><div class="pp-cv">${c.rate}</div></div>
+          </div>
+          <button class="pp-btn" onclick="selectCorridor('${key}');document.getElementById('map').querySelectorAll('.leaflet-popup').forEach(p=>p.remove())">Load Health Card →</button>
+        </div>
+      `, { maxWidth: 220 });
+
+    markers[key] = marker;
+  });
+});
+
+// ── SELECT CORRIDOR ───────────────────────────────────────────────────────────
+function selectCorridor(key) {
+  const c = CORRIDORS[key];
+  currentCorridor = c;
+
+  document.getElementById('crumbCorridor').textContent = c.name;
+  document.getElementById('mapSelBadge').textContent = c.name;
+
+  // Update Panel 2 header
+  document.getElementById('p2CorridorName').innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+    ${c.name}
+  `;
+  document.getElementById('p2TypeBadge').innerHTML = `<span class="identity-badge ${c.typClass}">${c.type}</span>`;
+
+  // Show panels
+  document.getElementById('p2Empty').style.display = 'none';
+  const p2c = document.getElementById('p2Content');
+  p2c.style.display = 'flex';
+  p2c.style.flexDirection = 'column';
+  p2c.style.flex = '1';
+  p2c.style.overflow = 'hidden';
+
+  document.getElementById('p3Empty').style.display = 'none';
+  const p3c = document.getElementById('p3Content');
+  p3c.style.display = 'flex';
+  p3c.style.flexDirection = 'column';
+
+  // Populate stats
+  document.getElementById('statKsi').textContent = c.ksi;
+  document.getElementById('statFatal').textContent = c.fatal;
+  document.getElementById('statTotal').textContent = c.total;
+  document.getElementById('statRate').textContent = c.rate;
+
+  // KSI trend badge
+  const pct = Math.round((c.ksi3yr[2]/c.ksi3yr[0]-1)*100);
+  const badge = document.getElementById('ksiTrendBadge');
+  badge.textContent = (pct>0?'+':'')+pct+'%';
+  badge.className = 'sparkline-badge '+(pct>0?'badge-up':'badge-down');
+
+  // Sparkline
+  drawSparkline(c.ksi3yr);
+
+  // PCF
+  const pcfEl = document.getElementById('pcfList');
+  pcfEl.innerHTML = c.pcf.map(p=>`
+    <div class="pcf-row">
+      <span class="pcf-name">${p.name}</span>
+      <div class="pcf-track"><div class="pcf-fill ${p.fill}" style="width:${p.pct}%"></div></div>
+      <span class="pcf-count">${p.count}</span>
+    </div>
+  `).join('');
+
+  // Risk clock
+  buildRiskClock(c.riskHours);
+  document.getElementById('peakWindow').textContent = c.peakWindow;
+  document.getElementById('peakLabel').textContent = c.peakLabel;
+
+  // Violations
+  document.getElementById('vSpeed').textContent = c.violations.speed+'/mo';
+  document.getElementById('vRedLight').textContent = c.violations.redLight+'/mo';
+  document.getElementById('vCamera').textContent = c.violations.camera+'/mo';
+  document.getElementById('cSpeed').textContent = c.complaints.speed;
+  document.getElementById('cCross').textContent = c.complaints.cross;
+  document.getElementById('cSignal').textContent = c.complaints.signal;
+
+  // Anomaly
+  document.getElementById('anomalyTitle').textContent = c.anomaly.title;
+  document.getElementById('anomalyMeta').innerHTML = c.anomaly.meta;
+  document.getElementById('anomalySev').textContent = c.anomaly.sev;
+
+  // CM recs
+  const cmEl = document.getElementById('cmRecList');
+  cmEl.innerHTML = c.cms.map((cm, i)=>`
+    <div class="cm-rec-item">
+      <div class="cm-rec-rank">${i+1}</div>
+      <div class="cm-rec-body">
+        <div class="cm-rec-name">${cm.name}</div>
+        <div class="cm-rec-impact">${cm.impact} expected</div>
+        <div class="cm-rec-bar-wrap"><div class="cm-rec-bar" style="width:${cm.pct}%"></div></div>
+      </div>
+    </div>
+  `).join('');
+
+  // Infra
+  const infraEl = document.getElementById('infraList');
+  infraEl.innerHTML = `
+    <div>
+      <div class="infra-col-lbl">✓ Present</div>
+      ${c.infra.present.map(i=>`<div class="infra-item"><div class="infra-dot dot-green"></div>${i}</div>`).join('')}
+    </div>
+    <div>
+      <div class="infra-col-lbl">✗ Missing</div>
+      ${c.infra.missing.map(i=>`<div class="infra-item"><div class="infra-dot dot-red"></div>${i}</div>`).join('')}
+    </div>
+  `;
+
+  // Factor table
+  const tbody = document.getElementById('factorTableBody');
+  tbody.innerHTML = c.factors.map(f=>`
+    <tr>
+      <td>${f.factor}</td>
+      <td class="ftd-mono">${f.count}</td>
+      <td class="ftd-mono" style="color:#dc2626">${f.ksi}</td>
+      <td>
+        <div class="ftd-bar">
+          <div class="ftd-track"><div class="ftd-fill" style="width:${f.pct}%"></div></div>
+          <span class="ftd-pct">${f.pct}%</span>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+
+  const condEl = document.getElementById('conditionChips');
+  const condColors = ['fchip-red','fchip-amber','fchip-blue','fchip-purple'];
+  condEl.innerHTML = c.conditions.map((cd,i)=>`<span class="fchip ${condColors[i%4]}">${cd}</span>`).join('');
+
+  // Rear-end deep dive
+  const reEl = document.getElementById('rearEndDeepDive');
+  reEl.innerHTML = c.rearEndFactors.map(f=>`
+    <div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px;font-size:11px">
+        <span style="color:#475569">${f.label}</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:10px;color:#94a3b8">${f.pct}%</span>
+      </div>
+      <div style="height:4px;background:#f1f5f9;border-radius:2px;overflow:hidden">
+        <div style="height:100%;width:${f.pct}%;background:${f.color};border-radius:2px;transition:width .5s ease"></div>
+      </div>
+    </div>
+  `).join('');
+
+  // Update AI panel 3 context
+  document.getElementById('ctxAnomalyTitle').textContent = c.anomaly.title;
+  document.getElementById('ctxAnomalyText').innerHTML = `AI detected an unusual clustering pattern related to <strong>${c.anomaly.title}</strong> in this corridor. Severity score <strong>${c.anomaly.sev}/100</strong>. Pattern peaks during ${c.peakWindow}.`;
+
+  // Update AI welcome message
+  document.getElementById('aiWelcomeMsg').innerHTML = `I've loaded the <strong>${c.name}</strong> corridor context. I can see <strong>${c.anomaly.title}</strong> as the top anomaly (severity ${c.anomaly.sev}). What would you like to investigate?`;
+
+  // Clear chat history (except welcome)
+  const chatArea = document.getElementById('chatArea');
+  const msgs = chatArea.querySelectorAll('.msg-wrapper');
+  msgs.forEach((m, i) => { if (i > 0) m.remove(); });
+}
+
+// ── SPARKLINE ─────────────────────────────────────────────────────────────────
+function drawSparkline(vals) {
+  const min = Math.min(...vals)-2, max = Math.max(...vals)+2;
+  const W = 300, H = 36, pad = 10;
+  const xs = [pad, W/2, W-pad];
+  const ys = vals.map(v => H - pad - (v-min)/(max-min)*(H-2*pad));
+
+  const pts = xs.map((x,i)=>`${x},${ys[i]}`).join(' ');
+  const linePts = xs.map((x,i)=>(i===0?'M':'L')+x+' '+ys[i]).join(' ');
+  const areaPts = `M${xs[0]},${H} ${linePts} L${xs[xs.length-1]},${H} Z`;
+
+  document.getElementById('spkLine').setAttribute('d', linePts);
+  document.getElementById('spkArea').setAttribute('d', areaPts);
+  ['spkDot1','spkDot2','spkDot3'].forEach((id,i)=>{
+    const el = document.getElementById(id);
+    el.setAttribute('cx', xs[i]);
+    el.setAttribute('cy', ys[i]);
+  });
+}
+
+// ── RISK CLOCK ────────────────────────────────────────────────────────────────
+function buildRiskClock(hours) {
+  const max = Math.max(...hours);
+  const grid = document.getElementById('riskClockGrid');
+  grid.innerHTML = hours.map((h, i) => {
+    const intensity = h / max;
+    const isPeak = i >= 16 && i <= 18;
+    const bg = isPeak
+      ? `rgba(239,68,68,${0.2 + intensity*0.8})`
+      : `rgba(147,51,234,${intensity*0.6})`;
+    return `<div class="rch" title="${i}:00 — ${h} crashes" style="background:${bg}"></div>`;
+  }).join('');
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  activeTab = name;
+  ['overview','factors','infra'].forEach(t => {
+    document.getElementById('tab'+capitalize(t)).className = 'ph-tab'+(t===name?' active':'');
+    const el = document.getElementById('tabContent'+capitalize(t));
+    if (el) el.className = 'factor-tab-content'+(t===name?' active':'');
+  });
+
+  // Auto-send AI message when Factors tab is opened
+  if (name === 'factors' && currentCorridor) {
+    setTimeout(()=>{
+      addAIMessage(`I've opened the <strong>Factor Cross-Tab</strong> for ${currentCorridor.name}. The dominant pattern is <strong>${currentCorridor.factors[0].factor}</strong> (${currentCorridor.factors[0].count} crashes, ${currentCorridor.factors[0].ksi} KSI). Want me to explain why rear-end crashes dominate this corridor?`);
+    }, 400);
+  }
+}
+
+function capitalize(s) { return s.charAt(0).toUpperCase()+s.slice(1); }
+
+// ── CHAT ──────────────────────────────────────────────────────────────────────
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function sendQuick(txt) {
+  document.getElementById('chatInput').value = txt;
+  sendMessage();
+}
+
+function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if (!text || !currentCorridor) return;
+
+  addUserMessage(text);
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('sendBtn').disabled = true;
+
+  const typing = document.getElementById('typingIndicator');
+  typing.classList.add('active');
+
+  setTimeout(() => {
+    typing.classList.remove('active');
+    const lc = text.toLowerCase();
+    let resp;
+    const matched = Object.keys(AI_RESPONSES).find(k => lc.includes(k.split(' ')[0]));
+    if (matched) {
+      resp = AI_RESPONSES[matched](currentCorridor);
+    } else {
+      resp = `Analyzing <strong>${currentCorridor.name}</strong> for: "${text}"<br><br>Based on the crash data, the ${currentCorridor.pcf[0].name} pattern (${currentCorridor.pcf[0].count} crashes) is the primary concern. The ${currentCorridor.anomaly.title} anomaly (severity ${currentCorridor.anomaly.sev}) is the most actionable finding. Would you like a countermeasure recommendation?`;
+    }
+    addAIMessage(resp);
+    document.getElementById('sendBtn').disabled = false;
+  }, 1100 + Math.random()*600);
+}
+
+function addUserMessage(text) {
+  const area = document.getElementById('chatArea');
+  const typing = document.getElementById('typingIndicator');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-wrapper user-msg';
+  wrap.innerHTML = `<div class="msg-meta">You · now</div><div class="msg-bubble bubble-user">${text}</div>`;
+  area.insertBefore(wrap, typing);
+  area.scrollTop = area.scrollHeight;
+}
+
+function addAIMessage(html) {
+  const area = document.getElementById('chatArea');
+  const typing = document.getElementById('typingIndicator');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-wrapper';
+  wrap.innerHTML = `<div class="msg-meta">AI Assistant · now</div><div class="msg-bubble bubble-ai">${html}</div>`;
+  area.insertBefore(wrap, typing);
+  area.scrollTop = area.scrollHeight;
+}
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+function triggerAICountermeasures() {
+  if (!currentCorridor) return;
+  addAIMessage(`Opening countermeasure panel for <strong>${currentCorridor.name}</strong>. Top recommendation: <strong>${currentCorridor.cms[0].name}</strong> with expected ${currentCorridor.cms[0].impact} KSI reduction. Ready to configure the simulation?`);
+}
+function triggerWhatIf() {
+  if (!currentCorridor) return;
+  addAIMessage(`What-If Simulator loaded for <strong>${currentCorridor.name}</strong>. Toggle countermeasures to model projected KSI reduction. Current baseline: ${currentCorridor.ksi} KSI over 3 years.`);
+}
+function triggerExport() {
+  if (!currentCorridor) return;
+  addAIMessage(`Exporting corridor brief for <strong>${currentCorridor.name}</strong>. The brief includes KSI trend, PCF breakdown, infrastructure gaps, and recommended countermeasures.`);
+}
+
+// Auto-select Willow Pass on load for demo
+window.addEventListener('load', () => {
+  setTimeout(() => selectCorridor('willowPass'), 600);
+});
+
+// ── INTERSECTION DATA ─────────────────────────────────────────────────────────
+const INTERSECTIONS = {
+  willowPass: {
+    id: 'willow-grant',
+    name: 'Willow Pass Rd & Grant St',
+    corridorName: 'Willow Pass Rd',
+    severity: 82,
+    crashCount: 14,
+    collisions: [
+      { date: '2024-10-14', severity: 'Fatal',        sev_class: 'sev-fatal',  pcf: 'Unsafe Speed',    mviw: 'Auto vs Auto',   lighting: 'Dark — No Light', time: '22:34' },
+      { date: '2024-08-03', severity: 'Injury (Sev)', sev_class: 'sev-injury', pcf: 'Rear-End',        mviw: 'Auto vs Auto',   lighting: 'Dusk',            time: '18:12' },
+      { date: '2024-05-17', severity: 'Injury (Mod)', sev_class: 'sev-injury', pcf: 'Unsafe Speed',    mviw: 'Auto vs Ped',    lighting: 'Dark — Street Lt',time: '20:45' },
+      { date: '2023-11-29', severity: 'Injury (Sev)', sev_class: 'sev-injury', pcf: 'Improper Turn',   mviw: 'Auto vs Auto',   lighting: 'Daylight',        time: '07:21' },
+      { date: '2023-09-06', severity: 'PDO',          sev_class: 'sev-pdo',    pcf: 'Rear-End',        mwiw: 'Auto vs Auto',   lighting: 'Dark — Street Lt',time: '17:50' },
+      { date: '2023-06-22', severity: 'Injury (Min)', sev_class: 'sev-injury', pcf: 'Rear-End',        mviw: 'Auto vs Auto',   lighting: 'Dusk',            time: '19:08' },
+      { date: '2023-02-11', severity: 'Injury (Sev)', sev_class: 'sev-injury', pcf: 'DUI / Alcohol',   mviw: 'Auto vs Auto',   lighting: 'Dark — No Light', time: '01:14' },
+      { date: '2022-12-04', severity: 'PDO',          sev_class: 'sev-pdo',    pcf: 'Unsafe Speed',    mviw: 'Auto vs Object', lighting: 'Dark — Street Lt',time: '23:30' },
+      { date: '2022-08-19', severity: 'Injury (Mod)', sev_class: 'sev-injury', pcf: 'Rear-End',        mviw: 'Auto vs Auto',   lighting: 'Daylight',        time: '14:33' },
+      { date: '2022-04-07', severity: 'Fatal',        sev_class: 'sev-fatal',  pcf: 'Pedestrian Err',  mviw: 'Auto vs Ped',    lighting: 'Dark — No Light', time: '21:56' },
+      { date: '2021-10-31', severity: 'Injury (Min)', sev_class: 'sev-injury', pcf: 'Rear-End',        mviw: 'Auto vs Auto',   lighting: 'Dusk',            time: '17:22' },
+      { date: '2021-07-15', severity: 'PDO',          sev_class: 'sev-pdo',    pcf: 'Improper Turn',   mviw: 'Auto vs Auto',   lighting: 'Daylight',        time: '10:05' },
+      { date: '2021-03-28', severity: 'Injury (Sev)', sev_class: 'sev-injury', pcf: 'Unsafe Speed',    mviw: 'Auto vs Bicycle',lighting: 'Daylight',        time: '08:48' },
+      { date: '2020-11-02', severity: 'Injury (Mod)', sev_class: 'sev-injury', pcf: 'DUI / Alcohol',   mviw: 'Auto vs Auto',   lighting: 'Dark — No Light', time: '02:37' },
+    ],
+    stats: [
+      { lbl: 'Fatal',   val: '2',  cls: 'red' },
+      { lbl: 'KSI',     val: '9',  cls: 'red' },
+      { lbl: 'Total',   val: '14', cls: 'amber' },
+      { lbl: 'PDO',     val: '3',  cls: '' },
+    ],
+    infra: [
+      { name: 'Traffic Signal',     dist: '0 ft · at intersection', status: 'present',  statusLabel: 'Operational',   iconClass: 'icon-green', icon: '🚦' },
+      { name: 'Street Lighting',    dist: '12 ft · NE corner',       status: 'degraded', statusLabel: '1 of 3 out',    iconClass: 'icon-amber', icon: '💡' },
+      { name: 'Stop Bar Marking',   dist: '8 ft · WB approach',      status: 'degraded', statusLabel: 'Faded',         iconClass: 'icon-amber', icon: '🛑' },
+      { name: 'Crosswalk — N leg',  dist: '15 ft',                   status: 'present',  statusLabel: 'Good Condition',iconClass: 'icon-green', icon: '🚶' },
+      { name: 'Crosswalk — S leg',  dist: '18 ft',                   status: 'missing',  statusLabel: 'Not Present',   iconClass: 'icon-red',   icon: '🚶' },
+      { name: 'Ped Push Button',    dist: '5 ft · SE post',          status: 'present',  statusLabel: 'Functional',    iconClass: 'icon-green', icon: '🔘' },
+      { name: 'Protected Left Turn',dist: '—',                       status: 'missing',  statusLabel: 'Not Installed', iconClass: 'icon-red',   icon: '↰' },
+      { name: 'Speed Camera',       dist: '—',                       status: 'missing',  statusLabel: 'Not Installed', iconClass: 'icon-red',   icon: '📷' },
+      { name: 'Pedestrian Refuge',  dist: '—',                       status: 'missing',  statusLabel: 'Not Present',   iconClass: 'icon-red',   icon: '🏝' },
+      { name: 'Bike Lane (EB)',      dist: '22 ft',                   status: 'present',  statusLabel: 'Striped',       iconClass: 'icon-green', icon: '🚲' },
+    ],
+    complaints: [
+      { text: 'Nearly hit by car running red light northbound after school hours', date: '2024-11-03', type: 'Open',     dotCls: 'comp-open',     tag: 'Signal Compliance' },
+      { text: 'Crosswalk lines completely faded on south side — invisible at night', date: '2024-09-18', type: 'Open',     dotCls: 'comp-open',     tag: 'Markings' },
+      { text: 'Street light out for 3 weeks — multiple near-miss reports from neighbors', date: '2024-08-12', type: 'Open',  dotCls: 'comp-open',     tag: 'Lighting' },
+      { text: 'Speeding vehicles during PM peak; children walking to school unsafe', date: '2024-06-22', type: 'Open',     dotCls: 'comp-open',     tag: 'Speed' },
+      { text: 'Request for protected left-turn signal — rear-ends every week at left bay', date: '2023-11-14', type: 'Open', dotCls: 'comp-open',    tag: 'Signal Phase' },
+      { text: 'Pothole in NB lane causing swerving behavior near intersection',  date: '2023-07-05', type: 'Resolved', dotCls: 'comp-resolved',  tag: 'Pavement' },
+      { text: 'Tree obstructing sight line at NW corner — hard to see oncoming traffic', date: '2023-03-22', type: 'Resolved', dotCls: 'comp-resolved', tag: 'Sight Line' },
+    ],
+    deployedCms: [
+      {
+        name: 'Pavement Friction Treatment (EB approach)',
+        date: 'Mar 2023',
+        status: 'Deployed',
+        before: { label: 'KSI 3yr', val: '6', cls: 'ba-before' },
+        after:  { label: 'KSI 1yr', val: '2', cls: 'ba-after'  },
+        note: '−67% KSI post-treatment. Wet-pavement crashes dropped significantly.',
+      },
+      {
+        name: 'High-Visibility Crosswalk (N leg)',
+        date: 'Aug 2022',
+        status: 'Deployed',
+        before: { label: 'Ped conflicts', val: '4', cls: 'ba-before' },
+        after:  { label: 'Ped conflicts', val: '1', cls: 'ba-after'  },
+        note: '−75% pedestrian conflict events in 12-month post period.',
+      },
+    ],
+    modelledCms: [
+      { name: 'Protected Left-Turn Phase',    impact: '−22% KSI', pct: 88 },
+      { name: 'Leading Pedestrian Interval',  impact: '−18% KSI', pct: 72 },
+      { name: 'Speed Feedback Sign (EB)',      impact: '−9% KSI',  pct: 36 },
+      { name: 'Enhanced Lighting (all legs)', impact: '−11% KSI', pct: 44 },
+    ],
+    combinedReduction: '−38% KSI',
+    combinedPct: 38,
+    analysis: `<strong>This intersection is the highest-priority collision cluster</strong> within the Willow Pass Rd corridor, accounting for <strong>30% of all KSI events</strong> despite representing a single point location.<br><br>
+The dominant crash pattern is <strong>rear-end collisions during the 4–7 PM peak window</strong>, strongly correlated with the eastbound downgrade geometry, faded stop-bar markings, and a single non-functional streetlight on the NE corner. Wet-pavement conditions are present in 68% of severe crashes — significantly above the corridor average of 51%.<br><br>
+The <strong>2024 pavement friction treatment</strong> delivered a 67% KSI reduction and validates the infrastructure-first approach. Remaining critical gaps are: absence of a protected left-turn phase (responsible for 4 of 9 KSI events), missing south-leg crosswalk, and lighting failures creating near-zero visibility windows after 9 PM.<br><br>
+<strong>Recommended immediate action:</strong> Emergency lighting repair + south crosswalk installation (low cost, high impact). Medium-term: Protected LT signal phase + Leading Pedestrian Interval. Combined modelled KSI reduction: 38% over 3 years — meets HSIP minimum threshold.`,
+    analysisTags: [
+      { label: 'Rear-End · 8 crashes', cls: 'ctx-tag-red' },
+      { label: 'Dark Conditions · 64%', cls: 'ctx-tag-amber' },
+      { label: 'Wet Pavement · 68%', cls: 'ctx-tag-amber' },
+      { label: 'HSIP Eligible', cls: 'ctx-tag-blue' },
+    ],
+    grantChecklist: [
+      { label: 'Minimum 3-year crash history',         done: true  },
+      { label: 'KSI threshold met (≥3 KSI events)',    done: true  },
+      { label: 'Infrastructure inventory complete',     done: true  },
+      { label: 'Countermeasure safety analysis on file',done: true  },
+      { label: 'Before/after data for prior treatments',done: true  },
+      { label: 'Community complaint record documented', done: true  },
+      { label: 'Environmental review (CEQA)',           done: false },
+    ],
+  }
+};
+
+let currentIntersection = null;
+let currentIntTab = 'collisions';
+
+// ── OPEN INTERSECTION PROFILE ─────────────────────────────────────────────────
+function openTopIntersection() {
+  if (!currentCorridor) return;
+  const key = Object.keys(CORRIDORS).find(k => CORRIDORS[k] === currentCorridor);
+  const intData = INTERSECTIONS[key] || INTERSECTIONS['willowPass'];
+  openIntersectionProfile(intData);
+}
+
+function openIntersectionProfile(intData) {
+  currentIntersection = intData;
+  currentIntTab = 'collisions';
+
+  // Header
+  document.getElementById('intDrawerName').innerHTML = `${intData.name} <span class="sev-badge">Sev ${intData.severity}</span>`;
+  document.getElementById('intCrashCount').textContent = `${intData.crashCount} crashes · 2020–2024`;
+
+  // Tab counts
+  document.getElementById('itab-collisions-count').textContent = intData.collisions.length;
+  document.getElementById('itab-infra-count').textContent = intData.infra.length;
+  document.getElementById('itab-complaints-count').textContent = intData.complaints.length;
+  document.getElementById('itab-cms-count').textContent = intData.deployedCms.length + intData.modelledCms.length;
+
+  // Collisions table
+  document.getElementById('collisionTableBody').innerHTML = intData.collisions.map(col => `
+    <tr>
+      <td class="mono-sm">${col.date}</td>
+      <td><span class="sev-dot ${col.sev_class}"></span><span style="font-size:10px;color:#475569">${col.severity}</span></td>
+      <td><span class="pcf-chip">${col.pcf}</span></td>
+      <td style="font-size:10px;color:#475569">${col.mviw || '—'}</td>
+      <td style="font-size:10px;color:#64748b">${col.lighting}</td>
+      <td class="mono-sm">${col.time}</td>
+    </tr>
+  `).join('');
+
+  // Stats
+  document.getElementById('intStatGrid').innerHTML = intData.stats.map(s => `
+    <div class="stat-cell">
+      <div class="stat-lbl">${s.lbl}</div>
+      <div class="stat-val ${s.cls}">${s.val}</div>
+    </div>
+  `).join('');
+
+  // Infra
+  renderInfra(intData.infra);
+
+  // Complaints
+  document.getElementById('complaintsList').innerHTML = intData.complaints.map(c => `
+    <div class="complaint-item">
+      <div class="complaint-dot ${c.dotCls}"></div>
+      <div class="complaint-body">
+        <div class="complaint-text">${c.text}</div>
+        <div class="complaint-meta">${c.date} · ${c.type} · <span style="color:#9333ea">${c.tag}</span></div>
+      </div>
+    </div>
+  `).join('');
+
+  // Deployed CMs
+  document.getElementById('deployedCmsList').innerHTML = intData.deployedCms.map(cm => `
+    <div class="cm-deployed-item">
+      <span class="cm-status-pill pill-deployed">DEPLOYED</span>
+      <div class="cm-deployed-body">
+        <div class="cm-deployed-name">${cm.name}</div>
+        <div class="cm-deployed-meta">Installed: ${cm.date}</div>
+        <div class="cm-before-after">
+          <div class="ba-cell">
+            <div class="ba-label">Before</div>
+            <div class="ba-val ${cm.before.cls}">${cm.before.val}</div>
+            <div style="font-size:9px;color:#94a3b8;margin-top:2px">${cm.before.label}</div>
+          </div>
+          <div class="ba-arrow">→</div>
+          <div class="ba-cell">
+            <div class="ba-label">After</div>
+            <div class="ba-val ${cm.after.cls}">${cm.after.val}</div>
+            <div style="font-size:9px;color:#94a3b8;margin-top:2px">${cm.after.label}</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:#16a34a;margin-top:6px;font-family:'JetBrains Mono',monospace">${cm.note}</div>
+      </div>
+    </div>
+  `).join('');
+
+  // Modelled CMs
+  document.getElementById('modelledCmsList').innerHTML = intData.modelledCms.map(cm => `
+    <div class="whatif-row">
+      <span class="cm-status-pill pill-modelled">MODELLED</span>
+      <span class="whatif-cm-name">${cm.name}</span>
+      <div class="whatif-track"><div class="whatif-fill" style="width:${cm.pct}%"></div></div>
+      <span class="whatif-impact">${cm.impact}</span>
+    </div>
+  `).join('');
+  document.getElementById('combinedKsiReduction').textContent = intData.combinedReduction;
+  setTimeout(() => {
+    document.getElementById('combinedKsiBar').style.width = intData.combinedPct + '%';
+  }, 200);
+
+  // AI Analysis
+  document.getElementById('aiAnalysisContent').innerHTML = `
+    <div class="ai-analysis-label">
+      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      AI-Generated · Updated 2 hours ago
+    </div>
+    <div class="ai-analysis-text">${intData.analysis}</div>
+    <div class="ai-analysis-tags">
+      ${intData.analysisTags.map(t => `<span class="ctx-tag ${t.cls}">${t.label}</span>`).join('')}
+    </div>
+  `;
+
+  // Grant checklist
+  document.getElementById('grantChecklist').innerHTML = intData.grantChecklist.map(item => `
+    <div style="display:flex;align-items:center;gap:9px;font-size:11px">
+      <div style="width:16px;height:16px;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;${item.done ? 'background:rgba(22,163,74,.12);color:#16a34a' : 'background:#f1f5f9;color:#94a3b8'}">
+        ${item.done
+          ? '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+          : '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/><circle cx="12" cy="12" r="10"/></svg>'
+        }
+      </div>
+      <span style="color:${item.done ? '#1e293b' : '#94a3b8'}">${item.label}</span>
+    </div>
+  `).join('');
+
+  // Activate first tab, open overlay
+  switchIntTab('collisions');
+  document.getElementById('intProfileOverlay').classList.add('open');
+}
+
+function renderInfra(infraItems) {
+  document.getElementById('infraCountHint').textContent = `${infraItems.length} items in range`;
+  document.getElementById('infraProximityGrid').innerHTML = infraItems.map(item => `
+    <div class="infra-prox-item">
+      <div class="infra-prox-icon ${item.iconClass}" style="font-size:14px">${item.icon}</div>
+      <div>
+        <div class="infra-prox-name">${item.name}</div>
+        <div class="infra-prox-dist">${item.dist}</div>
+        <span class="infra-prox-status status-${item.status}">${item.statusLabel}</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateRadius(val) {
+  if (!currentIntersection) return;
+  // Simulate filtering: show fewer items for smaller radii
+  const thresholds = { '50': 4, '100': currentIntersection.infra.length, '150': currentIntersection.infra.length, '250': currentIntersection.infra.length };
+  const count = thresholds[val] || currentIntersection.infra.length;
+  const subset = currentIntersection.infra.slice(0, count);
+  document.getElementById('infraCountHint').textContent = `${count} items in range`;
+  renderInfra(subset);
+}
+
+function closeIntersectionProfile() {
+  document.getElementById('intProfileOverlay').classList.remove('open');
+}
+
+function switchIntTab(name) {
+  currentIntTab = name;
+  ['collisions','infra','complaints','cms','analysis'].forEach(t => {
+    document.getElementById('itab-'+t).className = 'int-tab' + (t === name ? ' active' : '');
+    const panel = document.getElementById('itabpanel-'+t);
+    if (panel) panel.className = 'int-tab-panel' + (t === name ? ' active' : '');
+  });
+}
+
+function triggerGrantPackage() {
+  closeIntersectionProfile();
+  setTimeout(() => {
+    addAIMessage(`🗂 <strong>Grant Package initialized</strong> for <strong>${currentIntersection ? currentIntersection.name : 'this intersection'}</strong>.<br><br>The What-If Simulator has been pre-populated with:<br>• 14 collision records (2020–2024)<br>• 4 modelled countermeasures (combined −38% KSI)<br>• Deployed treatment before/after data<br>• 6 of 7 HSIP eligibility criteria met<br><br>Ready to run the simulation and generate the HSIP application narrative?`);
+  }, 400);
+}
+</script>
+</body>
+</html>

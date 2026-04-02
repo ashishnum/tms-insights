@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TMS Insights — Product Documentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --blue:        #005EB8;
+    --blue-deep:   #004A94;
+    --yellow:      #FFC72C;
+    --bg-page:     #080F1E;
+    --bg-nav:      #0D1829;
+    --bg-card:     #111F35;
+    --bg-elevated: #162B4D;
+    --text-primary:   #E4ECF7;
+    --text-dim:       #8CA0BE;
+    --text-muted:     #4D6280;
+    --border-yellow:  rgba(255,199,44,0.12);
+    --border-blue:    rgba(0,94,184,0.30);
+    --tr: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    --font-sans: 'Sora', sans-serif;
+    --font-mono: 'DM Mono', monospace;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-size: 15px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    position: sticky; top: 0; z-index: 100;
+    background: linear-gradient(135deg, #0D1829, #111F35);
+    border-bottom: 1px solid var(--border-yellow);
+    padding: 0 2.5rem; height: 56px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .topbar-logo { display: flex; align-items: center; gap: 10px; }
+  .topbar-logo-icon {
+    width: 28px; height: 28px; background: var(--blue); border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .topbar-brand { font-size: 12px; font-weight: 700; color: var(--text-primary); }
+  .topbar-divider { width: 1px; height: 20px; background: var(--border-yellow); }
+  .topbar-title { font-size: 12px; font-weight: 400; color: var(--text-dim); }
+  .topbar-right { display: flex; align-items: center; gap: 10px; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 10px; border-radius: 10px;
+    font-family: var(--font-mono); font-size: 9px; font-weight: 500;
+    letter-spacing: 0.8px; text-transform: uppercase;
+  }
+  .pill-yellow { background: rgba(255,199,44,0.12); color: var(--yellow); border: 1px solid rgba(255,199,44,0.28); }
+  .pill-blue   { background: rgba(0,94,184,0.18); color: #5aaeff; border: 1px solid var(--border-blue); }
+  .status-dot  { width: 6px; height: 6px; border-radius: 50%; background: #00c87a; }
+
+  /* LAYOUT */
+  .layout { display: flex; min-height: calc(100vh - 56px); }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px; flex-shrink: 0;
+    background: var(--bg-nav); border-right: 1px solid var(--border-yellow);
+    padding: 2rem 0;
+    position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto;
+  }
+  .nav-group-label {
+    font-family: var(--font-mono); font-size: 9px; font-weight: 500;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--text-muted);
+    padding: 1.2rem 1.5rem 0.4rem;
+  }
+  .nav-link {
+    display: block; padding: 0.42rem 1.5rem;
+    font-size: 13px; font-weight: 400; color: var(--text-dim);
+    text-decoration: none; border-left: 2px solid transparent;
+    transition: color var(--tr), background var(--tr), border-color var(--tr);
+  }
+  .nav-link:hover { color: var(--text-primary); background: rgba(255,255,255,0.03); }
+  .nav-link.active { color: var(--yellow); border-left-color: var(--yellow); background: rgba(255,199,44,0.05); font-weight: 500; }
+
+  /* MAIN */
+  .main { flex: 1; padding: 3rem 3.5rem 6rem; max-width: 880px; }
+
+  /* HERO */
+  .hero { margin-bottom: 4rem; padding-bottom: 3rem; border-bottom: 1px solid var(--border-yellow); }
+  .hero-eyebrow {
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--yellow); margin-bottom: 1rem;
+  }
+  .hero-title { font-size: 34px; font-weight: 700; line-height: 1.2; color: var(--text-primary); margin-bottom: 1rem; }
+  .hero-title span { color: var(--yellow); }
+  .hero-sub { font-size: 14px; color: var(--text-dim); max-width: 600px; line-height: 1.75; }
+
+  /* SECTIONS */
+  section { margin-bottom: 4rem; scroll-margin-top: 80px; }
+  .section-label {
+    font-family: var(--font-mono); font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+    color: var(--text-muted); margin-bottom: 0.4rem;
+  }
+  h2 {
+    font-size: 21px; font-weight: 700; color: var(--text-primary);
+    margin-bottom: 1.1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-yellow);
+  }
+  h3 { font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 1.75rem 0 0.6rem; }
+  p { color: var(--text-dim); margin-bottom: 0.85rem; font-size: 14px; line-height: 1.75; }
+  strong { color: var(--text-primary); font-weight: 600; }
+
+  /* CALLOUT */
+  .callout {
+    display: flex; gap: 12px; align-items: flex-start;
+    background: rgba(0,94,184,0.1); border: 1px solid var(--border-blue);
+    border-radius: 10px; padding: 1.1rem 1.3rem; margin: 1.25rem 0;
+  }
+  .callout-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+  .callout-body { font-size: 13px; color: var(--text-dim); line-height: 1.65; }
+  .callout-body strong { color: #5aaeff; }
+  .callout-yellow { background: rgba(255,199,44,0.07); border-color: rgba(255,199,44,0.25); }
+  .callout-yellow .callout-body strong { color: var(--yellow); }
+
+  /* CARDS */
+  .card {
+    background: var(--bg-card); border: 1px solid var(--border-yellow);
+    border-radius: 12px; padding: 1.4rem; margin-bottom: 1rem;
+    transition: border-color var(--tr);
+  }
+  .card:hover { border-color: rgba(255,199,44,0.25); }
+  .card-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 0.65rem; }
+  .card-title  { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .card-body   { font-size: 13px; color: var(--text-dim); line-height: 1.65; }
+  .card-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  /* BADGE */
+  .badge {
+    display: inline-block; font-family: var(--font-mono);
+    font-size: 9px; letter-spacing: 0.8px; text-transform: uppercase; font-weight: 500;
+    padding: 2px 8px; border-radius: 5px; white-space: nowrap;
+  }
+  .badge-new      { background: rgba(0,200,112,0.12); color: #4dd68c; border: 1px solid rgba(0,200,112,0.25); }
+  .badge-enhanced { background: rgba(255,199,44,0.12); color: var(--yellow); border: 1px solid rgba(255,199,44,0.28); }
+
+  /* COMPARE */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1.5rem 0; }
+  .compare-col { background: var(--bg-card); border-radius: 10px; padding: 1.2rem 1.4rem; }
+  .compare-col.before { border: 1px solid rgba(255,255,255,0.08); }
+  .compare-col.after  { border: 1px solid rgba(0,94,184,0.3); }
+  .compare-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 0.75rem; }
+  .compare-col.before .compare-label { color: var(--text-muted); }
+  .compare-col.after  .compare-label { color: #5aaeff; }
+  .compare-col ul { list-style: none; }
+  .compare-col ul li { font-size: 13px; color: var(--text-dim); padding: 4px 0; display: flex; align-items: flex-start; gap: 8px; line-height: 1.5; }
+  .compare-col.before ul li::before { content: '—'; color: var(--text-muted); flex-shrink: 0; }
+  .compare-col.after  ul li::before { content: '✓'; color: #5aaeff; flex-shrink: 0; font-weight: 700; }
+
+  /* LEVEL CARDS */
+  .level-card { background: var(--bg-card); border: 1px solid var(--border-yellow); border-radius: 12px; overflow: hidden; margin-bottom: 1rem; }
+  .level-card-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 1.1rem 1.4rem; background: var(--bg-elevated); border-bottom: 1px solid var(--border-yellow);
+  }
+  .level-badge {
+    width: 28px; height: 28px; border-radius: 7px; background: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #fff; flex-shrink: 0;
+  }
+  .level-name    { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .level-purpose { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--text-muted); margin-top: 1px; }
+  .level-body    { padding: 1.2rem 1.4rem; display: flex; gap: 2rem; flex-wrap: wrap; }
+  .level-col     { flex: 1; min-width: 180px; }
+  .level-col-title { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .level-col ul  { list-style: none; }
+  .level-col ul li { font-size: 13px; color: var(--text-dim); padding: 3px 0; display: flex; align-items: center; gap: 7px; }
+  .level-col ul li::before { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--blue); flex-shrink: 0; }
+  .level-shift {
+    font-size: 12px; color: var(--text-dim);
+    background: rgba(0,94,184,0.1); border: 1px solid var(--border-blue);
+    border-radius: 8px; padding: 0.6rem 0.9rem; margin-top: 0.75rem; line-height: 1.6;
+  }
+  .level-shift strong { color: #5aaeff; }
+
+  /* PERSONA CARDS */
+  .persona-card { background: var(--bg-card); border: 1px solid var(--border-yellow); border-radius: 12px; overflow: hidden; margin-bottom: 1rem; }
+  .persona-header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 1.1rem 1.4rem; background: var(--bg-elevated); border-bottom: 1px solid var(--border-yellow);
+  }
+  .persona-icon {
+    width: 34px; height: 34px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+  .persona-name  { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+  .persona-entry { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .persona-body  { padding: 1.2rem 1.4rem; }
+  .persona-col-title { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.5rem; }
+  .persona-body ul { list-style: none; }
+  .persona-body ul li { font-size: 13px; color: var(--text-dim); padding: 4px 0; display: flex; align-items: flex-start; gap: 8px; line-height: 1.55; }
+  .persona-body ul li::before { content: '→'; color: var(--yellow); flex-shrink: 0; font-size: 11px; margin-top: 2px; }
+  .persona-output {
+    background: rgba(255,199,44,0.06); border-top: 1px solid rgba(255,199,44,0.12);
+    padding: 0.8rem 1.4rem; font-size: 12px; color: var(--text-dim);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .persona-output strong { color: var(--yellow); }
+
+  /* MAP MODES */
+  .map-modes { display: flex; gap: 0.75rem; flex-wrap: wrap; margin: 1rem 0; }
+  .map-mode {
+    background: var(--bg-elevated); border: 1px solid var(--border-blue);
+    border-radius: 8px; padding: 0.6rem 1rem;
+    font-size: 13px; color: var(--text-dim); display: flex; align-items: center; gap: 8px;
+  }
+  .map-mode-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* GRANT STEPS */
+  .grant-step {
+    display: flex; gap: 1rem; align-items: flex-start;
+    padding: 1rem 1.25rem; background: var(--bg-card);
+    border: 1px solid var(--border-yellow); border-radius: 10px; margin-bottom: 0.75rem;
+    transition: border-color var(--tr);
+  }
+  .grant-step:hover { border-color: rgba(255,199,44,0.25); }
+  .grant-step-num {
+    font-family: var(--font-mono); font-size: 10px; font-weight: 500;
+    color: var(--yellow); background: rgba(255,199,44,0.1);
+    border: 1px solid rgba(255,199,44,0.2);
+    border-radius: 6px; padding: 3px 8px; flex-shrink: 0; margin-top: 1px;
+  }
+  .grant-step-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+  .grant-step-body  { font-size: 13px; color: var(--text-dim); line-height: 1.6; }
+
+  /* PRINCIPLE GRID */
+  .principle-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+  .principle-card { background: var(--bg-card); border: 1px solid var(--border-yellow); border-radius: 12px; padding: 1.2rem; }
+  .principle-num   { font-family: var(--font-mono); font-size: 10px; letter-spacing: 1px; color: var(--yellow); font-weight: 500; margin-bottom: 0.5rem; }
+  .principle-title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 0.35rem; }
+  .principle-body  { font-size: 12px; color: var(--text-dim); line-height: 1.55; }
+
+  /* FOOTER */
+  .doc-footer {
+    margin-top: 5rem; padding-top: 2rem; border-top: 1px solid var(--border-yellow);
+    display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;
+  }
+  .doc-footer-left { font-size: 12px; color: var(--text-muted); }
+  .doc-footer-right { font-family: var(--font-mono); font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--text-muted); }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">
+      <div class="topbar-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+          <polygon points="3 11 22 2 13 21 11 13 3 11"/>
+        </svg>
+      </div>
+      <span class="topbar-brand">TMS Insights</span>
+    </div>
+    <div class="topbar-divider"></div>
+    <span class="topbar-title">Product Re-Architecture — Design Review Draft</span>
+  </div>
+  <div class="topbar-right">
+    <span class="pill pill-yellow"><span class="status-dot"></span>Confidential</span>
+    <span class="pill pill-blue">March 2026</span>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="sidebar">
+    <div class="nav-group-label">Overview</div>
+    <a class="nav-link active" href="#overview">What We Are Building</a>
+    <a class="nav-link" href="#what-changed">Before &amp; After</a>
+
+    <div class="nav-group-label">Platform</div>
+    <a class="nav-link" href="#map">Map as the Interface</a>
+    <a class="nav-link" href="#navigation">Four-Level Navigation</a>
+
+    <div class="nav-group-label">Experience</div>
+    <a class="nav-link" href="#personas">Who It Serves</a>
+    <a class="nav-link" href="#countermeasures">Countermeasures</a>
+
+    <div class="nav-group-label">Capability</div>
+    <a class="nav-link" href="#grant">Grant Pipeline</a>
+    <a class="nav-link" href="#principles">Design Principles</a>
+  </nav>
+
+  <main class="main">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-eyebrow">City of Concord · Public Works / Traffic Safety Division</div>
+      <h1 class="hero-title">TMS Insights<br/><span>Re-Architecture</span></h1>
+      <p class="hero-sub">
+        TMS Insights is an AI-augmented analysis layer built on the City of Concord's collision dataset — covering 4,777 incidents from 2014 to 2025 across 27 geospatial layers. This document describes what we are changing, why we are changing it, and what the redesigned platform will do for everyone who uses it.
+      </p>
+    </div>
+
+    <!-- OVERVIEW -->
+    <section id="overview">
+      <div class="section-label">01 · Overview</div>
+      <h2>What We Are Building</h2>
+      <p>
+        The current product operates as <strong>15 independent analysis pages</strong>. Each page extracts a specific view from the data. The analytical depth is real and valuable — but the structure forces users to mentally assemble context that the platform should be maintaining for them.
+      </p>
+      <p>
+        The re-architecture does not discard this work. It repositions everything within a <strong>map-centric, investigation-driven structure</strong> — one that serves five distinct user personas, supports grant document generation, and introduces AI that reasons across data levels rather than describing individual charts.
+      </p>
+
+      <div class="card-grid" style="margin-top:1.5rem;">
+        <div class="card">
+          <div class="card-header"><div class="card-title">From 15 pages to 5 views</div><span class="badge badge-enhanced">Consolidation</span></div>
+          <div class="card-body">Map, Countermeasures, What-If Simulator, Factor Explorer, and Grant Workspace — replacing fifteen disconnected pages with five integrated functional views.</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Map as the organising principle</div><span class="badge badge-enhanced">Architecture</span></div>
+          <div class="card-body">The map moves from one page among fifteen to the permanent canvas. Every analysis now responds to map state — no separate navigation required to find spatial context.</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Five personas, one platform</div><span class="badge badge-new">New</span></div>
+          <div class="card-body">Safety Analyst, Corridor Director, Engineer, Elected Official, and General Public each get a purpose-built entry point and workflow — on the same underlying data.</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Grant document generation</div><span class="badge badge-new">New</span></div>
+          <div class="card-body">The What-If Simulator now produces a complete, formatted grant application package — turning a two-week manual process into a 30-minute review task.</div>
+        </div>
+      </div>
+
+      <div class="callout callout-yellow" style="margin-top:1.5rem;">
+        <span class="callout-icon">💡</span>
+        <div class="callout-body">
+          <strong>The framing:</strong> This is a re-architecture, not a replacement. The analytical intelligence — KSI logic, anomaly detection, amplification, PCF analysis — is fully preserved. What changes is how people move through it and what they can produce from it.
+        </div>
+      </div>
+    </section>
+
+    <!-- BEFORE & AFTER -->
+    <section id="what-changed">
+      <div class="section-label">02 · Transformation</div>
+      <h2>Before &amp; After</h2>
+      <p>Three fundamental shifts define the difference between the current product and the redesigned platform.</p>
+
+      <div class="compare">
+        <div class="compare-col before">
+          <div class="compare-label">Current Product</div>
+          <ul>
+            <li>15 separate pages with no shared spatial context</li>
+            <li>Map is one of 15 pages — not the organising interface</li>
+            <li>AI describes what charts already show</li>
+            <li>Three of five personas have no path through the product</li>
+            <li>Countermeasures is a static library — no location connection</li>
+            <li>What-If Simulator produces no output document</li>
+            <li>26 of 27 infrastructure layers are invisible to the analysis</li>
+          </ul>
+        </div>
+        <div class="compare-col after">
+          <div class="compare-label">Redesigned Platform</div>
+          <ul>
+            <li>Five integrated views — all anchored to the map</li>
+            <li>Map is the permanent canvas — always present</li>
+            <li>AI reasons across levels and generates structured output</li>
+            <li>All five personas have tailored workflows and outputs</li>
+            <li>Countermeasures are location-aware and ranked by relevance</li>
+            <li>What-If Simulator generates a full grant application package</li>
+            <li>All 27 infrastructure layers connected to collision analysis</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- MAP -->
+    <section id="map">
+      <div class="section-label">03 · Primary Interface</div>
+      <h2>The Map as the Central Canvas</h2>
+      <p>
+        Every analysis in TMS Insights is ultimately about <strong>where something is happening</strong> and <strong>what should be done about it</strong>. The map is the only interface that answers both questions simultaneously.
+      </p>
+      <p>
+        The canvas always occupies the left 60% of the screen. The right 40% is a persistent context panel that updates as the map state changes — it is never blank. As a user drills from city level down to an individual intersection, the panel deepens. Navigating back up restores the previous state without losing context.
+      </p>
+
+      <h3>Four Analytical Map Modes</h3>
+      <div class="map-modes">
+        <div class="map-mode"><div class="map-mode-dot" style="background:#FF4D4D;"></div>Severity Points — weighted by KSI outcome</div>
+        <div class="map-mode"><div class="map-mode-dot" style="background:#FF8C00;"></div>Heatmap — collision density clusters</div>
+        <div class="map-mode"><div class="map-mode-dot" style="background:var(--blue);"></div>Factor Layers — speed, lighting, alcohol</div>
+        <div class="map-mode"><div class="map-mode-dot" style="background:var(--yellow);"></div>Corridor Overlays — risk-tiered segments</div>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">🗺</span>
+        <div class="callout-body">
+          <strong>All 27 infrastructure layers now connect to the analysis.</strong> The current product uses one — the collision point layer. The remaining 26 (missing sidewalks, street lights, RRFB, traffic signals, bike paths, school zones, and more) now participate in proximity analysis. This answers the question at the heart of every engineering and grant workflow: at locations where collisions occur, what infrastructure is present, absent, or proposed?
+        </div>
+      </div>
+    </section>
+
+    <!-- NAVIGATION -->
+    <section id="navigation">
+      <div class="section-label">04 · Navigation Structure</div>
+      <h2>Four-Level Navigation</h2>
+      <p>
+        The map operates at four levels. Transitions are triggered by clicking or zooming — the same mental model as Google Maps. Each level has a distinct information state, right panel content, and set of actions.
+      </p>
+
+      <div class="level-card">
+        <div class="level-card-header">
+          <div class="level-badge">1</div>
+          <div>
+            <div class="level-name">City Level</div>
+            <div class="level-purpose">Default entry · macro safety overview · all personas</div>
+          </div>
+        </div>
+        <div class="level-body">
+          <div class="level-col">
+            <div class="level-col-title">Panel Shows</div>
+            <ul>
+              <li>Total KSI and year-over-year trend</li>
+              <li>Top corridors by severity</li>
+              <li>PCF distribution across the city</li>
+              <li>Benchmark vs. county and state</li>
+            </ul>
+          </div>
+          <div class="level-col">
+            <div class="level-col-title">Entry Point For</div>
+            <div class="level-shift">Accessible to <strong>all five personas</strong>. Each arrives with their persona preset active — determining which layers and metrics are surfaced by default, without requiring any manual configuration.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="level-card">
+        <div class="level-card-header">
+          <div class="level-badge">2</div>
+          <div>
+            <div class="level-name">District Level</div>
+            <div class="level-purpose">Click a Voting District boundary · the District Scorecard</div>
+          </div>
+        </div>
+        <div class="level-body">
+          <div class="level-col">
+            <div class="level-col-title">Panel Shows</div>
+            <ul>
+              <li>District KSI rate vs. city and county benchmark</li>
+              <li>Year-over-year trend</li>
+              <li>Top 3 corridors within the district</li>
+              <li>Resident complaints filed</li>
+              <li>Countermeasures deployed and pending</li>
+            </ul>
+          </div>
+          <div class="level-col">
+            <div class="level-col-title">Primary Output</div>
+            <div class="level-shift">A <strong>one-page district summary</strong> exportable for council presentations and constituent communications — formatted and ready, with no manual assembly.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="level-card">
+        <div class="level-card-header">
+          <div class="level-badge">3</div>
+          <div>
+            <div class="level-name">Corridor Level</div>
+            <div class="level-purpose">Click a corridor line · the Corridor Health Card</div>
+          </div>
+        </div>
+        <div class="level-body">
+          <div class="level-col">
+            <div class="level-col-title">Panel Shows</div>
+            <ul>
+              <li>3-year KSI trend sparkline</li>
+              <li>Dominant PCF category and typology badge</li>
+              <li>Risk Clock miniature heatmap</li>
+              <li>Infrastructure present and absent along the corridor</li>
+              <li>Resident complaints count</li>
+            </ul>
+          </div>
+          <div class="level-col">
+            <div class="level-col-title">Actions Available</div>
+            <div class="level-shift">From this card: open <strong>Countermeasures</strong> scoped to this corridor, launch the <strong>What-If Simulator</strong> pre-populated with corridor data, or export a <strong>field briefing one-pager</strong>.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="level-card">
+        <div class="level-card-header">
+          <div class="level-badge" style="background:var(--yellow);color:#080F1E;">4</div>
+          <div>
+            <div class="level-name">Intersection Level</div>
+            <div class="level-purpose">Click a collision cluster · the Full Dossier</div>
+          </div>
+        </div>
+        <div class="level-body">
+          <div class="level-col">
+            <div class="level-col-title">Panel Shows</div>
+            <ul>
+              <li>All collision records at this location</li>
+              <li>Infrastructure inventory within 100ft</li>
+              <li>Outstanding resident complaints</li>
+              <li>Countermeasures deployed or modelled</li>
+              <li>AI-generated intersection analysis</li>
+            </ul>
+          </div>
+          <div class="level-col">
+            <div class="level-col-title">Grant Entry Point</div>
+            <div class="level-shift">The <strong>"Begin Grant Package"</strong> button at the bottom of this profile opens the What-If Simulator pre-populated with this intersection's data — the direct path from diagnosis to application.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PERSONAS -->
+    <section id="personas">
+      <div class="section-label">05 · User Experience</div>
+      <h2>Who It Serves — Five Personas</h2>
+      <p>
+        The redesign is built around five distinct user types. Each has a different entry point, default map state, primary workflow, and primary output. The underlying data and analysis engine are shared — only the surface experience differs.
+      </p>
+      <p>
+        Users select their persona through a <strong>role toggle</strong> in the interface. This is not a separate login or data access change — it adjusts which layers are active by default, which metrics appear at prominence, and how language is calibrated. A user can switch role at any point without losing their current map state.
+      </p>
+
+      <div class="persona-card">
+        <div class="persona-header">
+          <div class="persona-icon" style="background:rgba(0,94,184,0.2);">🔍</div>
+          <div>
+            <div class="persona-name">Safety Analyst</div>
+            <div class="persona-entry">City level · CSAP filter active · heatmap and anomaly markers as default</div>
+          </div>
+        </div>
+        <div class="persona-body">
+          <div class="persona-col-title">Primary Workflows</div>
+          <ul>
+            <li>Anomaly investigation — pulsing markers flag anomalous intersections on the map; drill to intersection for an AI-generated factor summary with z-score context and infrastructure gap if applicable</li>
+            <li>Factor correlation — select two factors in the Factor Explorer to generate a correlation heatmap that colours the map itself, not just a separate chart</li>
+            <li>Temporal sweep — Risk Clock time slider animates the map through 24 hours with severity density changing in real time</li>
+            <li>Violations overlay — toggle violation density layer to identify enforcement gaps versus collision clusters</li>
+          </ul>
+        </div>
+        <div class="persona-output"><strong>Output:</strong> Anomaly flags with infrastructure context · AI factor summary · Watchlist export for handoff to Engineer or Corridor Director</div>
+      </div>
+
+      <div class="persona-card">
+        <div class="persona-header">
+          <div class="persona-icon" style="background:rgba(255,199,44,0.12);">🛣</div>
+          <div>
+            <div class="persona-name">Corridor Director</div>
+            <div class="persona-entry">City level → select a corridor → jumps directly to Corridor Health Card at Level 3</div>
+          </div>
+        </div>
+        <div class="persona-body">
+          <div class="persona-col-title">Primary Workflows</div>
+          <ul>
+            <li>Corridor review — single panel consolidates KSI trend, PCF breakdown, typology badge, Risk Clock miniature, infrastructure status, and complaints count in one view</li>
+            <li>Countermeasure selection — one click opens Countermeasures scoped to this corridor, pre-ranked by projected KSI impact for this specific location</li>
+            <li>What-If simulation — pre-populated from the Corridor Health Card; review projected KSI reduction before committing to an intervention</li>
+            <li>Field briefing — save Corridor Health Card snapshot as a one-page PDF for field teams or internal review</li>
+          </ul>
+        </div>
+        <div class="persona-output"><strong>Output:</strong> Corridor action plan · What-If simulation result · Field briefing one-pager</div>
+      </div>
+
+      <div class="persona-card">
+        <div class="persona-header">
+          <div class="persona-icon" style="background:rgba(0,200,112,0.12);">⚙️</div>
+          <div>
+            <div class="persona-name">Traffic / Civil Engineer</div>
+            <div class="persona-entry">Engineer preset auto-activates · Missing Sidewalk, RRFB, Traffic Signals, Street Lights on by default · Entirely new to the product</div>
+          </div>
+        </div>
+        <div class="persona-body">
+          <div class="persona-col-title">Primary Workflows</div>
+          <ul>
+            <li>Infrastructure Gap Analysis — ranked list of locations where a specific infrastructure type is absent and collision data justifies intervention. Example: "Show all pedestrian KSI locations with no RRFB within 200ft." Result is a ranked work queue exportable as a table</li>
+            <li>Countermeasure scoping — build a project package for one or multiple flagged locations from the Recommended panel, with CRF values and local Concord evidence</li>
+            <li>What-If to Grant Package — run the simulation, generate the complete grant request document. HSIP and ATP submission ready</li>
+          </ul>
+        </div>
+        <div class="persona-output"><strong>Output:</strong> Infrastructure gap report · Grant Request Package · HSIP/ATP submission ready</div>
+      </div>
+
+      <div class="persona-card">
+        <div class="persona-header">
+          <div class="persona-icon" style="background:rgba(0,94,184,0.15);">🏛</div>
+          <div>
+            <div class="persona-name">Elected Official</div>
+            <div class="persona-entry">Voting District selection screen — all data scopes to district boundary · Entirely new to the product</div>
+          </div>
+        </div>
+        <div class="persona-body">
+          <div class="persona-col-title">Primary Workflows</div>
+          <ul>
+            <li>District Scorecard — KSI rate vs. county and state benchmarks, year-over-year trend, top 3 corridors, resident complaints, CalEnviro equity overlay for vulnerable population context</li>
+            <li>Infrastructure lens — Schools and BART layers show pedestrian vulnerability concentrations; Cal Enviro Property shows equity context for grant and policy decisions</li>
+            <li>What's Being Done — countermeasures deployed, requested, and pending in the district; shows investment and progress, not just risk numbers</li>
+            <li>Constituent summary — one-page district report exportable for council presentations and constituent communications</li>
+          </ul>
+        </div>
+        <div class="persona-output"><strong>Output:</strong> District summary report · Council presentation content · Constituent communications</div>
+      </div>
+
+      <div class="persona-card">
+        <div class="persona-header">
+          <div class="persona-icon" style="background:rgba(255,199,44,0.08);">🧭</div>
+          <div>
+            <div class="persona-name">General Public</div>
+            <div class="persona-entry">Address search or "use my location" · Simplified interface · No filter bar · No jargon, no KSI codes, no z-scores</div>
+          </div>
+        </div>
+        <div class="persona-body">
+          <div class="persona-col-title">Primary Workflows</div>
+          <ul>
+            <li>My street — collision history within 500ft shown in plain language ("1 fatal crash, 3 injury crashes") rather than technical severity codes</li>
+            <li>What's here — schools, BART stations, parks, and shopping centres visible on the map without any filter interaction required</li>
+            <li>Resident complaints — view existing complaints near the location; file a new one with a structured form that appears on the map immediately</li>
+            <li>What's being done — deployed countermeasures shown nearby with plain-language descriptions ("A pedestrian signal was installed at this intersection in 2024")</li>
+          </ul>
+        </div>
+        <div class="persona-output"><strong>Output:</strong> Resident complaint submission · Community safety awareness</div>
+      </div>
+    </section>
+
+    <!-- COUNTERMEASURES -->
+    <section id="countermeasures">
+      <div class="section-label">06 · Countermeasures</div>
+      <h2>From Static Library to Recommendation Engine</h2>
+      <p>
+        The current Countermeasures page is a static reference list — no connection to specific locations, no ranking by relevance, no output. The redesigned screen operates in three states and is always scoped to the currently selected map entity.
+      </p>
+
+      <div class="card-grid">
+        <div class="card">
+          <div class="card-header"><div class="card-title">Recommended</div><span class="badge badge-enhanced">State 1</span></div>
+          <div class="card-body">When a corridor or intersection is selected, the panel generates a ranked list of applicable interventions — ranked by collision type match, PCF match, infrastructure gap match, CRF value, and local evidence from existing Concord deployments.</div>
+        </div>
+        <div class="card">
+          <div class="card-header"><div class="card-title">Applied</div><span class="badge badge-enhanced">State 2</span></div>
+          <div class="card-body">All countermeasures deployed within Concord, with installation date and before/after collision data where available. Local evidence of what works — and a record of city investment and impact for elected official reporting.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Modelled</div><span class="badge badge-enhanced">State 3</span></div>
+        <div class="card-body">Countermeasures currently staged in the What-If Simulator — the full portfolio across all locations, with individual and combined projected KSI reduction. A direct "Generate Grant Package" button connects to the Grant Workspace for any modelled intervention. This is the bridge between simulation and submission document.</div>
+      </div>
+
+      <div class="callout">
+        <span class="callout-icon">📋</span>
+        <div class="callout-body">
+          <strong>Example recommendation:</strong> "3 pedestrian KSI collisions at this location in 3 years. No RRFB within 300ft. RRFB CRF for pedestrian collisions: 0.47 (47% KSI reduction). 2 similar RRFB installations in Concord showed 38% and 51% reduction over 2-year post-periods." The infrastructure gap connection — collision pattern matched to physical absence — is surfaced automatically for every location.
+        </div>
+      </div>
+    </section>
+
+    <!-- GRANT PIPELINE -->
+    <section id="grant">
+      <div class="section-label">07 · Grant Pipeline</div>
+      <h2>The Grant Pipeline — From Simulation to Submission</h2>
+      <p>
+        The What-If Simulator currently runs the simulation correctly but produces no output document. The redesigned simulator generates a complete, formatted grant application package directly from the data already in the system.
+      </p>
+      <p>
+        What today takes engineers <strong>two weeks of manual data collection and formatting</strong> takes <strong>30 minutes of review</strong>. For a city submitting 5–10 grant applications per year, that is a material capacity gain.
+      </p>
+
+      <h3>How the Grant Cycle Works</h3>
+      <p>
+        Traffic safety grants — primarily HSIP (Highway Safety Improvement Program), ATP (Active Transportation Program), and Caltrans Highway Safety — move in annual or biennial cycles. The state announces a call for applications 3–6 months before the deadline. The preparation phase is where TMS Insights now lives.
+      </p>
+      <p>
+        Scoring is heavily weighted toward four criteria: <strong>severity of the existing crash problem</strong> (KSI counts over a defined lookback period), <strong>expected effectiveness of the proposed intervention</strong> (CRF-backed reduction projection), <strong>cost-effectiveness ratio</strong> (lives saved per dollar), and <strong>equity</strong> (is this in a disadvantaged community?). Every one of those scoring criteria maps directly to data already in TMS Insights.
+      </p>
+      <p>
+        After award, post-implementation crash studies feed the Applied database in the Countermeasures screen — closing the loop so each deployed countermeasure strengthens the next application.
+      </p>
+
+      <h3>What the Grant Package Contains</h3>
+      <div class="grant-step">
+        <div class="grant-step-num">01</div>
+        <div>
+          <div class="grant-step-title">Project Title and Location</div>
+          <div class="grant-step-body">Auto-generated from corridor or intersection name and countermeasure type.</div>
+        </div>
+      </div>
+      <div class="grant-step">
+        <div class="grant-step-num">02</div>
+        <div>
+          <div class="grant-step-title">Problem Statement</div>
+          <div class="grant-step-body">Current collision data at the location, benchmarked against city average and county rate. Plain language framing. Violations data included if available. Reviewers compare dozens of applications for a limited pool — the locations with the strongest documented data win.</div>
+        </div>
+      </div>
+      <div class="grant-step">
+        <div class="grant-step-num">03</div>
+        <div>
+          <div class="grant-step-title">Proposed Intervention</div>
+          <div class="grant-step-body">Selected countermeasure with description, CRF source citation from the FHWA CMF Clearinghouse, and infrastructure gap context. The match between the collision pattern and the countermeasure is made explicit and defensible.</div>
+        </div>
+      </div>
+      <div class="grant-step">
+        <div class="grant-step-num">04</div>
+        <div>
+          <div class="grant-step-title">Expected Outcome</div>
+          <div class="grant-step-body">KSI reduction projection from the What-If Simulator. 5-year fatalities and injuries prevented. Cost-benefit estimate using comparable Concord deployment costs — a local cost reference is more credible to reviewers than a national average.</div>
+        </div>
+      </div>
+      <div class="grant-step">
+        <div class="grant-step-num">05</div>
+        <div>
+          <div class="grant-step-title">Supporting Data Tables</div>
+          <div class="grant-step-body">Collision data by year (3-year lookback), severity breakdown, lighting conditions, PCF breakdown, and time-of-day analysis from Risk Clock data for this location.</div>
+        </div>
+      </div>
+      <div class="grant-step">
+        <div class="grant-step-num">06</div>
+        <div>
+          <div class="grant-step-title">Map Exhibit</div>
+          <div class="grant-step-body">Exported map view of the location with collision points, severity colour-coding, and relevant infrastructure layers visible. Required in nearly every application — tells the story visually for reviewers processing dozens of submissions.</div>
+        </div>
+      </div>
+      <div class="grant-step">
+        <div class="grant-step-num">07</div>
+        <div>
+          <div class="grant-step-title">Equity Statement</div>
+          <div class="grant-step-body">Cal Enviro Property designation if applicable. Affected populations — schools, BART stations, pedestrian routes within 500ft — identified automatically. ATP gives significant scoring weight to projects in CalEnviro-designated disadvantaged communities. This data is already in the system.</div>
+        </div>
+      </div>
+      <div class="grant-step">
+        <div class="grant-step-num">08</div>
+        <div>
+          <div class="grant-step-title">Grant Program Alignment</div>
+          <div class="grant-step-body">Alignment statement for HSIP, ATP, or Caltrans Highway Safety requirements, as selected by the user. The Resident Complaints and Cal Enviro Property data directly strengthen ATP applications by providing community need evidence and equity documentation — two layers already in the system.</div>
+        </div>
+      </div>
+
+      <div class="callout callout-yellow" style="margin-top:1.25rem;">
+        <span class="callout-icon">⚡</span>
+        <div class="callout-body">
+          <strong>The infrastructure is ready.</strong> The Superset API already carries a grant_exportable flag on each data record. The data for grant document generation is in place. The redesign adds the document assembly and formatting layer on top of what already exists.
+        </div>
+      </div>
+    </section>
+
+    <!-- PRINCIPLES -->
+    <section id="principles">
+      <div class="section-label">08 · Design Principles</div>
+      <h2>Design Principles</h2>
+      <p>Six principles guide every decision in the re-architecture — from navigation structure to how individual insight cards are written.</p>
+
+      <div class="principle-grid">
+        <div class="principle-card">
+          <div class="principle-num">01</div>
+          <div class="principle-title">Progressive Drill-Down</div>
+          <div class="principle-body">City → District → Corridor → Intersection → Cause. Users always know where they are and how to go deeper — without losing the context they have built.</div>
+        </div>
+        <div class="principle-card">
+          <div class="principle-num">02</div>
+          <div class="principle-title">Spatial First</div>
+          <div class="principle-body">Every analysis is anchored to geography. Data supports location — not the other way around. The map is always present, never a separate destination.</div>
+        </div>
+        <div class="principle-card">
+          <div class="principle-num">03</div>
+          <div class="principle-title">Severity-Driven</div>
+          <div class="principle-body">Focus on risk and KSI outcomes over raw collision volume. High-severity events command visual prominence at every level of the interface.</div>
+        </div>
+        <div class="principle-card">
+          <div class="principle-num">04</div>
+          <div class="principle-title">Modular Insights</div>
+          <div class="principle-body">Cards instead of long text reports. Every insight answers three questions: What is happening, Why it matters, and So what should be done.</div>
+        </div>
+        <div class="principle-card">
+          <div class="principle-num">05</div>
+          <div class="principle-title">Multi-Factor Analysis</div>
+          <div class="principle-body">Risk combinations — Speed + Dark + Alcohol — are surfaced as amplification cards. The product moves beyond single-variable thinking throughout.</div>
+        </div>
+        <div class="principle-card">
+          <div class="principle-num">06</div>
+          <div class="principle-title">Role-Aware Output</div>
+          <div class="principle-body">The same data produces different outputs for different roles. An Engineer gets a grant package. An Elected Official gets a council briefing. The General Public gets plain language.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="doc-footer">
+      <div class="doc-footer-left">TMS Insights · Product Re-Architecture · City of Concord — Public Works / Traffic Safety Division</div>
+      <div class="doc-footer-right">Version 1.0 · March 2026 · Confidential Draft</div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nav-link');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`.nav-link[href="#${entry.target.id}"]`);
+        if (active) active.classList.add('active');
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

@@ -1,0 +1,1493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TMS Insights — Concord, CA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Bricolage+Grotesque:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+/* ═══════════════════════════════════════
+   TOKENS / DESIGN SYSTEM
+═══════════════════════════════════════ */
+:root {
+  --bg:        #080a0f;
+  --surf:      #0e1118;
+  --surf2:     #141820;
+  --surf3:     #1a1f2b;
+  --border:    #1e2434;
+  --border2:   #262e42;
+  --border3:   #303b56;
+  --text:      #e2e8f4;
+  --text2:     #7b8aaa;
+  --text3:     #3f4d68;
+  --accent:    #4f8ef7;
+  --accent-d:  #3a70d4;
+  --accent-gl: rgba(79,142,247,0.15);
+  --red:       #f05252;
+  --red-gl:    rgba(240,82,82,0.12);
+  --orange:    #fb923c;
+  --orange-gl: rgba(251,146,60,0.12);
+  --amber:     #f59e0b;
+  --amber-gl:  rgba(245,158,11,0.12);
+  --green:     #34d399;
+  --green-gl:  rgba(52,211,153,0.1);
+  --panel-h:   320px;
+  --fd:        'Bricolage Grotesque', sans-serif;
+  --fb:        'DM Sans', sans-serif;
+  --fm:        'IBM Plex Mono', monospace;
+  --r:         8px;
+  --r2:        12px;
+}
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; }
+body { font-family:var(--fb); background:var(--bg); color:var(--text); overflow:hidden; font-size:13px; line-height:1.5; }
+
+/* ═══════════════════════════════════════
+   SHADCN-STYLE PRIMITIVES
+═══════════════════════════════════════ */
+
+/* Badge */
+.badge {
+  display:inline-flex; align-items:center; gap:4px;
+  font-size:10px; font-weight:600; letter-spacing:0.4px;
+  padding:2px 8px; border-radius:4px; font-family:var(--fm);
+  white-space:nowrap; border-width:1px; border-style:solid;
+}
+.badge-destructive { background:var(--red-gl);   color:var(--red);    border-color:rgba(240,82,82,0.2); }
+.badge-warning     { background:var(--orange-gl); color:var(--orange); border-color:rgba(251,146,60,0.2); }
+.badge-caution     { background:var(--amber-gl);  color:var(--amber);  border-color:rgba(245,158,11,0.2); }
+.badge-success     { background:var(--green-gl);  color:var(--green);  border-color:rgba(52,211,153,0.2); }
+.badge-default     { background:var(--surf3);     color:var(--text2);  border-color:var(--border2); }
+.badge-accent      { background:var(--accent-gl); color:var(--accent); border-color:rgba(79,142,247,0.2); }
+
+/* Card */
+.card {
+  background:var(--surf); border:1px solid var(--border);
+  border-radius:var(--r2); overflow:hidden;
+}
+.card-header { padding:14px 16px 0; }
+.card-title { font-size:11px; text-transform:uppercase; letter-spacing:0.9px; color:var(--text3); font-weight:700; }
+.card-content { padding:14px 16px; }
+
+/* Button */
+.btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:6px;
+  padding:7px 14px; border-radius:var(--r); border:none; cursor:pointer;
+  font-family:var(--fb); font-size:12px; font-weight:600;
+  transition:all 0.15s ease; white-space:nowrap;
+}
+.btn-primary { background:var(--accent); color:#fff; }
+.btn-primary:hover { background:var(--accent-d); }
+.btn-ghost { background:var(--surf2); border:1px solid var(--border2); color:var(--text2); }
+.btn-ghost:hover { background:var(--surf3); color:var(--text); border-color:var(--border3); }
+.btn-outline { background:transparent; border:1px solid var(--border2); color:var(--text2); }
+.btn-outline:hover { background:var(--surf2); color:var(--text); }
+.btn-sm { padding:4px 10px; font-size:11px; }
+.btn-icon { padding:6px; width:30px; height:30px; border-radius:6px; }
+
+/* Separator */
+.sep { height:1px; background:var(--border); }
+
+/* Toggle (pill group) */
+.toggle-group { display:flex; background:var(--surf2); border:1px solid var(--border2); border-radius:var(--r); padding:3px; gap:2px; }
+.toggle-item {
+  display:flex; align-items:center; gap:5px; padding:5px 12px;
+  border-radius:6px; border:none; cursor:pointer;
+  font-family:var(--fb); font-size:11px; font-weight:600;
+  color:var(--text3); background:transparent; transition:all 0.2s;
+}
+.toggle-item svg { width:12px; height:12px; }
+.toggle-item.active { background:var(--accent); color:#fff; box-shadow:0 0 16px rgba(79,142,247,0.3); }
+
+/* Select pill */
+.select-chip {
+  display:flex; align-items:center; gap:4px; padding:3px 9px;
+  border-radius:4px; border:1px solid var(--border2); background:var(--surf3);
+  font-size:10px; font-family:var(--fm); color:var(--text2); cursor:pointer;
+  transition:all 0.15s;
+}
+.select-chip.on { border-color:currentColor; background:transparent; }
+.select-chip.on.r { border-color:var(--red);    color:var(--red);    background:var(--red-gl); }
+.select-chip.on.o { border-color:var(--orange);  color:var(--orange); background:var(--orange-gl); }
+.select-chip.on.a { border-color:var(--amber);   color:var(--amber);  background:var(--amber-gl); }
+.select-chip.on.g { border-color:var(--green);   color:var(--green);  background:var(--green-gl); }
+.select-chip.on.b { border-color:var(--accent);  color:var(--accent); background:var(--accent-gl); }
+
+/* Progress bar */
+.progress { height:5px; background:var(--surf3); border-radius:3px; overflow:hidden; }
+.progress-fill { height:100%; border-radius:3px; transition:width 0.8s cubic-bezier(0.4,0,0.2,1); }
+
+/* Table */
+.tbl { width:100%; border-collapse:collapse; font-size:11px; }
+.tbl thead tr { background:var(--surf2); }
+.tbl th { padding:8px 12px; text-align:left; font-size:9px; text-transform:uppercase; letter-spacing:0.8px; color:var(--text3); font-weight:700; font-family:var(--fm); white-space:nowrap; border-bottom:1px solid var(--border2); }
+.tbl tbody tr { border-bottom:1px solid var(--border); transition:background 0.1s; cursor:pointer; }
+.tbl tbody tr:last-child { border-bottom:none; }
+.tbl tbody tr:hover { background:var(--surf2); }
+.tbl td { padding:9px 12px; color:var(--text2); vertical-align:middle; }
+.tbl td.mono { font-family:var(--fm); color:var(--text); }
+.tbl td.name { color:var(--text); font-weight:600; }
+
+
+/* ═══════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════ */
+.topbar {
+  position:fixed; top:0; left:0; right:0; z-index:1200;
+  height:52px; background:rgba(8,10,15,0.95); backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; padding:0 16px; gap:12px;
+}
+.logo { font-family:var(--fd); font-size:16px; font-weight:800; display:flex; align-items:center; gap:8px; letter-spacing:-0.3px; }
+.logo-dot { width:8px; height:8px; border-radius:50%; background:var(--red); flex-shrink:0; animation:throb 2.4s ease-in-out infinite; }
+@keyframes throb { 0%,100%{box-shadow:0 0 6px var(--red)} 50%{box-shadow:0 0 16px var(--red),0 0 30px rgba(240,82,82,0.25)} }
+.city-tag { display:flex; align-items:center; gap:5px; background:var(--surf2); border:1px solid var(--border2); border-radius:5px; padding:3px 9px; font-family:var(--fm); font-size:10px; color:var(--text2); }
+.city-tag b { color:var(--text); font-weight:500; }
+.topbar-right { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.period-tag { font-size:10px; font-family:var(--fm); color:var(--text3); }
+
+/* KPI bar */
+.kpibar {
+  position:fixed; top:52px; left:0; right:0; z-index:1100;
+  height:42px; background:rgba(8,10,15,0.9); backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; padding:0 16px; gap:0; overflow:hidden;
+}
+.kpi { display:flex; align-items:center; gap:8px; padding:0 14px; border-right:1px solid var(--border); flex-shrink:0; }
+.kpi:first-child { padding-left:0; }
+.kl { font-size:9px; color:var(--text3); text-transform:uppercase; letter-spacing:0.8px; font-weight:700; }
+.kv { font-family:var(--fm); font-size:14px; color:var(--text); line-height:1.1; }
+
+/* Map container */
+#map-view {
+  position:fixed; top:94px; left:0; right:0; bottom:0; z-index:1;
+  transition:bottom 0.42s cubic-bezier(0.4,0,0.2,1);
+}
+#map { width:100%; height:100%; }
+
+/* Overview page */
+#ov-view {
+  position:fixed; top:94px; left:0; right:0; bottom:0;
+  overflow-y:auto; padding:20px; display:none; background:var(--bg); z-index:1;
+}
+#ov-view.show { display:block; }
+#ov-view::-webkit-scrollbar { width:4px; }
+#ov-view::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+
+
+/* ═══════════════════════════════════════
+   FILTER PANEL
+═══════════════════════════════════════ */
+.filter-panel {
+  position:fixed; top:108px; left:14px; z-index:600;
+  width:214px;
+  background:rgba(14,17,24,0.95); backdrop-filter:blur(20px);
+  border:1px solid var(--border2); border-radius:var(--r2);
+  box-shadow:0 8px 40px rgba(0,0,0,0.5);
+  overflow:hidden;
+}
+.fp-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 13px; cursor:pointer; user-select:none;
+  border-bottom:1px solid var(--border);
+}
+.fp-title { font-size:10px; text-transform:uppercase; letter-spacing:1px; font-weight:700; color:var(--text2); display:flex; align-items:center; gap:6px; }
+.fp-chevron { font-size:9px; color:var(--text3); transition:transform 0.2s; }
+.fp-chevron.open { transform:rotate(180deg); }
+.fp-body { padding:12px 13px; display:flex; flex-direction:column; gap:11px; }
+.fp-body.hidden { display:none; }
+.fp-group-label { font-size:9px; text-transform:uppercase; letter-spacing:0.8px; color:var(--text3); font-weight:700; margin-bottom:6px; }
+.fp-chips { display:flex; flex-wrap:wrap; gap:4px; }
+.fp-reset { width:100%; padding:6px; background:transparent; border:1px solid var(--border); border-radius:6px; color:var(--text3); font-family:var(--fm); font-size:9px; cursor:pointer; transition:all 0.15s; letter-spacing:0.5px; text-transform:uppercase; }
+.fp-reset:hover { background:var(--surf2); color:var(--text2); border-color:var(--border2); }
+.fp-active-count { font-size:9px; background:var(--accent); color:#fff; border-radius:3px; padding:1px 5px; font-family:var(--fm); display:none; }
+
+/* Map legend */
+.map-legend {
+  position:fixed; bottom:20px; left:14px; z-index:600;
+  background:rgba(14,17,24,0.92); backdrop-filter:blur(16px);
+  border:1px solid var(--border2); border-radius:10px; padding:12px 14px;
+}
+.leg-title { font-size:9px; text-transform:uppercase; letter-spacing:0.9px; color:var(--text3); font-weight:700; margin-bottom:8px; }
+.leg-row { display:flex; align-items:center; gap:7px; margin-bottom:5px; font-size:10px; color:var(--text2); }
+.leg-row:last-child { margin-bottom:0; }
+.leg-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+
+
+/* ═══════════════════════════════════════
+   BOTTOM WAVE PANEL
+═══════════════════════════════════════ */
+.btm-panel {
+  position:fixed; left:0; right:0; bottom:0; z-index:900;
+  background:rgba(9,11,17,0.98); backdrop-filter:blur(28px);
+  border-top:1px solid var(--border2);
+  border-radius:16px 16px 0 0;
+  transform:translateY(100%);
+  transition:transform 0.44s cubic-bezier(0.32,0.72,0,1);
+  display:flex; flex-direction:column;
+  max-height:72vh;
+  box-shadow:0 -20px 60px rgba(0,0,0,0.6);
+}
+.btm-panel.open { transform:translateY(0); }
+
+.panel-drag {
+  flex-shrink:0; padding:10px 0 0;
+  display:flex; align-items:center; justify-content:center;
+  cursor:grab;
+}
+.panel-drag-handle { width:36px; height:4px; background:var(--border3); border-radius:2px; }
+
+/* Panel top section */
+.panel-top {
+  display:grid; grid-template-columns:1fr auto;
+  align-items:start; padding:12px 20px 0; gap:14px; flex-shrink:0;
+}
+.panel-meta {}
+.panel-badge-row { display:flex; align-items:center; gap:6px; margin-bottom:6px; flex-wrap:wrap; }
+.panel-name { font-family:var(--fd); font-size:22px; font-weight:800; letter-spacing:-0.4px; line-height:1.1; }
+.panel-sub { font-size:11px; color:var(--text2); margin-top:3px; }
+.panel-actions { display:flex; gap:6px; flex-shrink:0; padding-top:2px; }
+
+/* Panel tab bar */
+.panel-tabs {
+  display:flex; padding:12px 20px 0; gap:0;
+  border-bottom:1px solid var(--border); flex-shrink:0; margin-top:8px;
+}
+.ptab {
+  padding:6px 14px 10px; font-size:11px; font-weight:600; cursor:pointer;
+  color:var(--text3); border-bottom:2px solid transparent; margin-bottom:-1px;
+  transition:all 0.15s; white-space:nowrap;
+}
+.ptab.on { color:var(--accent); border-bottom-color:var(--accent); }
+.ptab:hover:not(.on) { color:var(--text2); }
+
+/* Panel scrollable content */
+.panel-content {
+  flex:1; overflow-y:auto; padding:16px 20px 24px;
+}
+.panel-content::-webkit-scrollbar { width:3px; }
+.panel-content::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+
+/* Tab panels */
+.tab-panel { display:none; }
+.tab-panel.on { display:block; animation:fadeSlide 0.25s ease; }
+@keyframes fadeSlide { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── Snapshot grid (4 stat boxes) */
+.snap-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px; }
+.snap-box { background:var(--surf2); border:1px solid var(--border); border-radius:9px; padding:11px 13px; }
+.snap-label { font-size:9px; text-transform:uppercase; letter-spacing:0.8px; color:var(--text3); font-weight:700; margin-bottom:4px; }
+.snap-val { font-family:var(--fm); font-size:20px; font-weight:600; line-height:1.1; }
+.snap-sub { font-size:9px; color:var(--text3); margin-top:3px; }
+
+/* ── KSI comparison */
+.ksi-compare-card { background:var(--surf2); border:1px solid var(--border); border-radius:9px; padding:13px 14px; margin-bottom:14px; }
+.ksi-compare-title { font-size:9px; text-transform:uppercase; letter-spacing:0.8px; color:var(--text3); font-weight:700; margin-bottom:10px; }
+.ksi-numbers { display:flex; gap:20px; align-items:flex-end; margin-bottom:10px; }
+.ksi-num-block {}
+.ksi-num-label { font-size:9px; color:var(--text3); margin-bottom:2px; }
+.ksi-num-val { font-family:var(--fm); font-size:28px; font-weight:600; line-height:1; }
+.ksi-vs-label { font-size:11px; color:var(--text3); padding-bottom:4px; }
+.ksi-track { height:8px; background:var(--surf3); border-radius:4px; overflow:hidden; position:relative; margin-bottom:5px; }
+.ksi-fill-avg { position:absolute; left:0; top:0; height:100%; background:var(--green); opacity:0.45; border-radius:4px; }
+.ksi-fill-zone { position:absolute; left:0; top:0; height:100%; border-radius:4px; }
+.ksi-scale { display:flex; justify-content:space-between; font-size:9px; font-family:var(--fm); color:var(--text3); }
+
+/* ── Factors & Severity (2 col) */
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px; }
+.mini-sect { background:var(--surf2); border:1px solid var(--border); border-radius:9px; padding:12px 13px; }
+.mini-title { font-size:9px; text-transform:uppercase; letter-spacing:0.8px; color:var(--text3); font-weight:700; margin-bottom:9px; }
+.fbar { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.fbar:last-child { margin-bottom:0; }
+.fbar-label { font-size:10px; color:var(--text2); width:72px; flex-shrink:0; }
+.fbar-pct { font-size:9px; font-family:var(--fm); color:var(--text3); width:28px; text-align:right; }
+.sev-item { display:flex; align-items:center; justify-content:space-between; margin-bottom:7px; }
+.sev-item:last-child { margin-bottom:0; }
+.sev-dot-label { display:flex; align-items:center; gap:7px; font-size:11px; color:var(--text2); }
+.sev-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.sev-right { display:flex; align-items:center; gap:7px; }
+.sev-val { font-family:var(--fm); font-size:11px; color:var(--text); }
+.sev-pct { font-size:9px; color:var(--text3); font-family:var(--fm); }
+
+/* ── Countermeasure */
+.cm-card {
+  background:linear-gradient(135deg, rgba(79,142,247,0.06), rgba(79,142,247,0.02));
+  border:1px solid rgba(79,142,247,0.18); border-radius:9px; padding:13px 14px; margin-bottom:12px;
+}
+.cm-head { display:flex; align-items:center; gap:8px; margin-bottom:7px; }
+.cm-icon { font-size:16px; }
+.cm-title { font-size:12px; font-weight:700; color:var(--accent); font-family:var(--fd); }
+.cm-body { font-size:11px; color:var(--text2); line-height:1.65; }
+.cm-tags { display:flex; gap:5px; flex-wrap:wrap; margin-top:8px; }
+.cm-tag { font-size:9px; padding:2px 7px; border-radius:3px; background:var(--surf3); border:1px solid var(--border2); color:var(--text2); font-family:var(--fm); }
+
+/* ── View More button */
+.view-more-btn {
+  width:100%; padding:9px 14px; margin-top:12px;
+  background:var(--surf2); border:1px solid var(--border2); border-radius:8px;
+  color:var(--text2); font-family:var(--fb); font-size:11px; font-weight:600;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;
+  transition:all 0.18s;
+}
+.view-more-btn:hover { background:var(--surf3); color:var(--text); border-color:var(--border3); }
+.view-more-btn .chevron { transition:transform 0.2s; display:inline-block; font-size:10px; }
+.view-more-btn.expanded .chevron { transform:rotate(180deg); }
+
+/* Inline expand table */
+.expand-table { display:none; margin-top:12px; border:1px solid var(--border); border-radius:9px; overflow:hidden; }
+.expand-table.show { display:block; animation:fadeSlide 0.3s ease; }
+
+/* ─ Anomaly tab styles */
+.anomaly-list { display:flex; flex-direction:column; gap:6px; }
+.anomaly-row {
+  display:flex; align-items:center; gap:10px;
+  background:var(--surf2); border:1px solid var(--border); border-radius:8px;
+  padding:10px 12px; cursor:pointer; transition:border-color 0.15s;
+}
+.anomaly-row:hover { border-color:var(--border3); }
+.anomaly-rank { font-family:var(--fm); font-size:11px; color:var(--text3); width:22px; flex-shrink:0; }
+.anomaly-body { flex:1; min-width:0; }
+.anomaly-name { font-size:12px; font-weight:600; color:var(--text); margin-bottom:2px; }
+.anomaly-sub { font-size:10px; color:var(--text3); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.anomaly-score { font-family:var(--fm); font-size:11px; color:var(--text2); flex-shrink:0; }
+
+/* ─ Table tab */
+.table-scroll { overflow-x:auto; border:1px solid var(--border); border-radius:9px; }
+
+
+/* ═══════════════════════════════════════
+   OVERVIEW PAGE (toggle)
+═══════════════════════════════════════ */
+.ov-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; max-width:1400px; margin:0 auto; }
+.ov-grid .s2 { grid-column:span 2; }
+.ov-grid .s3 { grid-column:span 3; }
+.ov-card { background:var(--surf); border:1px solid var(--border); border-radius:var(--r2); padding:18px; }
+.ov-card-title { font-size:10px; text-transform:uppercase; letter-spacing:0.9px; color:var(--text3); font-weight:700; margin-bottom:14px; }
+.big-num { font-family:var(--fd); font-size:44px; font-weight:800; line-height:1; letter-spacing:-1px; }
+
+/* amplification trio */
+.amp-trio { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.amp-box { background:var(--surf2); border:1px solid var(--border); border-radius:8px; padding:12px; text-align:center; }
+.amp-label { font-size:9px; text-transform:uppercase; letter-spacing:0.7px; color:var(--text3); font-weight:700; margin-bottom:6px; }
+.amp-val { font-family:var(--fm); font-size:20px; color:var(--text); }
+.amp-sub { font-size:9px; color:var(--text3); margin-top:3px; }
+
+/* corridor bar list */
+.corr-list { display:flex; flex-direction:column; gap:8px; }
+.corr-row { display:grid; grid-template-columns:110px 1fr 44px; gap:10px; align-items:center; }
+.corr-name { font-size:11px; color:var(--text2); }
+.corr-val { font-family:var(--fm); font-size:11px; color:var(--text); text-align:right; }
+
+/* fatal profile grid */
+.fatal-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; }
+.fatal-item { background:var(--surf2); border:1px solid var(--border); border-radius:8px; padding:10px 12px; display:flex; align-items:center; gap:10px; }
+.fatal-pct { font-family:var(--fm); font-size:16px; font-weight:600; flex-shrink:0; }
+.fatal-label { font-size:11px; color:var(--text2); }
+
+/* VRU callout */
+.vru-callout { background:var(--surf2); border:1px solid var(--border); border-radius:9px; padding:14px; display:flex; align-items:center; gap:14px; }
+.vru-arrow { font-family:var(--fm); font-size:11px; color:var(--text3); }
+.vru-pct-block { text-align:center; }
+.vru-pct { font-family:var(--fd); font-size:28px; font-weight:800; line-height:1; }
+.vru-sub { font-size:9px; color:var(--text3); margin-top:2px; }
+
+/* Leaflet overrides */
+.leaflet-container { background:#080b12; }
+.leaflet-tile { filter:brightness(0.42) saturate(0.25) hue-rotate(210deg) contrast(1.15); }
+.leaflet-control-attribution { display:none !important; }
+.leaflet-control-zoom a { background:var(--surf2) !important; color:var(--text2) !important; border-color:var(--border2) !important; font-family:var(--fm) !important; }
+.leaflet-control-zoom a:hover { background:var(--surf3) !important; color:var(--text) !important; }
+.leaflet-popup-content-wrapper { background:var(--surf); border:1px solid var(--border2); border-radius:9px; box-shadow:0 16px 48px rgba(0,0,0,0.7); }
+.leaflet-popup-tip { background:var(--surf); }
+.leaflet-popup-content { margin:11px 14px; font-family:var(--fb); font-size:11px; color:var(--text2); min-width:180px; }
+.leaflet-popup-content b { color:var(--text); font-family:var(--fd); font-size:13px; display:block; margin-bottom:3px; }
+
+/* Misc */
+.divider { height:1px; background:var(--border); margin:12px 0; }
+.fade-up { animation:fadeSlide 0.35s ease both; }
+
+/* Anomaly table sticky header */
+#anomalyTable thead th { position:sticky; top:0; z-index:2; background:var(--surf2); }
+#anomalyTableWrap::-webkit-scrollbar { width:4px; height:4px; }
+#anomalyTableWrap::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+</style>
+</head>
+<body>
+
+<!-- ═══ TOPBAR ═══ -->
+<header class="topbar">
+  <div class="logo"><div class="logo-dot"></div>TMS Insights</div>
+  <div class="city-tag">📍 <b>Concord, CA</b></div>
+  <span class="period-tag">2014 – 2025 · 1,499 collisions</span>
+  <div class="topbar-right">
+    <div class="toggle-group" id="viewToggle">
+      <button class="toggle-item active" id="mapBtn" onclick="setView('map')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+        Map
+      </button>
+      <button class="toggle-item" id="ovBtn" onclick="setView('overview')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Overview
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ KPI BAR ═══ -->
+<div class="kpibar">
+  <div class="kpi"><div class="kl">Total Collisions</div><div class="kv">1,499</div></div>
+  <div class="kpi"><div class="kl">Fatalities</div><div class="kv" style="color:var(--red)">56</div></div>
+  <div class="kpi"><div class="kl">KSI Rate</div><div class="kv" style="color:var(--red)">25.0%</div> &nbsp;<span class="badge badge-destructive">↑ Trending</span></div>
+  <div class="kpi"><div class="kl">Benchmark KSI</div><div class="kv">16.4%</div></div>
+  <div class="kpi"><div class="kl">Total Injured</div><div class="kv">2,057</div></div>
+  <div class="kpi"><div class="kl">Top Corridor</div><div class="kv" style="color:var(--amber)">Clayton Rd</div></div>
+  <div class="kpi"><div class="kl">Anomalies</div><div class="kv" style="color:var(--orange)">260</div> &nbsp;<span class="badge badge-destructive">51 Critical</span></div>
+  <div class="kpi"><div class="kl">Anchor Factors</div><div class="kv">7</div></div>
+</div>
+
+<!-- ═══ MAP VIEW ═══ -->
+<div id="map-view">
+  <div id="map"></div>
+
+  <!-- FILTER PANEL -->
+  <div class="filter-panel" id="filterPanel">
+    <div class="fp-header" onclick="toggleFilters()">
+      <div class="fp-title">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="color:var(--accent)"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+        Map Filters
+        <span class="fp-active-count" id="fpCount">0</span>
+      </div>
+      <div class="fp-chevron open" id="fpChevron">▼</div>
+    </div>
+    <div class="fp-body" id="fpBody">
+      <div>
+        <div class="fp-group-label">Severity / KSI Zone</div>
+        <div class="fp-chips">
+          <div class="select-chip on r" data-g="sev" data-v="critical"  onclick="toggleChip(this)">● Critical</div>
+          <div class="select-chip on o" data-g="sev" data-v="high"      onclick="toggleChip(this)">● High</div>
+          <div class="select-chip on a" data-g="sev" data-v="elevated"  onclick="toggleChip(this)">● Elevated</div>
+          <div class="select-chip on g" data-g="sev" data-v="normal"    onclick="toggleChip(this)">● Normal</div>
+        </div>
+      </div>
+      <div>
+        <div class="fp-group-label">Condition / Type</div>
+        <div class="fp-chips">
+          <div class="select-chip on b" data-g="type" data-v="pedestrian" onclick="toggleChip(this)">Pedestrian</div>
+          <div class="select-chip on b" data-g="type" data-v="cyclist"    onclick="toggleChip(this)">Cyclist</div>
+          <div class="select-chip on b" data-g="type" data-v="broadside"  onclick="toggleChip(this)">Broadside</div>
+          <div class="select-chip on b" data-g="type" data-v="head-on"    onclick="toggleChip(this)">Head-On</div>
+          <div class="select-chip on b" data-g="type" data-v="hit-run"    onclick="toggleChip(this)">Hit-&-Run</div>
+        </div>
+      </div>
+      <div>
+        <div class="fp-group-label">Amplification Factor</div>
+        <div class="fp-chips">
+          <div class="select-chip on r" data-g="amp" data-v="dark"       onclick="toggleChip(this)">Dark Conditions</div>
+          <div class="select-chip on r" data-g="amp" data-v="alcohol"    onclick="toggleChip(this)">Alcohol / DUI</div>
+          <div class="select-chip on o" data-g="amp" data-v="speeding"   onclick="toggleChip(this)">Speeding</div>
+          <div class="select-chip on o" data-g="amp" data-v="ped-viol"   onclick="toggleChip(this)">Ped Violation</div>
+          <div class="select-chip on a" data-g="amp" data-v="wrong-way"  onclick="toggleChip(this)">Wrong-Way</div>
+        </div>
+      </div>
+      <button class="fp-reset" onclick="resetFilters()">Reset All Filters</button>
+    </div>
+  </div>
+
+  <!-- MAP LEGEND -->
+  <div class="map-legend">
+    <div class="leg-title">KSI Zone</div>
+    <div class="leg-row"><div class="leg-dot" style="background:var(--red);box-shadow:0 0 7px var(--red)"></div>Critical &gt;30% KSI</div>
+    <div class="leg-row"><div class="leg-dot" style="background:var(--orange)"></div>High 25–30%</div>
+    <div class="leg-row"><div class="leg-dot" style="background:var(--amber)"></div>Elevated 20–25%</div>
+    <div class="leg-row"><div class="leg-dot" style="background:var(--green)"></div>Normal &lt;20%</div>
+  </div>
+</div>
+
+<!-- ═══ OVERVIEW VIEW ═══ -->
+<div id="ov-view">
+  <div class="ov-grid">
+
+    <!-- KSI Rate Card -->
+    <div class="ov-card">
+      <div class="ov-card-title">City KSI Rate</div>
+      <div style="display:flex;align-items:flex-end;gap:14px;margin-bottom:12px">
+        <div>
+          <div class="big-num" style="color:var(--red)">25.0%</div>
+          <div style="font-size:10px;color:var(--text3);margin-top:3px">Current Rate</div>
+        </div>
+        <div style="text-align:right;padding-bottom:4px">
+          <div style="font-family:var(--fm);font-size:20px;color:var(--text2)">16.4%</div>
+          <div style="font-size:10px;color:var(--text3)">Benchmark</div>
+        </div>
+      </div>
+      <div class="progress" style="margin-bottom:5px">
+        <div class="progress-fill" style="width:76%;background:linear-gradient(90deg,var(--green),var(--amber),var(--red))"></div>
+      </div>
+      <div style="font-size:9px;color:var(--text3);font-family:var(--fm)">KSI rose from 20.7% (2014) → 32.9% (2025) · +52% over period</div>
+      <div class="divider"></div>
+      <div style="font-size:10px;color:var(--text2);line-height:1.6">
+        KSI peaked at <span style="color:var(--red);font-family:var(--fm)">31.19%</span> in 2021. Recent period (2020–2025) KSI is
+        <span style="color:var(--orange);font-family:var(--fm)">27.1%</span> vs early period
+        <span style="color:var(--text);font-family:var(--fm)">23.3%</span>.
+      </div>
+    </div>
+
+    <!-- Amplification -->
+    <div class="ov-card">
+      <div class="ov-card-title">Amplification Factors</div>
+      <div class="amp-trio" style="margin-bottom:12px">
+        <div class="amp-box">
+          <div class="amp-label">Ped KSI</div>
+          <div class="amp-val" style="color:var(--red)">46.4%</div>
+          <div class="amp-sub">vs 20.8% non-ped</div>
+        </div>
+        <div class="amp-box">
+          <div class="amp-label">Dark KSI</div>
+          <div class="amp-val" style="color:var(--orange)">35.2%</div>
+          <div class="amp-sub">vs 19.8% daylight</div>
+        </div>
+        <div class="amp-box">
+          <div class="amp-label">Spd+Dark+DUI</div>
+          <div class="amp-val" style="color:var(--red)">41.7%</div>
+          <div class="amp-sub">Triple threat</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--text2);line-height:1.6">
+        Pedestrian amplification <span style="color:var(--red);font-family:var(--fm)">2.2×</span> · Dark conditions <span style="color:var(--orange);font-family:var(--fm)">1.8×</span> · Speed alone only <span style="color:var(--text);font-family:var(--fm)">13.3%</span> KSI.
+      </div>
+    </div>
+
+    <!-- Fatal Profile -->
+    <div class="ov-card">
+      <div class="ov-card-title">Fatal Profile — 56 Deaths</div>
+      <div class="fatal-grid">
+        <div class="fatal-item"><div class="fatal-pct" style="color:var(--red)">64.8%</div><div class="fatal-label">Dark conditions</div></div>
+        <div class="fatal-item"><div class="fatal-pct" style="color:var(--orange)">44.4%</div><div class="fatal-label">Alcohol involved</div></div>
+        <div class="fatal-item"><div class="fatal-pct" style="color:var(--red)">42.6%</div><div class="fatal-label">Pedestrian involved</div></div>
+        <div class="fatal-item"><div class="fatal-pct" style="color:var(--amber)">13%</div><div class="fatal-label">Motorcycle involved</div></div>
+        <div class="fatal-item"><div class="fatal-pct" style="color:var(--amber)">11.1%</div><div class="fatal-label">Hit-and-run</div></div>
+        <div class="fatal-item"><div class="fatal-pct" style="color:var(--amber)">11.1%</div><div class="fatal-label">Bicycle involved</div></div>
+      </div>
+    </div>
+
+    <!-- Top Corridors -->
+    <div class="ov-card s2">
+      <div class="ov-card-title">Top Corridors by Fatality Risk</div>
+      <div class="corr-list">
+        <div class="corr-row">
+          <div class="corr-name">Clayton Rd</div>
+          <div class="progress"><div class="progress-fill" style="width:100%;background:var(--red)"></div></div>
+          <div class="corr-val" style="color:var(--red)">7 fatal</div>
+        </div>
+        <div class="corr-row">
+          <div class="corr-name">Willow Pass Rd</div>
+          <div class="progress"><div class="progress-fill" style="width:71%;background:var(--orange)"></div></div>
+          <div class="corr-val" style="color:var(--orange)">5 fatal</div>
+        </div>
+        <div class="corr-row">
+          <div class="corr-name">Oak Grove Rd</div>
+          <div class="progress"><div class="progress-fill" style="width:43%;background:var(--amber)"></div></div>
+          <div class="corr-val" style="color:var(--amber)">3 fatal</div>
+        </div>
+        <div class="corr-row">
+          <div class="corr-name">Concord Blvd</div>
+          <div class="progress"><div class="progress-fill" style="width:38%;background:var(--amber)"></div></div>
+          <div class="corr-val" style="color:var(--amber)">Broadside anomaly</div>
+        </div>
+        <div class="corr-row">
+          <div class="corr-name">Treat Blvd</div>
+          <div class="progress"><div class="progress-fill" style="width:28%;background:var(--green)"></div></div>
+          <div class="corr-val" style="color:var(--green)">2 fatal</div>
+        </div>
+        <div class="corr-row">
+          <div class="corr-name">Galindo St</div>
+          <div class="progress"><div class="progress-fill" style="width:22%;background:var(--green)"></div></div>
+          <div class="corr-val" style="color:var(--green)">1 fatal</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VRU Disproportionality -->
+    <div class="ov-card">
+      <div class="ov-card-title">VRU Disproportionality</div>
+      <div class="vru-callout" style="margin-bottom:12px">
+        <div class="vru-pct-block">
+          <div class="vru-pct" style="color:var(--text2)">30.2%</div>
+          <div class="vru-sub">of crash volume</div>
+        </div>
+        <div class="vru-arrow">→</div>
+        <div class="vru-pct-block">
+          <div class="vru-pct" style="color:var(--red)">51.8%</div>
+          <div class="vru-sub">of fatalities</div>
+        </div>
+        <span class="badge badge-destructive" style="margin-left:auto">1.7× ratio</span>
+      </div>
+      <div style="font-size:10px;color:var(--text2);line-height:1.6">
+        VRU KSI rate: <span style="color:var(--red);font-family:var(--fm)">35.8%</span> vs non-VRU <span style="color:var(--text);font-family:var(--fm)">20.4%</span>. Bicycle wrong-side riding is the #1 bike factor (15% of bike crashes).
+      </div>
+    </div>
+
+    <!-- Top Anomalies by Score — Full Table -->
+    <div class="ov-card s3" style="padding:0;overflow:hidden">
+
+      <!-- Table header bar -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 14px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <div class="ov-card-title" style="margin-bottom:0">Top Anomalies by Score</div>
+          <span class="badge badge-destructive">51 Critical</span>
+          <span class="badge badge-warning">108 High</span>
+          <span class="badge badge-caution">75 Moderate</span>
+          <span class="badge badge-default">26 Watch</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <!-- Filter pills -->
+          <div style="display:flex;gap:4px" id="anomalyFilterBtns">
+            <button class="btn btn-sm" style="background:var(--red-gl);color:var(--red);border:1px solid rgba(240,82,82,0.25);font-size:10px" onclick="filterAnomalyTable('Critical',this)">Critical</button>
+            <button class="btn btn-sm" style="background:var(--surf2);color:var(--text3);border:1px solid var(--border2);font-size:10px" onclick="filterAnomalyTable('High',this)">High</button>
+            <button class="btn btn-sm" style="background:var(--surf2);color:var(--text3);border:1px solid var(--border2);font-size:10px" onclick="filterAnomalyTable('Moderate',this)">Moderate</button>
+            <button class="btn btn-sm" style="background:var(--surf2);color:var(--text3);border:1px solid var(--border2);font-size:10px" onclick="filterAnomalyTable('All',this)">All 260</button>
+          </div>
+          <button class="btn btn-ghost btn-sm" style="font-size:10px">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Export for Grant
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrollable table -->
+      <div style="overflow-x:auto;max-height:420px;overflow-y:auto" id="anomalyTableWrap">
+        <table class="tbl" id="anomalyTable" style="font-size:11px">
+          <thead style="position:sticky;top:0;z-index:2">
+            <tr>
+              <th style="cursor:pointer;user-select:none" onclick="sortAnomalyTable('rank')">
+                <div style="display:flex;align-items:center;gap:4px">RANK <span id="sort-rank" style="color:var(--accent)">↓</span></div>
+              </th>
+              <th>FACTOR COMBINATION</th>
+              <th style="cursor:pointer;user-select:none" onclick="sortAnomalyTable('collisions')">
+                <div style="display:flex;align-items:center;gap:4px">COLLISIONS <span id="sort-collisions"></span></div>
+              </th>
+              <th style="cursor:pointer;user-select:none" onclick="sortAnomalyTable('ksi')">
+                <div style="display:flex;align-items:center;gap:4px">KSI RATE <span id="sort-ksi"></span></div>
+              </th>
+              <th style="cursor:pointer;user-select:none" onclick="sortAnomalyTable('baseline')">
+                <div style="display:flex;align-items:center;gap:4px">VS BASELINE <span id="sort-baseline"></span></div>
+              </th>
+              <th style="cursor:pointer;user-select:none" onclick="sortAnomalyTable('score')">
+                <div style="display:flex;align-items:center;gap:4px">SCORE <span id="sort-score"></span></div>
+              </th>
+              <th>SEVERITY</th>
+              <th>TREND</th>
+              <th>KSI BAR</th>
+            </tr>
+          </thead>
+          <tbody id="anomalyTbody"></tbody>
+        </table>
+      </div>
+
+      <!-- Table footer -->
+      <div style="padding:10px 18px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:10px;color:var(--text3);font-family:var(--fm)" id="anomalyTableFooter">Showing 10 of 260 anomalies · Baseline KSI: 25.0%</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn btn-ghost btn-sm" style="font-size:10px" id="anomalyShowMore" onclick="showMoreAnomalies()">Show more ↓</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Key Anomaly Callout Cards (below table) -->
+    <div class="ov-card s3" style="padding:16px 18px">
+      <div class="ov-card-title" style="margin-bottom:12px">Critical Pattern Highlights</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+        <div style="background:var(--surf2);border:1px solid rgba(240,82,82,0.2);border-radius:9px;padding:12px;border-left:3px solid var(--red)">
+          <div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">Deadliest PCF</div>
+          <div style="font-family:var(--fm);font-size:22px;color:var(--red);line-height:1;margin-bottom:4px">59.5%</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:3px">Pedestrian Violation</div>
+          <div style="font-size:10px;color:var(--text3)">Highest KSI of any PCF · 20 fatal · 66 KSI</div>
+        </div>
+        <div style="background:var(--surf2);border:1px solid rgba(251,146,60,0.2);border-radius:9px;padding:12px;border-left:3px solid var(--orange)">
+          <div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">Trend Alert</div>
+          <div style="font-family:var(--fm);font-size:22px;color:var(--orange);line-height:1;margin-bottom:4px">+59%</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:3px">KSI Rate Rise</div>
+          <div style="font-size:10px;color:var(--text3)">20.7% (2014) → 32.9% (2025) · Getting worse</div>
+        </div>
+        <div style="background:var(--surf2);border:1px solid rgba(245,158,11,0.2);border-radius:9px;padding:12px;border-left:3px solid var(--amber)">
+          <div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">Broadside Anomaly</div>
+          <div style="font-family:var(--fm);font-size:22px;color:var(--amber);line-height:1;margin-bottom:4px">42%</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:3px">Concord Blvd</div>
+          <div style="font-size:10px;color:var(--text3)">1.2× citywide avg of 36% · Signal timing issue</div>
+        </div>
+        <div style="background:var(--surf2);border:1px solid rgba(245,158,11,0.2);border-radius:9px;padding:12px;border-left:3px solid var(--amber)">
+          <div style="font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px">Time Paradox</div>
+          <div style="font-family:var(--fm);font-size:22px;color:var(--amber);line-height:1;margin-bottom:4px">30.6%</div>
+          <div style="font-size:11px;font-weight:600;color:var(--text);margin-bottom:3px">Sunday Night KSI</div>
+          <div style="font-size:10px;color:var(--text3)">Fewest crashes but highest severity · 1.2× avg</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ BOTTOM WAVE PANEL ═══ -->
+<div class="btm-panel" id="btmPanel">
+  <div class="panel-drag"><div class="panel-drag-handle"></div></div>
+
+  <div class="panel-top">
+    <div class="panel-meta">
+      <div class="panel-badge-row" id="panelBadgeRow">
+        <span class="badge badge-destructive" id="panelSevBadge">● CRITICAL ZONE</span>
+        <span class="badge badge-default" id="panelTypeBadge">Arterial Corridor</span>
+        <span class="badge badge-accent" id="panelAnomalyBadge">Anomaly Flagged</span>
+      </div>
+      <div class="panel-name" id="panelName">Clayton Road Corridor</div>
+      <div class="panel-sub" id="panelSub">Concord, CA · 7 fatalities · Top KSI corridor</div>
+    </div>
+    <div class="panel-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closePanel()">✕ Close</button>
+      <button class="btn btn-primary btn-sm">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Apply Countermeasure
+      </button>
+    </div>
+  </div>
+
+  <div class="panel-tabs">
+    <div class="ptab on" onclick="switchTab('snapshot')">Snapshot</div>
+    <div class="ptab" onclick="switchTab('anomalies')">Anomalies</div>
+    <div class="ptab" onclick="switchTab('table')">Collision Records</div>
+  </div>
+
+  <div class="panel-content">
+
+    <!-- SNAPSHOT TAB -->
+    <div class="tab-panel on" id="tab-snapshot">
+      <!-- 4 stat boxes -->
+      <div class="snap-grid" id="snapGrid">
+        <div class="snap-box"><div class="snap-label">Total Collisions</div><div class="snap-val" id="sv-total">—</div><div class="snap-sub">On corridor</div></div>
+        <div class="snap-box"><div class="snap-label">Fatalities</div><div class="snap-val" id="sv-fatal" style="color:var(--red)">—</div><div class="snap-sub">KSI deaths</div></div>
+        <div class="snap-box"><div class="snap-label">KSI Rate</div><div class="snap-val" id="sv-ksi" style="color:var(--red)">—</div><div class="snap-sub">vs 16.4% benchmark</div></div>
+        <div class="snap-box"><div class="snap-label">Anomaly Score</div><div class="snap-val" id="sv-score" style="color:var(--orange)">—</div><div class="snap-sub">of 100 max</div></div>
+      </div>
+
+      <!-- KSI Compare -->
+      <div class="ksi-compare-card">
+        <div class="ksi-compare-title">KSI Rate vs City Benchmark</div>
+        <div class="ksi-numbers">
+          <div class="ksi-num-block">
+            <div class="ksi-num-label">Corridor KSI</div>
+            <div class="ksi-num-val" id="ksiZoneVal" style="color:var(--red)">—</div>
+          </div>
+          <div class="ksi-vs-label">vs</div>
+          <div class="ksi-num-block">
+            <div class="ksi-num-label">Benchmark</div>
+            <div class="ksi-num-val" style="color:var(--green)">16.4%</div>
+          </div>
+          <div style="margin-left:auto;align-self:center"><span class="badge badge-destructive" id="ksiMultiplier">—</span></div>
+        </div>
+        <div class="ksi-track">
+          <div class="ksi-fill-avg" id="ksiFillAvg" style="width:41%"></div>
+          <div class="ksi-fill-zone" id="ksiFillZone" style="width:60%;background:var(--red)"></div>
+        </div>
+        <div class="ksi-scale"><span>0%</span><span>10%</span><span>20%</span><span>30%</span><span>40%+</span></div>
+      </div>
+
+      <!-- Factors + Severity -->
+      <div class="two-col">
+        <div class="mini-sect">
+          <div class="mini-title">Amplification Factors</div>
+          <div id="factorsContent"></div>
+        </div>
+        <div class="mini-sect">
+          <div class="mini-title">Severity Breakdown</div>
+          <div id="severityContent"></div>
+        </div>
+      </div>
+
+      <!-- Countermeasure -->
+      <div class="cm-card" id="cmCard">
+        <div class="cm-head"><span class="cm-icon" id="cmIcon">🚦</span><span class="cm-title">Recommended Countermeasure</span></div>
+        <div class="cm-body" id="cmBody">—</div>
+        <div class="cm-tags" id="cmTags"></div>
+      </div>
+
+      <!-- VIEW MORE -->
+      <button class="view-more-btn" id="viewMoreBtn" onclick="toggleExpandTable()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+        View Collision Records
+        <span class="chevron">▼</span>
+      </button>
+      <div class="expand-table" id="expandTable">
+        <div class="table-scroll"><table class="tbl" id="expandTbl"><thead><tr><th>#</th><th>Date</th><th>Type</th><th>Severity</th><th>PCF</th><th>Conditions</th><th>Injured</th></tr></thead><tbody id="expandTblBody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- ANOMALIES TAB -->
+    <div class="tab-panel" id="tab-anomalies">
+      <div style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:11px;color:var(--text2)">Anomaly patterns detected on this corridor</div>
+        <span class="badge badge-destructive" id="anomalyCount">0 found</span>
+      </div>
+      <div class="anomaly-list" id="anomalyList"></div>
+    </div>
+
+    <!-- TABLE TAB -->
+    <div class="tab-panel" id="tab-table">
+      <div style="margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-size:11px;color:var(--text2)" id="tableCaption">All collision records for this corridor</div>
+        <button class="btn btn-ghost btn-sm">↓ Export CSV</button>
+      </div>
+      <div class="table-scroll">
+        <table class="tbl">
+          <thead><tr><th>ID</th><th>Date</th><th>Location</th><th>Type</th><th>Severity</th><th>PCF / Cause</th><th>Conditions</th><th>Injured</th><th>VRU</th></tr></thead>
+          <tbody id="mainTblBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// CORRIDOR DATA (real from tmsinsights.numentica.com)
+// ══════════════════════════════════════════
+const corridors = [
+  {
+    id: 0,
+    name: "Clayton Road Corridor",
+    short: "Clayton Rd",
+    sub: "Concord, CA · Arterial · 2014–2025",
+    type: "Arterial Corridor",
+    severity: "critical",
+    lat: 37.9738, lng: -122.0308,
+    ksi: 32.1, ksiPct: 80,
+    total: 218, fatal: 7, severe: 63, visible: 50, pdo: 98,
+    injured: 312,
+    anomalyScore: 82,
+    amplification: [
+      { label:"Pedestrian",   pct:46, color:"var(--red)" },
+      { label:"Dark/Night",   pct:38, color:"var(--orange)" },
+      { label:"Alcohol/DUI",  pct:28, color:"var(--orange)" },
+      { label:"Speed",        pct:22, color:"var(--amber)" },
+    ],
+    factors: ["dark","alcohol","ped-viol","speeding"],
+    collisionTypes: ["pedestrian","hit-run"],
+    anomalies: [
+      { rank:1, name:"Vehicle/Pedestrian + Ped Violation (Recent)", sub:"57.1% KSI · 2.28× baseline · 42 collisions", score:80, badge:"critical" },
+      { rank:2, name:"Vehicle/Pedestrian — PM Peak VRU", sub:"48.9% KSI · 1.96× baseline · 47 collisions", score:81, badge:"critical" },
+      { rank:3, name:"Night + Pedestrian Combination", sub:"Dark conditions 64.8% of fatalities on corridor", score:76, badge:"high" },
+      { rank:4, name:"Hit-and-Run VRU Bias", sub:"VRU hit-and-run rate 56.5% vs 28% non-HR", score:70, badge:"high" },
+    ],
+    countermeasure: "Pedestrian safety infrastructure overhaul along the 2.1mi corridor: protected crosswalks with HAWK beacons at 4 key intersections, improved nighttime lighting, speed feedback signs, and alcohol enforcement during PM peak hours (16:00–20:00).",
+    cmIcon: "🚶",
+    cmTags: ["HAWK Beacons", "Night Lighting", "Speed Feedback", "DUI Enforcement", "PM Peak Focus"],
+    records: [
+      { id:"CR-1091", date:"2024-11-14", loc:"Clayton Rd @ Oak Grove", type:"Vehicle/Pedestrian", sev:"Fatal", pcf:"Ped Violation", cond:"Dark", injured:1, vru:true },
+      { id:"CR-1087", date:"2024-09-22", loc:"Clayton Rd @ Treat Blvd", type:"Broadside", sev:"Severe", pcf:"Signal Violation", cond:"Daylight", injured:2, vru:false },
+      { id:"CR-1072", date:"2024-07-08", loc:"Clayton Rd mid-block", type:"Vehicle/Pedestrian", sev:"Fatal", pcf:"Ped Violation", cond:"Dark", injured:1, vru:true },
+      { id:"CR-1065", date:"2024-05-19", loc:"Clayton Rd @ Myrtle Dr", type:"Hit-and-Run", sev:"Severe", pcf:"Unknown", cond:"Dark", injured:1, vru:true },
+      { id:"CR-1041", date:"2023-12-03", loc:"Clayton Rd @ Oak Grove", type:"Head-On", sev:"Severe", pcf:"Wrong-Way/DUI", cond:"Dark/Rain", injured:3, vru:false },
+      { id:"CR-1028", date:"2023-09-17", loc:"Clayton Rd @ Treat Blvd", type:"Vehicle/Bicycle", sev:"Severe", pcf:"Right-of-Way", cond:"Daylight", injured:1, vru:true },
+      { id:"CR-0994", date:"2023-04-02", loc:"Clayton Rd mid-block", type:"Vehicle/Pedestrian", sev:"Fatal", pcf:"Ped Violation", cond:"Dark", injured:1, vru:true },
+    ]
+  },
+  {
+    id: 1,
+    name: "Willow Pass Road",
+    short: "Willow Pass Rd",
+    sub: "Concord, CA · Arterial · 2014–2025",
+    type: "Arterial Corridor",
+    severity: "critical",
+    lat: 37.9905, lng: -122.0189,
+    ksi: 29.4, ksiPct: 73,
+    total: 178, fatal: 5, severe: 48, visible: 42, pdo: 83,
+    injured: 261,
+    anomalyScore: 78,
+    amplification: [
+      { label:"Pedestrian",   pct:41, color:"var(--red)" },
+      { label:"Dark/Night",   pct:35, color:"var(--orange)" },
+      { label:"Speed",        pct:30, color:"var(--amber)" },
+      { label:"Alcohol/DUI",  pct:22, color:"var(--amber)" },
+    ],
+    factors: ["dark","speeding","ped-viol"],
+    collisionTypes: ["pedestrian","broadside"],
+    anomalies: [
+      { rank:1, name:"Vehicle/Pedestrian — Evening VRU", sub:"54.8% KSI · 2.19× baseline · 31 collisions", score:80, badge:"critical" },
+      { rank:2, name:"Speed + Dark compound factor", sub:"26.2% KSI vs 13.3% speed-only — doubled severity", score:74, badge:"high" },
+      { rank:3, name:"Broadside rate above citywide", sub:"Near Concord Blvd intersection cluster", score:68, badge:"high" },
+    ],
+    countermeasure: "Average speed cameras along the 1.8mi corridor. Pedestrian crossing improvements at 3 uncontrolled mid-block locations. Variable speed limit signs activated in dark/wet conditions.",
+    cmIcon: "📷",
+    cmTags: ["Speed Cameras", "Ped Crossings", "Variable Limits", "Night Enforcement"],
+    records: [
+      { id:"WP-0871", date:"2024-10-06", loc:"Willow Pass @ Bailey Rd", type:"Vehicle/Pedestrian", sev:"Fatal", pcf:"Ped Violation", cond:"Dark", injured:1, vru:true },
+      { id:"WP-0863", date:"2024-08-14", loc:"Willow Pass mid-block", type:"Broadside", sev:"Severe", pcf:"Signal", cond:"Daylight", injured:2, vru:false },
+      { id:"WP-0841", date:"2024-04-21", loc:"Willow Pass @ Port Chicago", type:"Vehicle/Pedestrian", sev:"Fatal", pcf:"Ped Violation", cond:"Dark/Wet", injured:1, vru:true },
+      { id:"WP-0820", date:"2023-11-30", loc:"Willow Pass @ Bailey Rd", type:"Head-On", sev:"Severe", pcf:"DUI", cond:"Dark", injured:2, vru:false },
+      { id:"WP-0788", date:"2023-07-18", loc:"Willow Pass @ Monument", type:"Vehicle/Bicycle", sev:"Severe", pcf:"Right-of-Way", cond:"Daylight", injured:1, vru:true },
+    ]
+  },
+  {
+    id: 2,
+    name: "Concord Blvd",
+    short: "Concord Blvd",
+    sub: "Concord, CA · Broadside Anomaly Corridor",
+    type: "Broadside Anomaly",
+    severity: "high",
+    lat: 37.9779, lng: -122.0501,
+    ksi: 27.3, ksiPct: 68,
+    total: 156, fatal: 4, severe: 39, visible: 41, pdo: 72,
+    injured: 218,
+    anomalyScore: 74,
+    amplification: [
+      { label:"Broadside",    pct:42, color:"var(--red)" },
+      { label:"Signal Issue", pct:35, color:"var(--orange)" },
+      { label:"Dark/Night",   pct:28, color:"var(--amber)" },
+      { label:"Speed",        pct:18, color:"var(--amber)" },
+    ],
+    factors: ["dark","speeding"],
+    collisionTypes: ["broadside","pedestrian"],
+    anomalies: [
+      { rank:1, name:"Broadside Rate 1.2× Citywide Average", sub:"42% broadside vs 36% city avg — signal-timing or visibility", score:74, badge:"critical" },
+      { rank:2, name:"Side-impact + Ped Error combination", sub:"40% severe · 5 crashes above baseline", score:68, badge:"high" },
+      { rank:3, name:"Ran Red Light / Signal cluster", sub:"Vehicle/Ped + Ran red light: 50% severe · 10 crashes", score:65, badge:"high" },
+    ],
+    countermeasure: "Signal-timing optimization at 5 key intersections with adaptive phasing. Leading pedestrian intervals (LPI) added. Red-light camera enforcement at highest-conflict intersections.",
+    cmIcon: "🚦",
+    cmTags: ["Signal Timing", "LPI Signals", "Red-Light Camera", "Visibility Improvement"],
+    records: [
+      { id:"CB-0612", date:"2024-09-12", loc:"Concord Blvd @ Willow Pass", type:"Broadside", sev:"Fatal", pcf:"Ran Red Light", cond:"Daylight", injured:2, vru:false },
+      { id:"CB-0597", date:"2024-06-28", loc:"Concord Blvd @ Farm Bureau", type:"Broadside", sev:"Severe", pcf:"Signal Violation", cond:"Daylight", injured:3, vru:false },
+      { id:"CB-0581", date:"2024-03-15", loc:"Concord Blvd @ Cowell", type:"Vehicle/Pedestrian", sev:"Fatal", pcf:"Ped Violation", cond:"Dark", injured:1, vru:true },
+      { id:"CB-0560", date:"2023-10-04", loc:"Concord Blvd @ Walnut", type:"Broadside", sev:"Severe", pcf:"Ran Red Light", cond:"Dusk", injured:2, vru:false },
+    ]
+  },
+  {
+    id: 3,
+    name: "Oak Grove Road",
+    short: "Oak Grove Rd",
+    sub: "Concord, CA · Mixed Residential/Commercial",
+    type: "Mixed Corridor",
+    severity: "elevated",
+    lat: 37.9651, lng: -122.0421,
+    ksi: 22.8, ksiPct: 57,
+    total: 134, fatal: 3, severe: 28, visible: 38, pdo: 65,
+    injured: 178,
+    anomalyScore: 66,
+    amplification: [
+      { label:"Dark/Night",   pct:36, color:"var(--orange)" },
+      { label:"Bicycle",      pct:28, color:"var(--amber)" },
+      { label:"Speed",        pct:22, color:"var(--amber)" },
+      { label:"Alcohol/DUI",  pct:16, color:"var(--accent)" },
+    ],
+    factors: ["dark","wrong-way","speeding"],
+    collisionTypes: ["cyclist","pedestrian"],
+    anomalies: [
+      { rank:1, name:"Bicyclist Wrong-Side Riding", sub:"Wrong side of road = #1 bike factor, 15% of bike crashes", score:66, badge:"high" },
+      { rank:2, name:"Night + Bicycle compound", sub:"Dark conditions elevating bicycle collision severity", score:61, badge:"high" },
+    ],
+    countermeasure: "Dedicated protected cycle lane along corridor. Contraflow bike lane clarification. Wayfinding signage to reduce wrong-side riding. Night-visibility improvements.",
+    cmIcon: "🚴",
+    cmTags: ["Protected Bike Lane", "Contraflow Signage", "Night Lighting", "Wayfinding"],
+    records: [
+      { id:"OG-0441", date:"2024-08-19", loc:"Oak Grove @ Clayton Rd", type:"Vehicle/Bicycle", sev:"Fatal", pcf:"Wrong Side of Road", cond:"Dark", injured:1, vru:true },
+      { id:"OG-0428", date:"2024-05-07", loc:"Oak Grove mid-block", type:"Vehicle/Pedestrian", sev:"Severe", pcf:"Ped Violation", cond:"Daylight", injured:1, vru:true },
+      { id:"OG-0409", date:"2023-12-22", loc:"Oak Grove @ Olivera", type:"Vehicle/Bicycle", sev:"Fatal", pcf:"Right-of-Way", cond:"Dark/Rain", injured:1, vru:true },
+      { id:"OG-0388", date:"2023-09-08", loc:"Oak Grove @ Cowell", type:"Sideswipe", sev:"Visible", pcf:"Improper Turn", cond:"Daylight", injured:1, vru:false },
+    ]
+  },
+  {
+    id: 4,
+    name: "Treat Boulevard",
+    short: "Treat Blvd",
+    sub: "Concord, CA · High-Volume Arterial",
+    type: "High-Volume Arterial",
+    severity: "elevated",
+    lat: 37.9601, lng: -122.0231,
+    ksi: 21.4, ksiPct: 53,
+    total: 122, fatal: 2, severe: 24, visible: 35, pdo: 61,
+    injured: 158,
+    anomalyScore: 58,
+    amplification: [
+      { label:"Speed",        pct:34, color:"var(--orange)" },
+      { label:"Dark/Night",   pct:26, color:"var(--amber)" },
+      { label:"Pedestrian",   pct:22, color:"var(--amber)" },
+      { label:"Alcohol/DUI",  pct:14, color:"var(--accent)" },
+    ],
+    factors: ["speeding","dark"],
+    collisionTypes: ["pedestrian","broadside"],
+    anomalies: [
+      { rank:1, name:"Speed + Dark severity escalation", sub:"Speed+Dark: 26.2% KSI vs speed-only 13.3%", score:58, badge:"high" },
+      { rank:2, name:"Sunday Night KSI Paradox", sub:"Sunday night KSI 30.6% — 1.2× weekly average", score:52, badge:"medium" },
+    ],
+    countermeasure: "Speed feedback signs at corridor entry points. Enhanced crosswalk visibility with RRFB beacons. Weekend late-night enforcement patrols targeting DUI and speed.",
+    cmIcon: "⚠️",
+    cmTags: ["Speed Feedback", "RRFB Beacons", "Weekend Enforcement", "DUI Patrol"],
+    records: [
+      { id:"TR-0311", date:"2024-07-21", loc:"Treat Blvd @ Cowell", type:"Vehicle/Pedestrian", sev:"Fatal", pcf:"Ped Violation", cond:"Dark", injured:1, vru:true },
+      { id:"TR-0298", date:"2024-04-14", loc:"Treat Blvd @ Bancroft", type:"Broadside", sev:"Severe", pcf:"Signal Violation", cond:"Daylight", injured:2, vru:false },
+      { id:"TR-0271", date:"2023-11-05", loc:"Treat Blvd @ Farm Bureau", type:"Sideswipe", sev:"Visible", pcf:"Unsafe Speed", cond:"Wet", injured:1, vru:false },
+    ]
+  },
+  {
+    id: 5,
+    name: "Galindo Street",
+    short: "Galindo St",
+    sub: "Concord, CA · Downtown Corridor",
+    type: "Downtown / Pedestrian",
+    severity: "normal",
+    lat: 37.9779, lng: -122.0323,
+    ksi: 18.2, ksiPct: 45,
+    total: 88, fatal: 1, severe: 15, visible: 25, pdo: 47,
+    injured: 107,
+    anomalyScore: 44,
+    amplification: [
+      { label:"Pedestrian",   pct:32, color:"var(--amber)" },
+      { label:"Speed",        pct:18, color:"var(--accent)" },
+      { label:"Dark/Night",   pct:16, color:"var(--accent)" },
+      { label:"Bicycle",      pct:14, color:"var(--accent)" },
+    ],
+    factors: ["ped-viol","speeding"],
+    collisionTypes: ["pedestrian","cyclist"],
+    anomalies: [
+      { rank:1, name:"Pedestrian volume vs infrastructure gap", sub:"Downtown density without adequate crossing infrastructure", score:44, badge:"medium" },
+    ],
+    countermeasure: "Preventive measures: raised crosswalks at key downtown intersections. Bike sharrow markings updated. Pedestrian countdown signals added at 3 intersections.",
+    cmIcon: "🏙️",
+    cmTags: ["Raised Crosswalks", "Sharrow Update", "Countdown Signals"],
+    records: [
+      { id:"GS-0121", date:"2024-06-10", loc:"Galindo St @ Willow Pass", type:"Vehicle/Pedestrian", sev:"Fatal", pcf:"Ped Violation", cond:"Dark", injured:1, vru:true },
+      { id:"GS-0114", date:"2024-02-28", loc:"Galindo @ Grant St", type:"Vehicle/Bicycle", sev:"Severe", pcf:"Right-of-Way", cond:"Daylight", injured:1, vru:true },
+      { id:"GS-0098", date:"2023-08-15", loc:"Galindo @ Todos Santos", type:"Sideswipe", sev:"Visible", pcf:"Improper Turn", cond:"Daylight", injured:1, vru:false },
+    ]
+  }
+];
+
+const SEV_COLORS = { critical:"#f05252", high:"#fb923c", elevated:"#f59e0b", normal:"#34d399" };
+const SEV_RADIUS = { critical:28, high:22, elevated:18, normal:14 };
+
+// ══════════════════════════════════════════
+// MAP INIT
+// ══════════════════════════════════════════
+const map = L.map('map', { center:[37.9780, -122.0310], zoom:13, zoomControl:true });
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(map);
+
+const markerLayers = {};
+
+corridors.forEach(c => {
+  const col = SEV_COLORS[c.severity];
+  const rad = SEV_RADIUS[c.severity];
+
+  const circle = L.circle([c.lat, c.lng], {
+    radius: rad * 65,
+    color: col, fillColor: col,
+    fillOpacity: c.severity === 'critical' ? 0.16 : 0.09,
+    weight: 2, opacity: 0.75
+  }).addTo(map).on('click', () => openPanel(c.id));
+
+  const icon = L.divIcon({
+    html: `<div style="
+      width:${rad}px;height:${rad}px;
+      background:${col};border:2px solid rgba(255,255,255,0.85);
+      border-radius:50%;cursor:pointer;
+      box-shadow:0 0 ${c.severity==='critical'?18:8}px ${col}88;
+      display:flex;align-items:center;justify-content:center;
+      font-family:'IBM Plex Mono',monospace;font-size:${rad>22?9:8}px;
+      color:#fff;font-weight:600;
+    ">${c.ksi.toFixed(0)}%</div>`,
+    iconSize:[rad,rad], iconAnchor:[rad/2,rad/2], className:''
+  });
+
+  const marker = L.marker([c.lat,c.lng],{icon})
+    .addTo(map)
+    .on('click', () => openPanel(c.id))
+    .bindTooltip(`<b>${c.short}</b>KSI ${c.ksi}% · ${c.total} collisions · ${c.fatal} fatal`, { offset:[0,-8] });
+
+  markerLayers[c.id] = { circle, marker };
+});
+
+// ══════════════════════════════════════════
+// PANEL LOGIC
+// ══════════════════════════════════════════
+let currentCorridorId = null;
+let expandOpen = false;
+
+function openPanel(id) {
+  const c = corridors.find(x => x.id === id);
+  currentCorridorId = id;
+  expandOpen = false;
+  const et = document.getElementById('expandTable');
+  et.classList.remove('show');
+  const vmb = document.getElementById('viewMoreBtn');
+  vmb.classList.remove('expanded');
+
+  // Badge + title
+  const sevMap = { critical:'badge-destructive', high:'badge-warning', elevated:'badge-caution', normal:'badge-success' };
+  const sevLabel = { critical:'● CRITICAL ZONE', high:'● HIGH KSI', elevated:'● ELEVATED KSI', normal:'● NORMAL ZONE' };
+
+  document.getElementById('panelSevBadge').className = 'badge ' + sevMap[c.severity];
+  document.getElementById('panelSevBadge').textContent = sevLabel[c.severity];
+  document.getElementById('panelTypeBadge').textContent = c.type;
+  document.getElementById('panelName').textContent = c.name;
+  document.getElementById('panelSub').textContent = c.sub;
+
+  // Snap stats
+  document.getElementById('sv-total').textContent = c.total;
+  document.getElementById('sv-fatal').textContent = c.fatal;
+  document.getElementById('sv-ksi').textContent = c.ksi.toFixed(1) + '%';
+  document.getElementById('sv-score').textContent = c.anomalyScore;
+
+  // KSI bar
+  const benchmarkPct = 41; // 16.4/40 * 100
+  const zonePct = Math.min((c.ksi / 40) * 100, 100);
+  document.getElementById('ksiZoneVal').textContent = c.ksi.toFixed(1) + '%';
+  document.getElementById('ksiFillZone').style.width = zonePct + '%';
+  document.getElementById('ksiFillZone').style.background = SEV_COLORS[c.severity];
+  const mult = (c.ksi / 16.4).toFixed(1);
+  document.getElementById('ksiMultiplier').textContent = mult + '× benchmark';
+  document.getElementById('ksiMultiplier').className = 'badge ' + (c.ksi > 16.4 ? 'badge-destructive' : 'badge-success');
+
+  // Factors
+  const fHtml = c.amplification.map(f => `
+    <div class="fbar">
+      <div class="fbar-label">${f.label}</div>
+      <div class="progress" style="flex:1"><div class="progress-fill" style="width:${f.pct}%;background:${f.color}"></div></div>
+      <div class="fbar-pct">${f.pct}%</div>
+    </div>`).join('');
+  document.getElementById('factorsContent').innerHTML = fHtml;
+
+  // Severity
+  const total = c.total;
+  const sevHtml = [
+    { label:'Fatal', count:c.fatal, color:'var(--red)' },
+    { label:'Severe Injury', count:c.severe, color:'var(--orange)' },
+    { label:'Visible Injury', count:c.visible, color:'var(--amber)' },
+    { label:'PDO', count:c.pdo, color:'var(--border3)' }
+  ].map(s => {
+    const pct = Math.round((s.count/total)*100);
+    return `<div class="sev-item">
+      <div class="sev-dot-label"><div class="sev-dot" style="background:${s.color}"></div>${s.label}</div>
+      <div class="sev-right">
+        <div class="sev-val">${s.count}</div>
+        <div class="sev-pct">${pct}%</div>
+      </div>
+    </div>
+    <div class="progress" style="margin-bottom:7px"><div class="progress-fill" style="width:${pct}%;background:${s.color}"></div></div>`;
+  }).join('');
+  document.getElementById('severityContent').innerHTML = sevHtml;
+
+  // CM
+  document.getElementById('cmIcon').textContent = c.cmIcon;
+  document.getElementById('cmBody').textContent = c.countermeasure;
+  document.getElementById('cmTags').innerHTML = c.cmTags.map(t => `<span class="cm-tag">${t}</span>`).join('');
+
+  // Anomaly tab
+  document.getElementById('anomalyCount').textContent = c.anomalies.length + ' found';
+  const badgeMap = { critical:'badge-destructive', high:'badge-warning', medium:'badge-caution' };
+  document.getElementById('anomalyList').innerHTML = c.anomalies.map(a => `
+    <div class="anomaly-row">
+      <div class="anomaly-rank">${String(a.rank).padStart(2,'0')}</div>
+      <div class="anomaly-body">
+        <div class="anomaly-name">${a.name}</div>
+        <div class="anomaly-sub">${a.sub}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge ${badgeMap[a.badge] || 'badge-default'}">${a.badge.toUpperCase()}</span>
+        <div class="anomaly-score">${a.score}</div>
+      </div>
+    </div>`).join('');
+
+  // Table tab
+  document.getElementById('tableCaption').textContent = `${c.records.length} collision records — ${c.name}`;
+  renderTableRows(document.getElementById('mainTblBody'), c.records, true);
+
+  // Expand table (same records, short)
+  renderTableRows(document.getElementById('expandTblBody'), c.records.slice(0,4), false);
+
+  // Reset to snapshot tab
+  switchTab('snapshot');
+
+  // Slide map up, open panel
+  document.getElementById('btmPanel').classList.add('open');
+  const panelH = Math.min(window.innerHeight * 0.55, 380);
+  document.getElementById('map-view').style.bottom = panelH + 'px';
+
+  // Pan map to corridor
+  map.flyTo([c.lat, c.lng], 14, { duration: 0.9 });
+}
+
+function renderTableRows(tbody, records, full) {
+  const sevMap = { Fatal:'badge-destructive', Severe:'badge-warning', Visible:'badge-caution', PDO:'badge-default' };
+  tbody.innerHTML = records.map(r => `
+    <tr>
+      ${full ? `<td class="mono">${r.id}</td>` : ''}
+      <td class="mono">${r.date}</td>
+      ${full ? `<td>${r.loc}</td>` : ''}
+      <td>${r.type}</td>
+      <td><span class="badge ${sevMap[r.sev] || 'badge-default'}">${r.sev}</span></td>
+      <td>${r.pcf}</td>
+      <td>${r.cond}</td>
+      <td class="mono">${r.injured}</td>
+      ${full ? `<td>${r.vru ? '<span class="badge badge-warning">VRU</span>' : '—'}</td>` : ''}
+    </tr>`).join('');
+}
+
+function closePanel() {
+  document.getElementById('btmPanel').classList.remove('open');
+  document.getElementById('map-view').style.bottom = '0px';
+  currentCorridorId = null;
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.ptab').forEach((t,i) => {
+    const names = ['snapshot','anomalies','table'];
+    t.classList.toggle('on', names[i] === name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('on'));
+  document.getElementById('tab-' + name).classList.add('on');
+}
+
+function toggleExpandTable() {
+  expandOpen = !expandOpen;
+  const et = document.getElementById('expandTable');
+  const btn = document.getElementById('viewMoreBtn');
+  et.classList.toggle('show', expandOpen);
+  btn.classList.toggle('expanded', expandOpen);
+  btn.querySelector('.chevron').textContent = expandOpen ? '▲' : '▼';
+  const label = btn.querySelector('span:not(.chevron)');
+  // find text node
+  btn.childNodes.forEach(n => { if(n.nodeType===3) n.textContent = expandOpen ? ' Hide Records ' : ' View Collision Records '; });
+}
+
+// ══════════════════════════════════════════
+// FILTERS
+// ══════════════════════════════════════════
+let filtersOpen = true;
+const activeFilters = { sev: new Set(['critical','high','elevated','normal']), type: new Set(['pedestrian','cyclist','broadside','head-on','hit-run']), amp: new Set(['dark','alcohol','speeding','ped-viol','wrong-way']) };
+
+function toggleFilters() {
+  filtersOpen = !filtersOpen;
+  document.getElementById('fpBody').classList.toggle('hidden', !filtersOpen);
+  document.getElementById('fpChevron').classList.toggle('open', filtersOpen);
+}
+
+function toggleChip(el) {
+  const g = el.dataset.g, v = el.dataset.v;
+  if(el.classList.contains('on')) { el.classList.remove('on'); activeFilters[g].delete(v); }
+  else { el.classList.add('on'); activeFilters[g].add(v); }
+  applyFilters();
+  updateFilterCount();
+}
+
+function applyFilters() {
+  corridors.forEach(c => {
+    const sevOk = activeFilters.sev.has(c.severity);
+    const typeOk = c.collisionTypes.some(t => activeFilters.type.has(t));
+    const ampOk  = c.factors.some(f => activeFilters.amp.has(f));
+    const show = sevOk && typeOk && ampOk;
+    const layer = markerLayers[c.id];
+    if(show) { if(!map.hasLayer(layer.circle)) { map.addLayer(layer.circle); map.addLayer(layer.marker); } }
+    else { if(map.hasLayer(layer.circle)) { map.removeLayer(layer.circle); map.removeLayer(layer.marker); } }
+  });
+}
+
+function updateFilterCount() {
+  const total = Object.values(activeFilters).reduce((s,set) => s + (set.size < (activeFilters === set ? 0 : 5) ? 1 : 0), 0);
+  const allOn = document.querySelectorAll('.select-chip.on').length;
+  const allTotal = document.querySelectorAll('.select-chip').length;
+  const off = allTotal - allOn;
+  const badge = document.getElementById('fpCount');
+  if(off > 0) { badge.style.display='inline'; badge.textContent = off + ' hidden'; } else { badge.style.display='none'; }
+}
+
+function resetFilters() {
+  document.querySelectorAll('.select-chip').forEach(chip => {
+    chip.classList.add('on');
+    activeFilters[chip.dataset.g].add(chip.dataset.v);
+  });
+  applyFilters(); updateFilterCount();
+}
+
+// ══════════════════════════════════════════
+// VIEW TOGGLE
+// ══════════════════════════════════════════
+function setView(v) {
+  const isMap = v === 'map';
+  document.getElementById('map-view').style.display = isMap ? 'block' : 'none';
+  document.getElementById('ov-view').classList.toggle('show', !isMap);
+  document.getElementById('mapBtn').classList.toggle('active', isMap);
+  document.getElementById('ovBtn').classList.toggle('active', !isMap);
+  if(isMap) { setTimeout(() => map.invalidateSize(), 50); closePanel(); }
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') closePanel();
+  if(e.key === 'm') setView('map');
+  if(e.key === 'o') setView('overview');
+});
+
+// ══════════════════════════════════════════
+// ANOMALY TABLE — real data from tmsinsights.numentica.com
+// ══════════════════════════════════════════
+const allAnomalies = [
+  { rank:1,  factors:["Location: Other","Collision Type: Vehicle/Pedestrian"],                                             collisions:93, ksi:46.2, baseline:1.85, score:82, severity:"Critical", trend:"Stable" },
+  { rank:2,  factors:["Collision Type: Vehicle/Pedestrian","Period: Recent (2020–2025)","DUI/VRU: VRU"],                   collisions:78, ksi:43.6, baseline:1.74, score:81, severity:"Critical", trend:"Stable" },
+  { rank:3,  factors:["Collision Type: Vehicle/Pedestrian","Time Period: PM Peak","DUI/VRU: VRU"],                         collisions:47, ksi:48.9, baseline:1.96, score:81, severity:"Critical", trend:"Stable" },
+  { rank:4,  factors:["Collision Type: Vehicle/Pedestrian","Time Period: PM Peak"],                                        collisions:59, ksi:45.8, baseline:1.83, score:80, severity:"Critical", trend:"Stable" },
+  { rank:5,  factors:["PCF: Pedestrian Violation","Period: Recent (2020–2025)"],                                           collisions:42, ksi:57.1, baseline:2.28, score:80, severity:"Critical", trend:"Stable" },
+  { rank:6,  factors:["Location: Other","Collision Type: Vehicle/Pedestrian","Period: Recent (2020–2025)"],                collisions:41, ksi:56.1, baseline:2.24, score:80, severity:"Critical", trend:"Stable" },
+  { rank:7,  factors:["PCF: Pedestrian Violation","Period: Early (2014–2019)","DUI/VRU: VRU"],                             collisions:43, ksi:55.8, baseline:2.23, score:80, severity:"Critical", trend:"Stable" },
+  { rank:8,  factors:["Location: Other","PCF: Pedestrian Violation","DUI/VRU: VRU"],                                      collisions:38, ksi:55.3, baseline:2.21, score:80, severity:"Critical", trend:"Stable" },
+  { rank:9,  factors:["Collision Type: Vehicle/Pedestrian","PCF: Pedestrian Violation","DUI/VRU: DUI+VRU"],               collisions:35, ksi:60.0, baseline:2.40, score:80, severity:"Critical", trend:"Stable" },
+  { rank:10, factors:["Collision Type: Vehicle/Pedestrian","Time Period: Evening","DUI/VRU: VRU"],                         collisions:31, ksi:54.8, baseline:2.19, score:80, severity:"Critical", trend:"Stable" },
+  { rank:11, factors:["Collision Type: Vehicle/Pedestrian","DUI/VRU: VRU"],                                               collisions:111, ksi:40.5, baseline:1.62, score:79, severity:"Critical", trend:"Stable" },
+  { rank:12, factors:["PCF: Pedestrian Violation","DUI/VRU: VRU"],                                                         collisions:62, ksi:53.2, baseline:2.13, score:79, severity:"Critical", trend:"Stable" },
+  { rank:13, factors:["Time Period: Night","DUI/VRU: VRU"],                                                                collisions:56, ksi:46.4, baseline:1.85, score:78, severity:"High",     trend:"Rising" },
+  { rank:14, factors:["Collision Type: Vehicle/Pedestrian","Time Period: Night"],                                           collisions:52, ksi:44.2, baseline:1.77, score:77, severity:"High",     trend:"Rising" },
+  { rank:15, factors:["PCF: Pedestrian Violation"],                                                                        collisions:105, ksi:51.4, baseline:2.06, score:76, severity:"High",     trend:"Stable" },
+  { rank:16, factors:["Time Period: Night","DUI/VRU: DUI"],                                                                collisions:38, ksi:41.7, baseline:1.67, score:74, severity:"High",     trend:"Stable" },
+  { rank:17, factors:["Collision Type: Head-On","PCF: Pedestrian Error"],                                                  collisions:6,  ksi:83.3, baseline:3.33, score:72, severity:"High",     trend:"Stable" },
+  { rank:18, factors:["Collision Type: Vehicle/Pedestrian","Location: Intersection"],                                      collisions:44, ksi:43.1, baseline:1.72, score:71, severity:"High",     trend:"Stable" },
+  { rank:19, factors:["PCF: DUI","Time Period: Night"],                                                                    collisions:29, ksi:48.3, baseline:1.93, score:70, severity:"High",     trend:"Stable" },
+  { rank:20, factors:["Collision Type: Sideswipe","PCF: Wrong Side of Road"],                                              collisions:5,  ksi:40.0, baseline:1.60, score:65, severity:"Moderate", trend:"Watch" },
+];
+
+let anomalyCurrentFilter = 'Critical';
+let anomalyShowing = 10;
+let anomalySortCol  = 'rank';
+let anomalySortDir  = 1; // 1 = asc, -1 = desc
+
+function getSevColor(s) {
+  return s === 'Critical' ? 'var(--red)' : s === 'High' ? 'var(--orange)' : s === 'Moderate' ? 'var(--amber)' : 'var(--text3)';
+}
+function getSevBadge(s) {
+  return s === 'Critical' ? 'badge-destructive' : s === 'High' ? 'badge-warning' : s === 'Moderate' ? 'badge-caution' : 'badge-default';
+}
+function getTrendIcon(t) {
+  if(t === 'Rising') return `<span style="color:var(--red);font-size:11px">↑ Rising</span>`;
+  if(t === 'Watch')  return `<span style="color:var(--amber);font-size:11px">◉ Watch</span>`;
+  return `<span style="color:var(--green);font-size:11px">→ Stable</span>`;
+}
+
+function renderAnomalyTable() {
+  const filtered = anomalyCurrentFilter === 'All'
+    ? allAnomalies
+    : allAnomalies.filter(a => a.severity === anomalyCurrentFilter);
+
+  const sorted = [...filtered].sort((a,b) => {
+    const valA = a[anomalySortCol], valB = b[anomalySortCol];
+    return (valA < valB ? -1 : valA > valB ? 1 : 0) * anomalySortDir;
+  });
+
+  const visible = sorted.slice(0, anomalyShowing);
+
+  document.getElementById('anomalyTbody').innerHTML = visible.map((a,i) => {
+    const ksiPct = Math.min((a.ksi / 80) * 100, 100);
+    const baselinePct = Math.min((25.0 / 80) * 100, 100);
+    const col = getSevColor(a.severity);
+    const factorTags = a.factors.map(f => {
+      const [key,...rest] = f.split(':');
+      return `<span style="display:inline-flex;align-items:center;gap:3px;font-size:9px;padding:1px 6px;border-radius:3px;background:var(--surf3);border:1px solid var(--border2);color:var(--text3);margin:1px;white-space:nowrap;font-family:var(--fm)">
+        <span style="color:var(--text3);font-size:8px">${key.trim()}:</span>
+        <span style="color:var(--text2)">${rest.join(':').trim()}</span>
+      </span>`;
+    }).join('');
+    return `<tr style="animation:fadeSlide 0.2s ease ${i*0.03}s both">
+      <td><span style="font-family:var(--fm);font-size:12px;color:${col};font-weight:600">#${String(a.rank).padStart(2,'0')}</span></td>
+      <td style="max-width:280px"><div style="display:flex;flex-wrap:wrap;gap:2px;padding:2px 0">${factorTags}</div></td>
+      <td class="mono" style="color:var(--text)">${a.collisions}</td>
+      <td>
+        <span style="font-family:var(--fm);font-size:12px;font-weight:600;color:${col}">${a.ksi.toFixed(1)}%</span>
+      </td>
+      <td>
+        <span style="font-family:var(--fm);font-size:12px;color:${a.baseline >= 2 ? 'var(--red)' : a.baseline >= 1.75 ? 'var(--orange)' : 'var(--amber)'};font-weight:600">${a.baseline.toFixed(2)}×</span>
+      </td>
+      <td>
+        <div style="display:flex;align-items:center;gap:6px">
+          <div style="width:36px;height:5px;background:var(--surf3);border-radius:3px;overflow:hidden">
+            <div style="height:100%;border-radius:3px;background:${col};width:${(a.score/100)*100}%"></div>
+          </div>
+          <span style="font-family:var(--fm);font-size:11px;color:${col};font-weight:600">${a.score}</span>
+        </div>
+      </td>
+      <td><span class="badge ${getSevBadge(a.severity)}">${a.severity}</span></td>
+      <td>${getTrendIcon(a.trend)}</td>
+      <td style="min-width:100px">
+        <div style="position:relative;height:5px;background:var(--surf3);border-radius:3px">
+          <div style="position:absolute;left:0;top:0;height:100%;border-radius:3px;background:${col};width:${ksiPct}%"></div>
+          <div style="position:absolute;top:-3px;height:11px;width:1px;background:var(--text3);left:${baselinePct}%"></div>
+        </div>
+        <div style="font-size:8px;color:var(--text3);margin-top:2px;font-family:var(--fm)">Baseline 25.0%</div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  const total = filtered.length;
+  document.getElementById('anomalyTableFooter').textContent =
+    `Showing ${Math.min(anomalyShowing, total)} of ${total} anomalies · Baseline KSI: 25.0%`;
+
+  const btn = document.getElementById('anomalyShowMore');
+  if(anomalyShowing >= total) {
+    btn.textContent = 'Show less ↑';
+    btn.onclick = () => { anomalyShowing = 10; renderAnomalyTable(); };
+  } else {
+    btn.textContent = `Show more (${total - anomalyShowing} remaining) ↓`;
+    btn.onclick = showMoreAnomalies;
+  }
+}
+
+function showMoreAnomalies() {
+  anomalyShowing += 10;
+  renderAnomalyTable();
+}
+
+function filterAnomalyTable(sev, btn) {
+  anomalyCurrentFilter = sev;
+  anomalyShowing = 10;
+  // Update button styles
+  document.querySelectorAll('#anomalyFilterBtns button').forEach(b => {
+    b.style.background = 'var(--surf2)';
+    b.style.color = 'var(--text3)';
+    b.style.borderColor = 'var(--border2)';
+  });
+  const colMap = { Critical:'var(--red-gl)',High:'var(--orange-gl)',Moderate:'var(--amber-gl)',All:'var(--accent-gl)' };
+  const textMap = { Critical:'var(--red)',High:'var(--orange)',Moderate:'var(--amber)',All:'var(--accent)' };
+  const borderMap = { Critical:'rgba(240,82,82,0.25)',High:'rgba(251,146,60,0.25)',Moderate:'rgba(245,158,11,0.25)',All:'rgba(79,142,247,0.25)' };
+  btn.style.background = colMap[sev] || 'var(--surf2)';
+  btn.style.color = textMap[sev] || 'var(--text2)';
+  btn.style.borderColor = borderMap[sev] || 'var(--border2)';
+  renderAnomalyTable();
+}
+
+function sortAnomalyTable(col) {
+  if(anomalySortCol === col) anomalySortDir *= -1;
+  else { anomalySortCol = col; anomalySortDir = col === 'rank' ? 1 : -1; }
+  // Clear all sort indicators
+  ['rank','collisions','ksi','baseline','score'].forEach(c => {
+    const el = document.getElementById('sort-' + c);
+    if(el) el.textContent = '';
+  });
+  const indicator = document.getElementById('sort-' + col);
+  if(indicator) indicator.textContent = anomalySortDir === 1 ? '↑' : '↓';
+  renderAnomalyTable();
+}
+
+// Render on page load and when switching to overview
+const origSetView = setView;
+function setView(v) {
+  origSetView(v);
+  if(v === 'overview') renderAnomalyTable();
+}
+
+// Initial sort indicator
+const si = document.getElementById('sort-rank');
+if(si) si.style.color = 'var(--accent)';
+</script>
+</body>
+</html>
