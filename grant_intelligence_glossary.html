@@ -1,0 +1,191 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); }
+.wrap { padding: 1rem 0; }
+.search-bar { position: relative; margin-bottom: 1.5rem; }
+.search-bar input { width: 100%; padding: 10px 14px 10px 36px; font-size: 14px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: var(--color-background-primary); color: var(--color-text-primary); outline: none; }
+.search-bar input:focus { border-color: var(--color-border-primary); }
+.search-icon { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--color-text-secondary); font-size: 15px; pointer-events: none; }
+.filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1.5rem; }
+.chip { font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 0.5px solid var(--color-border-secondary); background: var(--color-background-secondary); color: var(--color-text-secondary); cursor: pointer; transition: all 0.15s; user-select: none; }
+.chip.active { background: var(--color-background-info); color: var(--color-text-info); border-color: var(--color-border-info); font-weight: 500; }
+.count { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 1rem; }
+.term-list { display: flex; flex-direction: column; gap: 0; }
+.term { border-bottom: 0.5px solid var(--color-border-tertiary); padding: 14px 0; display: flex; gap: 16px; align-items: flex-start; }
+.term:last-child { border-bottom: none; }
+.term-left { flex-shrink: 0; width: 160px; }
+.term-abbr { font-size: 13px; font-weight: 500; color: var(--color-text-primary); line-height: 1.4; }
+.term-cat { display: inline-block; margin-top: 4px; font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+.cat-grant { background: #E6F1FB; color: #185FA5; }
+.cat-collision { background: #FAEEDA; color: #854F0B; }
+.cat-cm { background: #E1F5EE; color: #0F6E56; }
+.cat-program { background: #EEEDFE; color: #3C3489; }
+.cat-metric { background: #FCEBEB; color: #A32D2D; }
+.term-right { flex: 1; }
+.term-full { font-size: 13px; color: var(--color-text-secondary); margin-bottom: 4px; font-style: italic; }
+.term-def { font-size: 14px; color: var(--color-text-primary); line-height: 1.6; }
+.empty { text-align: center; padding: 3rem 0; font-size: 14px; color: var(--color-text-secondary); }
+@media (max-width: 560px) {
+  .term { flex-direction: column; gap: 6px; }
+  .term-left { width: auto; }
+}
+</style>
+<div class="wrap">
+  <div class="search-bar">
+    <span class="search-icon">⌕</span>
+    <input type="text" id="search" placeholder="Search terms..." oninput="filter()" />
+  </div>
+  <div class="filter-row" id="filters"></div>
+  <div class="count" id="count"></div>
+  <div class="term-list" id="list"></div>
+  <div class="empty" id="empty" style="display:none">No terms match your search.</div>
+</div>
+
+<script>
+const TERMS = [
+  { abbr: "HSIP", full: "Highway Safety Improvement Program", cat: "program",
+    def: "Federal-state grant program (23 CFR 924) that funds infrastructure improvements to reduce traffic fatalities and serious injuries. Concord has applied in cycles C9–C12, winning ~$24M." },
+  { abbr: "C9 – C13", full: "HSIP Grant Cycles", cat: "program",
+    def: "Sequential funding cycles for HSIP grants. Each cycle opens a new application window. Concord is currently preparing for Cycle 13 (C13). Prior history spans C9 through C12." },
+  { abbr: "BCR", full: "Benefit-Cost Ratio", cat: "metric",
+    def: "The primary scoring metric for HSIP BCR applications. Calculated as the annualized crash reduction benefit divided by total project cost. C12 statewide winners averaged BCR 24+; a BCR below ~20 is unlikely to compete." },
+  { abbr: "BCR App", full: "Benefit-Cost Ratio Application", cat: "grant",
+    def: "The main HSIP application category. Projects must demonstrate a high BCR using FHWA-approved Crash Modification Factors. Concord's largest grants (C9–C12) were all BCR applications." },
+  { abbr: "SA-Ped", full: "Set-Aside — Pedestrian Crossing", cat: "grant",
+    def: "A reserved HSIP funding set-aside specifically for pedestrian crossing improvements (RRFBs, crosswalks, ADA ramps). Cap raised to $350K per project in C12. Less competitive than BCR; Concord won in C10 and C11." },
+  { abbr: "SA-Bike", full: "Set-Aside — Bicycle Safety", cat: "grant",
+    def: "A reserved HSIP funding set-aside for bicycle safety improvements (bike lanes, buffered lanes, bike boxes). Set-aside pool grew 76% in C12 (17→30 funded projects). Concord won in C11 only." },
+  { abbr: "VRU Rule", full: "Vulnerable Road User Rule", cat: "grant",
+    def: "HSIP policy requiring a portion of funds to address pedestrian and cyclist fatalities. Projects on corridors with documented VRU crashes qualify for a dedicated funding pool with less competition than standard BCR." },
+  { abbr: "KSI", full: "Killed or Severely Injured", cat: "metric",
+    def: "The combined count of traffic fatalities and severe (incapacitating) injuries. HSIP BCR calculations weight KSI crashes far more heavily than PDO crashes — a higher KSI count strengthens BCR significantly." },
+  { abbr: "PDO", full: "Property Damage Only", cat: "collision",
+    def: "Crashes with no injuries — only vehicle or property damage. Used in BCR calculations at a much lower cost-of-crash value than injury or fatal crashes." },
+  { abbr: "CMF", full: "Crash Modification Factor", cat: "metric",
+    def: "A multiplier (from the FHWA CMF Clearinghouse) representing the expected crash reduction of a given countermeasure. E.g., a CMF of 0.72 means a 28% reduction in target crashes. Used directly in BCR calculations." },
+  { abbr: "CRF", full: "Crash Reduction Factor", cat: "metric",
+    def: "The complement of CMF — the percentage crash reduction expected (CRF = 1 − CMF). E.g., CMF 0.72 = CRF 28%. Sometimes used interchangeably with CMF in grant narratives." },
+  { abbr: "HIN", full: "High Injury Network", cat: "metric",
+    def: "A map layer identifying the road segments with the highest concentration of KSI crashes. Projects on the HIN receive stronger scoring justification for HSIP and SS4A applications." },
+  { abbr: "LPI", full: "Leading Pedestrian Interval", cat: "cm",
+    def: "A signal timing change (countermeasure SI22PB) that gives pedestrians a 3–7 second head start before vehicle traffic receives a green. Near-saturated in Concord after C9–C12; do not use as a BCR anchor in C13." },
+  { abbr: "RRFB", full: "Rectangular Rapid Flash Beacon", cat: "cm",
+    def: "A flashing amber LED beacon installed at uncontrolled pedestrian crossings, activated by pedestrians. CMF ~0.53 for ped crashes. Surging in HSIP funding (57 C12 projects)." },
+  { abbr: "HAWK", full: "High-Intensity Activated crossWalK beacon", cat: "cm",
+    def: "A traffic control device (red-yellow-red sequence) at unsignalized crossings that stops all vehicular traffic. Cannot be installed at signalized intersections or right-in/right-out access points. CMF ~0.52–0.71 for ped fatalities." },
+  { abbr: "APS / ADA", full: "Accessible Pedestrian Signal / Americans with Disabilities Act", cat: "cm",
+    def: "APS devices (vibrotactile + audible walk indication) required at upgraded signals for ADA compliance. ADA curb ramps are required upgrades whenever a project disturbs the pedestrian access path." },
+  { abbr: "SI01NT", full: "Signal Countermeasure — Intersection Lighting (Night)", cat: "cm",
+    def: "HSIP countermeasure code for installing or upgrading intersection lighting to address night-time crash patterns. Primary anchor CM for red-light running and night-time broadside projects in C13." },
+  { abbr: "SI02", full: "Signal Countermeasure — Retroreflective Backplates", cat: "cm",
+    def: "HSIP countermeasure code for adding yellow retroreflective borders to signal backplates, improving signal visibility. Concord completed city-wide coverage in C12 — do not repeat in C13." },
+  { abbr: "SI06", full: "Signal Countermeasure — Protected Left Turn Phasing", cat: "cm",
+    def: "HSIP countermeasure code for converting permissive left-turn signal phasing to protected-only, eliminating gap-acceptance conflicts. Targets broadside and left-turn ROW crashes." },
+  { abbr: "NS25PB", full: "Non-Signal Countermeasure — HAWK Beacon", cat: "cm",
+    def: "HSIP countermeasure code for HAWK signal installation at unsignalized pedestrian crossings. Paired with SI22PB (LPI) for driver-FTY-ped project applications." },
+  { abbr: "SWITRS", full: "Statewide Integrated Traffic Records System", cat: "collision",
+    def: "California's official collision database maintained by CHP, sourced from officer-filed collision reports. The authoritative data source for HSIP BCR crash evidence. Concord's 2020–2025 analysis draws from SWITRS." },
+  { abbr: "PCF", full: "Primary Collision Factor", cat: "collision",
+    def: "The officer-determined primary contributing factor in a SWITRS collision record (e.g., Unsafe Speed, Traffic Signals / Signs, DUI, Pedestrian Violation). Used to filter addressable crash pools for BCR calculations." },
+  { abbr: "RLR", full: "Red Light Running", cat: "collision",
+    def: "Crashes where a driver violated a red signal. Concord's SWITRS data shows 326 RLR crashes (86% broadside), 26 KSI. Primary countermeasures: SI01NT (lighting), SI06 (protected LT phasing)." },
+  { abbr: "DUI", full: "Driving Under the Influence", cat: "collision",
+    def: "Crashes where alcohol or drug impairment was the PCF. Concord has 275 DUI crashes (2020–2025). Not directly addressable by most HSIP CMs — noted in data but generally excluded from BCR crash pools." },
+  { abbr: "Broadside", full: "Right-Angle / Broadside Crash", cat: "collision",
+    def: "A collision type (SWITRS type 'A') where one vehicle strikes the side of another. Typically caused by left-turn conflicts or signal violations at intersections. Largest crash type in Concord's data: 784 crashes." },
+  { abbr: "H3", full: "Hexagonal Hierarchical Geospatial Index", cat: "metric",
+    def: "Uber's open-source geospatial indexing system used in TMS Insights to aggregate crash density into hexagonal cells for map visualization. Enables spatial clustering without administrative boundaries." },
+  { abbr: "ATP", full: "Active Transportation Program", cat: "program",
+    def: "California grant program for walking and biking infrastructure. Separate from HSIP — funded Concord's Willow Pass Rd Bike Lane / Cycle Track and Galindo Street Multimodal Corridor projects." },
+  { abbr: "SS4A", full: "Safe Streets and Roads for All", cat: "program",
+    def: "Federal USDOT grant program providing funding for local Vision Zero / action plans and implementation. Concord received $400K for its CSAP (Comprehensive Safety Action Plan). FY25 awarded $982M across 521 grants nationally." },
+  { abbr: "CSAP", full: "Comprehensive Safety Action Plan", cat: "program",
+    def: "A locally-developed traffic safety plan required before applying for SS4A implementation grants. Concord completed its CSAP (co-funded by SS4A) — this qualifies Concord to apply for SS4A implementation grants in future cycles." },
+  { abbr: "OBAG", full: "One Bay Area Grant", cat: "program",
+    def: "MTC's regional transportation grant program for the San Francisco Bay Area. Concord has received OBAG 3 funding for multiple projects including Willow Pass Rd and Galindo Street corridors." },
+  { abbr: "MTC", full: "Metropolitan Transportation Commission", cat: "program",
+    def: "The regional planning and funding agency for the nine-county Bay Area. Administers OBAG and PASS grants; Concord has received MTC IDEA and PASS signal-timing grants." },
+  { abbr: "AHSC", full: "Affordable Housing and Sustainable Communities", cat: "program",
+    def: "California grant program (Cap-and-Trade funded) supporting transit-oriented development and active transportation. Concord received $3.8M AHSC for its Downtown Bike Corridor Project." },
+  { abbr: "Vision Zero", full: "Vision Zero", cat: "program",
+    def: "A traffic safety framework with the goal of eliminating all traffic fatalities and serious injuries. Concord's CSAP adopts Vision Zero principles. SS4A prioritizes Vision Zero-aligned applications." },
+  { abbr: "Saturation", full: "Countermeasure Saturation", cat: "metric",
+    def: "The condition where a countermeasure has been applied to nearly all eligible locations in a jurisdiction. Saturated CMs (e.g., retroreflective backplates, LPI in Concord) cannot be used as BCR anchors in C13 without documented gap inventory." },
+  { abbr: "BCR Anchor", full: "Primary BCR Countermeasure", cat: "grant",
+    def: "The lead countermeasure that contributes the largest share of crash reduction in a BCR application. Must be a high-CMF, non-saturated countermeasure with a documented addressable crash pool. Signal hardware + lighting is Concord's planned C13 anchor." },
+  { abbr: "15% Rule", full: "HSIP 15% Cost Exception", cat: "grant",
+    def: "HSIP policy requiring that any countermeasure accounting for less than 15% of total project cost must receive an explicit exception from Caltrans. Concord successfully applied this exception for LPI in C9 by justifying ped/bike safety benefits near schools and trails." },
+  { abbr: "Addressable Pool", full: "Addressable Crash Pool", cat: "metric",
+    def: "The subset of crashes in the collision data that are directly attributable to the collision pattern targeted by a countermeasure. Used as the numerator in BCR calculations. Larger pools produce stronger BCR scores." },
+  { abbr: "Win Score", full: "Grant Win Score", cat: "metric",
+    def: "A composite internal score (0–100%) in TMS Insights estimating the likelihood of a project receiving HSIP funding, based on crash evidence strength, countermeasure trend, BCR competitiveness, and prior Concord grant history." },
+  { abbr: "Raised Median", full: "Raised Median / Access Management", cat: "cm",
+    def: "A physical barrier in the center of a roadway that restricts left-turn and U-turn access. Eliminates gap-acceptance broadside conflicts. Highest avg C12 grant at $2.55M. Concord has never applied for this countermeasure despite 200 crashes on Monument Blvd." },
+  { abbr: "FHWA", full: "Federal Highway Administration", cat: "program",
+    def: "U.S. DOT agency that administers HSIP funding and maintains the CMF Clearinghouse. Sets national eligibility rules for countermeasures — notably removed SI04 (dilemma zone detection) and video detection from HSIP-eligible CMs." },
+];
+
+const CATS = [
+  { id: "all", label: "All" },
+  { id: "grant", label: "Grant" },
+  { id: "program", label: "Programs" },
+  { id: "cm", label: "Countermeasures" },
+  { id: "collision", label: "Collision" },
+  { id: "metric", label: "Metrics" },
+];
+
+const catLabels = { grant: "Grant", collision: "Collision", cm: "Countermeasure", program: "Program", metric: "Metric" };
+const catCss = { grant: "cat-grant", collision: "cat-collision", cm: "cat-cm", program: "cat-program", metric: "cat-metric" };
+
+let activecat = "all";
+let q = "";
+
+function render() {
+  const filtered = TERMS.filter(t => {
+    const matchCat = activecat === "all" || t.cat === activecat;
+    const sq = q.toLowerCase();
+    const matchQ = !sq || t.abbr.toLowerCase().includes(sq) || t.full.toLowerCase().includes(sq) || t.def.toLowerCase().includes(sq);
+    return matchCat && matchQ;
+  });
+  const list = document.getElementById("list");
+  const empty = document.getElementById("empty");
+  const count = document.getElementById("count");
+  count.textContent = filtered.length + " term" + (filtered.length !== 1 ? "s" : "");
+  if (!filtered.length) { list.innerHTML = ""; empty.style.display = "block"; return; }
+  empty.style.display = "none";
+  list.innerHTML = filtered.map(t => `
+    <div class="term">
+      <div class="term-left">
+        <div class="term-abbr">${t.abbr}</div>
+        <span class="term-cat ${catCss[t.cat]}">${catLabels[t.cat]}</span>
+      </div>
+      <div class="term-right">
+        <div class="term-full">${t.full}</div>
+        <div class="term-def">${t.def}</div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function filter() {
+  q = document.getElementById("search").value;
+  render();
+}
+
+const frow = document.getElementById("filters");
+CATS.forEach(c => {
+  const btn = document.createElement("span");
+  btn.className = "chip" + (c.id === "all" ? " active" : "");
+  btn.textContent = c.label;
+  btn.onclick = () => {
+    activecat = c.id;
+    document.querySelectorAll(".chip").forEach(el => el.classList.remove("active"));
+    btn.classList.add("active");
+    render();
+  };
+  frow.appendChild(btn);
+});
+
+render();
+</script>

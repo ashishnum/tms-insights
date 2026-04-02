@@ -7,7 +7,10 @@
       "Bash(python3 -c \"import sys,re; data=sys.stdin.read\\(\\); text=re.sub\\(r''''<[^>]+>'''','''''''',data\\); lines=[l.strip\\(\\) for l in text.splitlines\\(\\) if l.strip\\(\\)]; print\\(''''\\\\n''''.join\\(lines[:300]\\)\\)\")",
       "Bash(python3 -c \"import sys,re; data=sys.stdin.read\\(\\); text=re.sub\\(r''''<[^>]+>'''','''''''',data\\); lines=[l.strip\\(\\) for l in text.splitlines\\(\\) if l.strip\\(\\)]; print\\(''''\\\\n''''.join\\(lines[:500]\\)\\)\")",
       "Bash(unzip -l \"/Users/hansidruvan/Downloads/TMS-Insights-Redesign-Brief.pages\")",
-      "Bash(unzip -p /Users/hansidruvan/Downloads/TMS-Insights-Redesign-Brief.pages Index/Document.iwa)"
+      "Bash(unzip -p /Users/hansidruvan/Downloads/TMS-Insights-Redesign-Brief.pages Index/Document.iwa)",
+      "WebFetch(domain:tms.dezinardo.com)",
+      "Bash(ls /Users/hansidruvan/Documents/GitHub/tms-2/tms-insights/transportation_analytics_documentation*)",
+      "Bash(ls /Users/hansidruvan/Documents/GitHub/tms-2/tms-insights/grant_intelligence_glossary*)"
     ]
   }
 }
