@@ -67,9 +67,14 @@
           "notes": "Live deployment of TMS Insights project hub"
         },
         {
-          "name": "GitHub — tms-2/tms-insights",
-          "url": "https://github.com/ashishnum/tms-2",
-          "notes": "Source repository for all prototype and documentation files"
+          "name": "Maps — Figma Prototypes",
+          "url": "https://www.figma.com/design/04JsCghK7rPyLWYNb0fnpp/TMS-Insights---Redone?node-id=175-797",
+          "notes": "Figma file — Map prototype screens for TMS Insights redesign"
+        },
+        {
+          "name": "Cards — Atomic Design",
+          "url": "https://www.figma.com/design/04JsCghK7rPyLWYNb0fnpp/TMS-Insights---Redone?node-id=2-120",
+          "notes": "Figma file — Atomic design system and card components"
         }
       ]
     },
