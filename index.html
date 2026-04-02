@@ -5,6 +5,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TMS Insights</title>
+  <script>
+    (function() {
+      const correct = 'Transportation$$1';
+      const key = 'tms_hub_auth';
+      if (sessionStorage.getItem(key) !== '1') {
+        const input = prompt('TMS Insights — Project Hub\n\nEnter password:');
+        if (input !== correct) {
+          document.documentElement.innerHTML = '<body style="background:#0f1117;color:#7a8099;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;font-size:14px;">Access denied.</body>';
+          throw new Error('Unauthorized');
+        }
+        sessionStorage.setItem(key, '1');
+      }
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link
     href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
