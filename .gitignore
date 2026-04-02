@@ -5,6 +5,9 @@ Thumbs.db
 # Editor directories
 .vscode/
 .idea/
+.claude/
+.cursor/
+.cursorrules
 
 # Node
 node_modules/
