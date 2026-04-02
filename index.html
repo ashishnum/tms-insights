@@ -1,20 +1,29 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TMS Insights — Project Hub</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     :root {
       --bg: #0f1117;
       --surface: #181c27;
       --border: #252a38;
       --accent: #4f8ef7;
-      --accent-dim: rgba(79,142,247,0.12);
+      --accent-dim: rgba(79, 142, 247, 0.12);
       --text: #e8eaf0;
       --text-muted: #7a8099;
       --green: #3ecf8e;
@@ -36,26 +45,44 @@
       padding: 48px 48px 32px;
       border-bottom: 1px solid var(--border);
     }
+
     .header-inner {
       max-width: 1100px;
       margin: 0 auto;
     }
+
     .brand-row {
       display: flex;
       align-items: center;
       gap: 14px;
       margin-bottom: 8px;
     }
+
     .brand-icon {
-      width: 40px; height: 40px;
+      width: 40px;
+      height: 40px;
       border-radius: 10px;
       background: var(--accent);
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 14px; color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      color: #fff;
       letter-spacing: .5px;
     }
-    h1 { font-size: 22px; font-weight: 600; }
-    .subtitle { color: var(--text-muted); font-size: 14px; margin-top: 4px; }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 600;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-top: 4px;
+    }
+
     .badge {
       display: inline-block;
       font-family: 'DM Mono', monospace;
@@ -105,24 +132,31 @@
       gap: 10px;
       transition: border-color .15s, transform .15s, box-shadow .15s;
     }
+
     .card:hover {
       border-color: var(--accent);
       transform: translateY(-2px);
-      box-shadow: 0 8px 32px rgba(79,142,247,0.08);
+      box-shadow: 0 8px 32px rgba(79, 142, 247, 0.08);
     }
+
     .card-top {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
       gap: 12px;
     }
+
     .card-icon {
-      width: 36px; height: 36px;
+      width: 36px;
+      height: 36px;
       border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       font-size: 18px;
       flex-shrink: 0;
     }
+
     .tag {
       font-size: 10px;
       font-weight: 600;
@@ -131,13 +165,39 @@
       padding: 3px 8px;
       border-radius: 4px;
     }
-    .tag-dashboard { background: rgba(79,142,247,.15); color: var(--accent); }
-    .tag-grant     { background: rgba(245,166,35,.12); color: var(--yellow); }
-    .tag-analysis  { background: rgba(62,207,142,.12); color: var(--green); }
-    .tag-research  { background: rgba(167,139,250,.12); color: var(--purple); }
 
-    .card-title { font-size: 15px; font-weight: 600; line-height: 1.4; }
-    .card-desc  { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+    .tag-dashboard {
+      background: rgba(79, 142, 247, .15);
+      color: var(--accent);
+    }
+
+    .tag-grant {
+      background: rgba(245, 166, 35, .12);
+      color: var(--yellow);
+    }
+
+    .tag-analysis {
+      background: rgba(62, 207, 142, .12);
+      color: var(--green);
+    }
+
+    .tag-research {
+      background: rgba(167, 139, 250, .12);
+      color: var(--purple);
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
     .card-footer {
       margin-top: auto;
       padding-top: 10px;
@@ -149,9 +209,11 @@
       align-items: center;
       gap: 6px;
     }
+
     .card-footer::before {
       content: '';
-      width: 6px; height: 6px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
       background: var(--accent);
       flex-shrink: 0;
@@ -166,142 +228,270 @@
       border-bottom: 1px solid var(--border);
       margin-bottom: 40px;
     }
-    .stat { text-align: center; }
-    .stat-value { font-size: 24px; font-weight: 600; color: var(--accent); }
-    .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
   </style>
 </head>
+
 <body>
 
-<header>
-  <div class="header-inner">
-    <div class="brand-row">
-      <div class="brand-icon">TMS</div>
-      <h1>TMS Insights</h1>
+  <header>
+    <div class="header-inner">
+      <div class="brand-row">
+        <div class="brand-icon">TMS</div>
+        <h1>TMS Insights</h1>
+      </div>
+      <p class="subtitle">Traffic Management & Safety Analytics — Project Hub</p>
+      <span class="badge">Cities: Concord · Walnut Creek &nbsp;|&nbsp; California</span>
     </div>
-    <p class="subtitle">Traffic Management & Safety Analytics — Project Hub</p>
-    <span class="badge">Cities: Concord · Walnut Creek &nbsp;|&nbsp; California</span>
+  </header>
+
+  <div class="container">
+
+    <!-- Stats -->
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value">17</div>
+        <div class="stat-label">Files</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">2</div>
+        <div class="stat-label">Cities</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">6</div>
+        <div class="stat-label">Explorers & Maps</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">3</div>
+        <div class="stat-label">Grant Packages</div>
+      </div>
+    </div>
+
+    <!-- Dashboards -->
+    <div class="section-label">Dashboards</div>
+    <div class="grid">
+
+      <a class="card" href="concord_tms_v6.html">
+        <div class="card-top">
+          <div class="card-icon" style="background:rgba(79,142,247,.12);">📊</div>
+          <span class="tag tag-dashboard">Dashboard</span>
+        </div>
+        <div class="card-title">Concord TMS — v6</div>
+        <div class="card-desc">Core TMS analytics dashboard for the City of Concord. Traffic management and collision
+          data overview.</div>
+        <div class="card-footer">concord_tms_v6.html</div>
+      </a>
+
+      <a class="card" href="Concord_Dashboard_v2.html">
+        <div class="card-top">
+          <div class="card-icon" style="background:rgba(79,142,247,.12);">🚦</div>
+          <span class="tag tag-dashboard">Dashboard</span>
+        </div>
+        <div class="card-title">Concord Collision Safety — v2</div>
+        <div class="card-desc">City of Concord collision safety dashboard. Visualizes injury patterns, hotspots, and
+          safety metrics.</div>
+        <div class="card-footer">Concord_Dashboard_v2.html</div>
+      </a>
+
+      <a class="card" href="WalnutCreek_Dashboard.html">
+        <div class="card-top">
+          <div class="card-icon" style="background:rgba(62,207,142,.12);">🗺️</div>
+          <span class="tag tag-dashboard">Dashboard</span>
+        </div>
+        <div class="card-title">Walnut Creek Collision Safety</div>
+        <div class="card-desc">City of Walnut Creek collision safety dashboard. Mirrors Concord's analytics framework
+          for comparative insights.</div>
+        <div class="card-footer">WalnutCreek_Dashboard.html</div>
+      </a>
+
+      <a class="card" href="tms-expanded-dashboard_1.html">
+        <div class="card-top">
+          <div class="card-icon" style="background:rgba(167,139,250,.12);">🤖</div>
+          <span class="tag tag-dashboard">Dashboard</span>
+        </div>
+        <div class="card-title">AI Insights Engine — v2.0</div>
+        <div class="card-desc">Expanded AI-powered dashboard with Violations + Infrastructure layers. Advanced analytics
+          for Concord.</div>
+        <div class="card-footer">tms-expanded-dashboard_1.html</div>
+      </a>
+
+    </div>
+
+    <!-- Explorers & Maps -->
+    <div class="section-label">Explorers & Maps</div>
+    <div class="grid">
+
+      <a class="card" href="city-district-explorer.html">
+        <div class="card-top">
+          <div class="card-icon" style="background:rgba(62,207,142,.12);">🗺️</div>
+          <span class="tag tag-analysis">Explorer</span>
+        </div>
+        <div class="card-title">City District Explorer</div>
+        <div class="card-desc">Interactive geographical exploration tool detailing traffic and safety factors at the
+          district level.</div>
+        <div class="card-footer">city-district-explorer.html</div>
+      </a>
+
+      <a class="card" href="corridor-explorer_2.html">
+        <div class="card-top">
+          <div class="card-icon" style="background:rgba(79,142,247,.12);">🛣️</div>
+          <span class="tag tag-dashboard">Explorer</span>
+        </div>
+        <div class="card-title">Corridor Explorer — v2</div>
+        <div class="card-desc">Advanced analysis of primary traffic corridors, prioritizing safe speeds and multimodal
+          activity.</div>
+        <div class="card-footer">corridor-explorer_2.html</div>
+      </a>
+
+      <a class="card" href="concord_ksi_hexmap.html">
+        <div class="card-top">
+          <div class="card-icon" style="background:rgba(248,113,113,.12);">🛑</div>
+          <span class="tag tag-analysis">Map</span>
+        </div>
+        <div class="card-title">Concord KSI Hexmap</div>
+        <div class="card-desc">Hexagonal density mapping of Killed or Severely Injured (KSI) collision incidents within
+          Concord.</div>
+        <div class="card-footer">concord_ksi_hexmap.html</div>
+      </a>
+
+      <a class="card" href="spatial-risk.html">
+        <div class="card-top">
+          <div class="card-icon" style="background:rgba(245,166,35,.12);">⚠️</div>
+          <span class="tag tag-analysis">Map</span>
+        </div>
+        <div class="card-title">Spatial Risk Intelligence</div>
+        <div class="card-desc">Map-based visualization of spatial risk factors to guide preventative traffic
+          engineering.</div>
+        <div class="card-footer">spatial-risk.html</div>
+      </a>
+
+      <a class="card" href="city-factors-v6.html">
+        <div class="card-top">
+          <div class="card-icon" style="background:rgba(167,139,250,.12);">🏙️</div>
+          <span class="tag tag-research">Explorer</span>
+        </div>
+        <div class="card-title">City Factors Overview — v6</div>
+        <div class="card-desc">Macro-level analysis dashboard examining broad city characteristics and structural safety
+          attributes.</div>
+        <div class="card-footer">city-factors-v6.html</div>
+      </a>
+
+      <a class="card" href="concord-outline-map_1.html">
+        <div class="card-top">
+          <div class="card-icon" style="background:rgba(79,142,247,.12);">📍</div>
+          <span class="tag tag-analysis">Map</span>
+        </div>
+        <div class="card-title">Concord City Outline</div>
+        <div class="card-desc">A clean, base-level outline map of Concord, providing a geographical foundation for
+          overlaid insights.</div>
+        <div class="card-footer">concord-outline-map_1.html</div>
+      </a>
+
+      <a class="card" href="tms-dark.html">
+        <div class="card-top">
+          <div class="card-icon" style="background:rgba(255,255,255,.1);">🌑</div>
+          <span class="tag tag-dashboard">Theme</span>
+        </div>
+        <div class="card-title">Corridor Explorer — Dark Theme</div>
+        <div class="card-desc">Dark-themed alternate interface built upon the foundational Corridor Explorer view.</div>
+        <div class="card-footer">tms-dark.html</div>
+      </a>
+
+    </div>
+
+    <!-- Analysis -->
+    <div class="section-label">Analysis</div>
+    <div class="grid">
+
+      <a class="card" href="Concord_Dashboard_Collision comparision 2015 to 2025.html">
+        <div class="card-top">
+          <div class="card-icon" style="background:rgba(62,207,142,.12);">📈</div>
+          <span class="tag tag-analysis">Analysis</span>
+        </div>
+        <div class="card-title">Collision Comparison 2015–2025</div>
+        <div class="card-desc">10-year longitudinal collision analysis for Concord. Tracks trends, patterns, and
+          year-over-year safety changes.</div>
+        <div class="card-footer">Concord_Dashboard_Collision comparision 2015 to 2025.html</div>
+      </a>
+
+      <a class="card" href="user_groups_v2_mindmap.html">
+        <div class="card-top">
+          <div class="card-icon" style="background:rgba(167,139,250,.12);">🧠</div>
+          <span class="tag tag-research">Research</span>
+        </div>
+        <div class="card-title">User Groups — Question Framework v2</div>
+        <div class="card-desc">Mind map of user groups and their question frameworks. Informs dashboard design and
+          feature prioritization.</div>
+        <div class="card-footer">user_groups_v2_mindmap.html</div>
+      </a>
+
+      <a class="card" href="user_groups_documentation.html">
+        <div class="card-top">
+          <div class="card-icon" style="background:rgba(167,139,250,.12);">📄</div>
+          <span class="tag tag-research">Research</span>
+        </div>
+        <div class="card-title">User Groups — Documentation</div>
+        <div class="card-desc">Comprehensive text documentation expanding upon the user groups question framework.</div>
+        <div class="card-footer">user_groups_documentation.html</div>
+      </a>
+
+    </div>
+
+    <!-- Grant Packages -->
+    <div class="section-label">Grant Packages</div>
+    <div class="grid">
+
+      <a class="card" href="Grant_Intelligence_Module.html">
+        <div class="card-top">
+          <div class="card-icon" style="background:rgba(245,166,35,.12);">💰</div>
+          <span class="tag tag-grant">Grant</span>
+        </div>
+        <div class="card-title">Grant Intelligence Module</div>
+        <div class="card-desc">Intelligent grant discovery and matching module for Concord. Identifies funding
+          opportunities aligned to safety projects.</div>
+        <div class="card-footer">Grant_Intelligence_Module.html</div>
+      </a>
+
+      <a class="card" href="tms-grant-v2_4.html">
+        <div class="card-top">
+          <div class="card-icon" style="background:rgba(245,166,35,.12);">📋</div>
+          <span class="tag tag-grant">Grant</span>
+        </div>
+        <div class="card-title">Grant Package — v2.4</div>
+        <div class="card-desc">TMS Insights grant application package for Concord. Light theme version with full funding
+          documentation.</div>
+        <div class="card-footer">tms-grant-v2_4.html</div>
+      </a>
+
+      <a class="card" href="tms-grant-dark_1.html">
+        <div class="card-top">
+          <div class="card-icon" style="background:rgba(245,166,35,.12);">🌑</div>
+          <span class="tag tag-grant">Grant</span>
+        </div>
+        <div class="card-title">Grant Package — Dark Theme</div>
+        <div class="card-desc">Dark-themed grant package presentation for TMS Insights Concord. Alternate visual format
+          for stakeholder reviews.</div>
+        <div class="card-footer">tms-grant-dark_1.html</div>
+      </a>
+
+    </div>
+
   </div>
-</header>
-
-<div class="container">
-
-  <!-- Stats -->
-  <div class="stats">
-    <div class="stat"><div class="stat-value">9</div><div class="stat-label">Files</div></div>
-    <div class="stat"><div class="stat-value">2</div><div class="stat-label">Cities</div></div>
-    <div class="stat"><div class="stat-value">4</div><div class="stat-label">Dashboards</div></div>
-    <div class="stat"><div class="stat-value">3</div><div class="stat-label">Grant Packages</div></div>
-  </div>
-
-  <!-- Dashboards -->
-  <div class="section-label">Dashboards</div>
-  <div class="grid">
-
-    <a class="card" href="concord_tms_v6.html">
-      <div class="card-top">
-        <div class="card-icon" style="background:rgba(79,142,247,.12);">📊</div>
-        <span class="tag tag-dashboard">Dashboard</span>
-      </div>
-      <div class="card-title">Concord TMS — v6</div>
-      <div class="card-desc">Core TMS analytics dashboard for the City of Concord. Traffic management and collision data overview.</div>
-      <div class="card-footer">concord_tms_v6.html</div>
-    </a>
-
-    <a class="card" href="Concord_Dashboard_v2.html">
-      <div class="card-top">
-        <div class="card-icon" style="background:rgba(79,142,247,.12);">🚦</div>
-        <span class="tag tag-dashboard">Dashboard</span>
-      </div>
-      <div class="card-title">Concord Collision Safety — v2</div>
-      <div class="card-desc">City of Concord collision safety dashboard. Visualizes injury patterns, hotspots, and safety metrics.</div>
-      <div class="card-footer">Concord_Dashboard_v2.html</div>
-    </a>
-
-    <a class="card" href="WalnutCreek_Dashboard.html">
-      <div class="card-top">
-        <div class="card-icon" style="background:rgba(62,207,142,.12);">🗺️</div>
-        <span class="tag tag-dashboard">Dashboard</span>
-      </div>
-      <div class="card-title">Walnut Creek Collision Safety</div>
-      <div class="card-desc">City of Walnut Creek collision safety dashboard. Mirrors Concord's analytics framework for comparative insights.</div>
-      <div class="card-footer">WalnutCreek_Dashboard.html</div>
-    </a>
-
-    <a class="card" href="tms-expanded-dashboard_1.html">
-      <div class="card-top">
-        <div class="card-icon" style="background:rgba(167,139,250,.12);">🤖</div>
-        <span class="tag tag-dashboard">Dashboard</span>
-      </div>
-      <div class="card-title">AI Insights Engine — v2.0</div>
-      <div class="card-desc">Expanded AI-powered dashboard with Violations + Infrastructure layers. Advanced analytics for Concord.</div>
-      <div class="card-footer">tms-expanded-dashboard_1.html</div>
-    </a>
-
-  </div>
-
-  <!-- Analysis -->
-  <div class="section-label">Analysis</div>
-  <div class="grid">
-
-    <a class="card" href="Concord_Dashboard_Collision comparision 2015 to 2025.html">
-      <div class="card-top">
-        <div class="card-icon" style="background:rgba(62,207,142,.12);">📈</div>
-        <span class="tag tag-analysis">Analysis</span>
-      </div>
-      <div class="card-title">Collision Comparison 2015–2025</div>
-      <div class="card-desc">10-year longitudinal collision analysis for Concord. Tracks trends, patterns, and year-over-year safety changes.</div>
-      <div class="card-footer">Concord_Dashboard_Collision comparision 2015 to 2025.html</div>
-    </a>
-
-    <a class="card" href="user_groups_v2_mindmap.html">
-      <div class="card-top">
-        <div class="card-icon" style="background:rgba(167,139,250,.12);">🧠</div>
-        <span class="tag tag-research">Research</span>
-      </div>
-      <div class="card-title">User Groups — Question Framework v2</div>
-      <div class="card-desc">Mind map of user groups and their question frameworks. Informs dashboard design and feature prioritization.</div>
-      <div class="card-footer">user_groups_v2_mindmap.html</div>
-    </a>
-
-  </div>
-
-  <!-- Grant Packages -->
-  <div class="section-label">Grant Packages</div>
-  <div class="grid">
-
-    <a class="card" href="Grant_Intelligence_Module.html">
-      <div class="card-top">
-        <div class="card-icon" style="background:rgba(245,166,35,.12);">💰</div>
-        <span class="tag tag-grant">Grant</span>
-      </div>
-      <div class="card-title">Grant Intelligence Module</div>
-      <div class="card-desc">Intelligent grant discovery and matching module for Concord. Identifies funding opportunities aligned to safety projects.</div>
-      <div class="card-footer">Grant_Intelligence_Module.html</div>
-    </a>
-
-    <a class="card" href="tms-grant-v2_4.html">
-      <div class="card-top">
-        <div class="card-icon" style="background:rgba(245,166,35,.12);">📋</div>
-        <span class="tag tag-grant">Grant</span>
-      </div>
-      <div class="card-title">Grant Package — v2.4</div>
-      <div class="card-desc">TMS Insights grant application package for Concord. Light theme version with full funding documentation.</div>
-      <div class="card-footer">tms-grant-v2_4.html</div>
-    </a>
-
-    <a class="card" href="tms-grant-dark_1.html">
-      <div class="card-top">
-        <div class="card-icon" style="background:rgba(245,166,35,.12);">🌑</div>
-        <span class="tag tag-grant">Grant</span>
-      </div>
-      <div class="card-title">Grant Package — Dark Theme</div>
-      <div class="card-desc">Dark-themed grant package presentation for TMS Insights Concord. Alternate visual format for stakeholder reviews.</div>
-      <div class="card-footer">tms-grant-dark_1.html</div>
-    </a>
-
-  </div>
-
-</div>
 </body>
+
 </html>
