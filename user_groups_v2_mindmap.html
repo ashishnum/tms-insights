@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>User Groups — Question Framework v2</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blue:#005EB8; --yellow:#FFC72C; --bg-page:#080F1E; --bg-nav:#0D1829;
+  --bg-card:#111F35; --bg-el:#162B4D; --text-p:#E4ECF7; --text-d:#8CA0BE;
+  --text-m:#4D6280; --border-y:rgba(255,199,44,0.12); --border-b:rgba(0,94,184,0.30);
+  --tr:0.22s cubic-bezier(0.4,0,0.2,1); --sans:'Sora',sans-serif; --mono:'DM Mono',monospace;
+  --green:#4DD68C; --red:#FF7B7B; --purple:#B47BFF; --orange:#FF8C42; --lb:#5aaeff;
+}
+html { scroll-behavior:smooth; }
+body { font-family:var(--sans); background:var(--bg-page); color:var(--text-p); font-size:15px; line-height:1.7; -webkit-font-smoothing:antialiased; }
+
+/* TOPBAR */
+.topbar { position:sticky;top:0;z-index:100;background:linear-gradient(135deg,#0D1829,#111F35);border-bottom:1px solid var(--border-y);padding:0 2.5rem;height:56px;display:flex;align-items:center;justify-content:space-between; }
+.tb-left { display:flex;align-items:center;gap:14px; }
+.tb-logo { display:flex;align-items:center;gap:10px; }
+.tb-icon { width:28px;height:28px;background:var(--blue);border-radius:7px;display:flex;align-items:center;justify-content:center; }
+.tb-icon svg { width:16px;height:16px;fill:#fff; }
+.tb-brand { font-size:12px;font-weight:700;color:var(--text-p);letter-spacing:0.2px; }
+.tb-divider { width:1px;height:20px;background:var(--border-y); }
+.tb-title { font-size:12px;font-weight:500;color:var(--text-d); }
+.tb-right { display:flex;align-items:center;gap:10px; }
+.pill { display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:10px;font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:0.8px;text-transform:uppercase; }
+.pill-y { background:rgba(255,199,44,0.12);color:var(--yellow);border:1px solid rgba(255,199,44,0.28); }
+.pill-b { background:rgba(0,94,184,0.18);color:var(--lb);border:1px solid var(--border-b); }
+.s-dot { width:6px;height:6px;border-radius:50%;background:#00c87a;display:inline-block; }
+
+/* LAYOUT */
+.layout { display:flex;min-height:calc(100vh - 56px); }
+
+/* SIDEBAR */
+.sidebar { width:230px;flex-shrink:0;background:var(--bg-nav);border-right:1px solid var(--border-y);padding:2rem 0;position:sticky;top:56px;height:calc(100vh - 56px);overflow-y:auto; }
+.ngl { font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--text-m);padding:1.2rem 1.5rem 0.4rem; }
+.nl { display:block;padding:0.45rem 1.5rem;font-size:13px;color:var(--text-d);text-decoration:none;transition:color var(--tr),background var(--tr);border-left:2px solid transparent; }
+.nl:hover { color:var(--text-p);background:rgba(255,255,255,0.03); }
+.nl.active { color:var(--yellow);border-left-color:var(--yellow);background:rgba(255,199,44,0.05);font-weight:500; }
+
+/* MAIN */
+.main { flex:1;padding:3rem 3.5rem 5rem;max-width:960px; }
+
+/* HERO */
+.hero { margin-bottom:4rem;padding-bottom:3rem;border-bottom:1px solid var(--border-y); }
+.hero-ey { font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:var(--yellow);margin-bottom:1rem; }
+.hero-t { font-size:36px;font-weight:700;line-height:1.2;color:var(--text-p);margin-bottom:1rem; }
+.hero-t span { color:var(--yellow); }
+.hero-sub { font-size:15px;color:var(--text-d);max-width:620px;line-height:1.7;margin-bottom:2rem; }
+.hero-meta { display:flex;gap:2rem;flex-wrap:wrap; }
+.hmi { display:flex;flex-direction:column;gap:3px; }
+.hml { font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-m); }
+.hmv { font-size:13px;font-weight:500;color:var(--text-d); }
+
+/* SECTION */
+section { margin-bottom:4rem;scroll-margin-top:80px; }
+.sl { font-family:var(--mono);font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--text-m);margin-bottom:0.5rem; }
+h2 { font-size:22px;font-weight:700;color:var(--text-p);margin-bottom:1.25rem;padding-bottom:0.75rem;border-bottom:1px solid var(--border-y); }
+p { color:var(--text-d);margin-bottom:0.9rem;font-size:14px; }
+strong { color:var(--text-p);font-weight:600; }
+
+/* CALLOUT */
+.callout { display:flex;gap:12px;align-items:flex-start;border-radius:10px;padding:1.1rem 1.3rem;margin:1.25rem 0; }
+.callout.blue { background:rgba(0,94,184,0.1);border:1px solid var(--border-b); }
+.callout.blue .cb strong { color:var(--lb); }
+.callout.yellow { background:rgba(255,199,44,0.07);border:1px solid rgba(255,199,44,0.25); }
+.callout.yellow .cb strong { color:var(--yellow); }
+.ci { font-size:16px;flex-shrink:0;margin-top:1px; }
+.cb { font-size:13px;color:var(--text-d);line-height:1.6; }
+
+/* SPATIAL GRID */
+.spatial-grid { display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-top:1.5rem; }
+.spatial-card { background:var(--bg-card);border:1px solid var(--border-y);border-radius:10px;padding:1.1rem 1.25rem; }
+.sc-label { font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:0.5rem; }
+.sc-label.city { color:var(--lb); }
+.sc-label.corridor { color:var(--green); }
+.sc-label.intersection { color:var(--purple); }
+.sc-name { font-size:14px;font-weight:700;color:var(--text-p);margin-bottom:0.3rem; }
+.sc-desc { font-size:12px;color:var(--text-d);line-height:1.5; }
+
+/* ROLE GRID */
+.role-grid { display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin:1.5rem 0; }
+.role-card { background:var(--bg-card);border:1px solid var(--border-y);border-radius:12px;padding:1.25rem 1.3rem; }
+.rc-icon { font-size:22px;margin-bottom:0.6rem; }
+.rc-name { font-size:14px;font-weight:700;color:var(--text-p);margin-bottom:0.2rem; }
+.rc-roles { font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;margin-bottom:0.5rem; }
+.rc-roles.ops { color:var(--red); }
+.rc-roles.ana { color:var(--lb); }
+.rc-roles.str { color:var(--yellow); }
+.rc-desc { font-size:12px;color:var(--text-d);line-height:1.5; }
+
+/* STAGE LEGEND */
+.stage-legend { display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin:1.5rem 0; }
+.slc { background:var(--bg-card);border:1px solid var(--border-y);border-radius:10px;padding:1rem 1.1rem; }
+.slc-num { font-family:var(--mono);font-size:9px;letter-spacing:1px;font-weight:500;margin-bottom:0.5rem; }
+.slc-name { font-size:13px;font-weight:600;color:var(--text-p);margin-bottom:0.3rem; }
+.slc-q { font-size:11px;color:var(--text-d); }
+.sl-ov .slc-num { color:var(--green); }
+.sl-ty .slc-num { color:var(--lb); }
+.sl-fa .slc-num { color:var(--yellow); }
+.sl-an .slc-num { color:var(--red); }
+
+/* GROUP BANNER */
+.grp-banner { border-radius:10px;padding:1.1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;flex-wrap:wrap;gap:0.75rem; }
+.grp-banner.ops { background:rgba(255,123,123,0.07);border:1px solid rgba(255,123,123,0.25); }
+.grp-banner.ana { background:rgba(0,94,184,0.10);border:1px solid rgba(0,94,184,0.35); }
+.grp-banner.str { background:rgba(255,199,44,0.07);border:1px solid rgba(255,199,44,0.28); }
+.gb-left { display:flex;align-items:center;gap:12px; }
+.gb-icon { width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0; }
+.ops .gb-icon { background:rgba(255,123,123,0.15); }
+.ana .gb-icon { background:rgba(0,94,184,0.18); }
+.str .gb-icon { background:rgba(255,199,44,0.12); }
+.gb-name { font-size:15px;font-weight:700;color:var(--text-p); }
+.gb-sub { font-size:12px;color:var(--text-d);margin-top:1px; }
+.gb-right { display:flex;gap:8px;align-items:center;flex-wrap:wrap; }
+
+/* VALUE STRIP */
+.val-strip { display:flex;gap:12px;align-items:flex-start;border-radius:8px;padding:0.9rem 1.2rem;margin-bottom:1.5rem; }
+.val-strip.ops { background:rgba(255,123,123,0.06);border:1px solid rgba(255,123,123,0.18); }
+.val-strip.ana { background:rgba(0,94,184,0.08);border:1px solid rgba(0,94,184,0.25); }
+.val-strip.str { background:rgba(255,199,44,0.06);border:1px solid rgba(255,199,44,0.22); }
+.vs-label { font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;font-weight:500;flex-shrink:0;margin-top:1px; }
+.ops .vs-label { color:var(--red); }
+.ana .vs-label { color:var(--lb); }
+.str .vs-label { color:var(--yellow); }
+.vs-body { font-size:12px;color:var(--text-d);line-height:1.6; }
+
+/* BADGES */
+.badge { display:inline-block;font-family:var(--mono);font-size:9px;letter-spacing:0.8px;text-transform:uppercase;font-weight:500;padding:2px 8px;border-radius:5px;vertical-align:middle; }
+.b-ops { background:rgba(255,123,123,0.15);color:var(--red);border:1px solid rgba(255,123,123,0.28); }
+.b-ana { background:rgba(0,94,184,0.15);color:var(--lb);border:1px solid var(--border-b); }
+.b-str { background:rgba(255,199,44,0.12);color:var(--yellow);border:1px solid rgba(255,199,44,0.28); }
+
+/* LEVEL BLOCKS */
+.lb-block { background:var(--bg-card);border:1px solid var(--border-y);border-radius:12px;overflow:hidden;margin-bottom:1rem; }
+.lb-header { display:flex;align-items:center;gap:12px;padding:0.9rem 1.3rem;background:var(--bg-el);border-bottom:1px solid var(--border-y); }
+.lb-badge { width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0; }
+.lb-badge.city { background:#005EB8; }
+.lb-badge.corridor { background:#007A5E; }
+.lb-badge.intersection { background:#9B5CE5; }
+.lb-title { font-size:13px;font-weight:700;color:var(--text-p); }
+.lb-sub { font-family:var(--mono);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--text-m);margin-top:1px; }
+.lb-body { display:grid;grid-template-columns:1fr 1fr 1fr 1fr; }
+.sc { padding:1rem 1.1rem;border-right:1px solid var(--border-y); }
+.sc:last-child { border-right:none; }
+.sc-lbl { font-family:var(--mono);font-size:8px;letter-spacing:1.5px;text-transform:uppercase;font-weight:500;margin-bottom:0.6rem; }
+.sc-lbl.ov { color:var(--green); }
+.sc-lbl.ty { color:var(--lb); }
+.sc-lbl.fa { color:var(--yellow); }
+.sc-lbl.an { color:var(--red); }
+.sc ul { list-style:none; }
+.sc ul li { font-size:11.5px;color:var(--text-d);padding:3px 0;display:flex;align-items:flex-start;gap:7px;line-height:1.45; }
+.sc ul li::before { content:'';width:4px;height:4px;border-radius:50%;flex-shrink:0;margin-top:5px; }
+.sc.ov ul li::before { background:var(--green); }
+.sc.ty ul li::before { background:var(--lb); }
+.sc.fa ul li::before { background:var(--yellow); }
+.sc.an ul li::before { background:var(--red); }
+
+/* FOOTER */
+.doc-footer { margin-top:5rem;padding-top:2rem;border-top:1px solid var(--border-y);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem; }
+.df-l { font-size:12px;color:var(--text-m); }
+.df-r { font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-m); }
+
+/* HAMBURGER */
+.hamburger { display:none;background:none;border:none;cursor:pointer;padding:6px;border-radius:6px;color:var(--text-d);transition:background var(--tr),color var(--tr);margin-right:4px;flex-shrink:0; }
+.hamburger svg { display:block;width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round; }
+.sb-close { display:none;position:absolute;top:12px;right:12px;background:rgba(255,255,255,0.06);border:none;cursor:pointer;border-radius:6px;padding:5px;color:var(--text-d); }
+.sb-close svg { display:block;width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round; }
+.sb-backdrop { display:none;position:fixed;inset:0;z-index:149;background:rgba(8,15,30,0.75);backdrop-filter:blur(2px);opacity:0;transition:opacity 0.25s ease; }
+.sb-backdrop.visible { opacity:1; }
+
+/* ═══════════════════════ MIND MAP ═══════════════════════ */
+.mm-wrap { background:var(--bg-el);border:1px solid var(--border-y);border-radius:14px;padding:2rem 1.5rem;overflow-x:auto;margin:1.5rem 0; }
+.mm-col { display:flex;flex-direction:column;gap:20px; }
+.mm-row { display:flex;align-items:center;gap:0; }
+.mm-level-tag { writing-mode:vertical-rl;transform:rotate(180deg);font-family:var(--mono);font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--text-m);margin-right:10px;flex-shrink:0;min-width:16px; }
+.mm-node { border-radius:9px;padding:0.55rem 1.1rem;font-size:12px;font-weight:700;color:#fff;white-space:nowrap;flex-shrink:0; }
+.mm-node.city { background:linear-gradient(135deg,#005EB8,#003d7a); }
+.mm-node.corridor { background:linear-gradient(135deg,#007A5E,#005240); }
+.mm-node.intersection { background:linear-gradient(135deg,#9B5CE5,#6b3db0); }
+.mm-arrow { display:flex;align-items:center;flex-shrink:0;padding:0 6px; }
+.mm-arrow svg { flex-shrink:0; }
+.mm-tabs { display:flex;gap:8px;flex-wrap:wrap; }
+.mm-tab { padding:0.4rem 0.85rem;border-radius:7px;display:flex;flex-direction:column;gap:2px;font-size:11px;font-weight:600;white-space:nowrap; }
+.mm-tab.ov { background:rgba(77,214,140,0.12);border:1px solid rgba(77,214,140,0.3);color:var(--green); }
+.mm-tab.ty { background:rgba(90,174,255,0.12);border:1px solid rgba(90,174,255,0.3);color:var(--lb); }
+.mm-tab.fa { background:rgba(255,199,44,0.12);border:1px solid rgba(255,199,44,0.3);color:var(--yellow); }
+.mm-tab.an { background:rgba(255,123,123,0.12);border:1px solid rgba(255,123,123,0.3);color:var(--red); }
+.mm-tab span { font-size:9px;opacity:0.65;font-weight:400; }
+.mm-drilldown { display:flex;align-items:center;padding-left:26px;gap:6px;font-family:var(--mono);font-size:8px;color:var(--text-m);letter-spacing:1px; }
+.mm-drilldown svg { flex-shrink:0; }
+
+/* stage coverage pills */
+.stage-pills { display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin-top:1rem; }
+.stage-pill { border-radius:8px;padding:0.75rem 1rem; }
+.stage-pill.ov { background:rgba(77,214,140,0.07);border:1px solid rgba(77,214,140,0.2); }
+.stage-pill.ty { background:rgba(90,174,255,0.07);border:1px solid rgba(90,174,255,0.2); }
+.stage-pill.fa { background:rgba(255,199,44,0.07);border:1px solid rgba(255,199,44,0.2); }
+.stage-pill.an { background:rgba(255,123,123,0.07);border:1px solid rgba(255,123,123,0.2); }
+.sp-label { font-family:var(--mono);font-size:8px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px; }
+.stage-pill.ov .sp-label { color:var(--green); }
+.stage-pill.ty .sp-label { color:var(--lb); }
+.stage-pill.fa .sp-label { color:var(--yellow); }
+.stage-pill.an .sp-label { color:var(--red); }
+.sp-text { font-size:11px;color:var(--text-d);line-height:1.5; }
+
+/* ═══════════════════════ SUPPORTING CARDS ═══════════════════════ */
+.sup-sec { margin:1.75rem 0 2.5rem; }
+.sup-hdr { display:flex;align-items:center;gap:10px;margin-bottom:1rem; }
+.sup-hdr-accent { width:3px;height:16px;border-radius:2px;flex-shrink:0; }
+.sup-lbl { font-family:var(--mono);font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-m); }
+.sup-title { font-size:13px;font-weight:600;color:var(--text-d); }
+
+.cards-row { display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin;scrollbar-color:rgba(255,199,44,0.2) transparent; }
+.cards-row::-webkit-scrollbar { height:4px; }
+.cards-row::-webkit-scrollbar-track { background:transparent; }
+.cards-row::-webkit-scrollbar-thumb { background:rgba(255,199,44,0.2);border-radius:2px; }
+
+.dc { flex-shrink:0;width:240px;background:var(--bg-card);border:1px solid var(--border-y);border-radius:10px;overflow:hidden;transition:border-color var(--tr),transform var(--tr); }
+.dc:hover { border-color:rgba(255,199,44,0.3);transform:translateY(-2px); }
+.dc-hdr { padding:0.75rem 0.9rem 0.5rem;background:var(--bg-el);border-bottom:1px solid var(--border-y); }
+.dc-tag { font-family:var(--mono);font-size:8px;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px; }
+.dc-title { font-size:11px;font-weight:600;color:var(--text-p);line-height:1.4; }
+.dc-body { padding:0.75rem 0.9rem; }
+
+/* mini components */
+.kpi-row { display:flex;gap:8px;margin-bottom:8px; }
+.kpi { flex:1; }
+.kpi-l { font-family:var(--mono);font-size:8px;letter-spacing:0.5px;text-transform:uppercase;color:var(--text-m);margin-bottom:2px; }
+.kpi-v { font-size:16px;font-weight:700;line-height:1.1; }
+.kpi-s { font-size:9px;color:var(--text-m);margin-top:1px; }
+
+.bars { margin-top:8px; }
+.bar-row { display:flex;align-items:center;gap:6px;margin-bottom:4px; }
+.bar-l { font-size:9px;color:var(--text-m);width:58px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
+.bar-track { flex:1;background:rgba(255,255,255,0.05);border-radius:2px;height:5px;overflow:hidden; }
+.bar-fill { height:100%;border-radius:2px; }
+.bar-v { font-size:9px;color:var(--text-d);width:26px;text-align:right;flex-shrink:0; }
+
+.stat-list { display:flex;flex-direction:column;gap:5px;margin-top:6px; }
+.stat-row { display:flex;align-items:center;justify-content:space-between;gap:6px; }
+.stat-l { font-size:10px;color:var(--text-d); }
+.stat-v { font-size:10px;font-weight:600;color:var(--text-p); }
+
+.anom-list { display:flex;flex-direction:column;gap:6px;margin-top:6px; }
+.anom-item { background:rgba(255,255,255,0.03);border-radius:6px;padding:6px 8px;border-left:2px solid; }
+.anom-label { font-size:10px;font-weight:600;color:var(--text-p);margin-bottom:2px; }
+.anom-desc { font-size:9px;color:var(--text-m);line-height:1.4; }
+
+.mini-tbl { width:100%;border-collapse:collapse;margin-top:6px; }
+.mini-tbl th { font-family:var(--mono);font-size:8px;letter-spacing:0.5px;text-transform:uppercase;color:var(--text-m);padding:3px 0;text-align:left;border-bottom:1px solid var(--border-y); }
+.mini-tbl td { font-size:9px;color:var(--text-d);padding:3px 0;border-bottom:1px solid rgba(255,199,44,0.05); }
+.mini-tbl tr:last-child td { border-bottom:none; }
+
+.donut-wrap { display:flex;align-items:center;gap:10px;margin-top:6px; }
+.donut-leg { display:flex;flex-direction:column;gap:3px; }
+.dl-item { display:flex;align-items:center;gap:4px;font-size:9px;color:var(--text-d); }
+.dl-dot { width:5px;height:5px;border-radius:50%;flex-shrink:0; }
+
+.tag-chip { font-family:var(--mono);font-size:8px;padding:1px 5px;border-radius:3px; }
+.chip-crit { background:rgba(255,80,80,0.15);color:#ff5050; }
+.chip-high { background:rgba(255,140,66,0.15);color:var(--orange); }
+.chip-med { background:rgba(255,199,44,0.15);color:var(--yellow); }
+.chip-low { background:rgba(77,214,140,0.15);color:var(--green); }
+
+/* RESPONSIVE */
+@media(max-width:960px){.main{padding:2.5rem 2.5rem 4rem}.hero-t{font-size:30px}.lb-body{grid-template-columns:1fr 1fr}.sc{border-bottom:1px solid var(--border-y)}.sc:nth-child(2n){border-right:none}.sc:nth-last-child(-n+2){border-bottom:none}.role-grid{grid-template-columns:1fr 1fr}.stage-legend{grid-template-columns:1fr 1fr}.spatial-grid{grid-template-columns:1fr}}
+@media(max-width:768px){.topbar{padding:0 1.25rem}.hamburger{display:flex;align-items:center;justify-content:center}.tb-divider,.tb-title{display:none}.sidebar{position:fixed;top:0;left:0;height:100vh;width:260px;z-index:150;transform:translateX(-100%);transition:transform 0.28s cubic-bezier(0.4,0,0.2,1);padding-top:3rem}.sidebar.open{transform:translateX(0)}.sb-close{display:block}.sb-backdrop{display:block}.layout{display:block}.main{padding:2rem 1.25rem 4rem;max-width:100%}.hero-t{font-size:26px}.role-grid{grid-template-columns:1fr}.stage-legend{grid-template-columns:1fr 1fr}.lb-body{grid-template-columns:1fr}.sc{border-right:none;border-bottom:1px solid var(--border-y)}.sc:last-child{border-bottom:none}.pill-b{display:none}.stage-pills{grid-template-columns:1fr 1fr}.mm-tabs{flex-wrap:wrap}}
+@media(max-width:480px){.main{padding:1.5rem 1rem 3.5rem}.hero-t{font-size:22px}h2{font-size:18px}.stage-legend{grid-template-columns:1fr}.stage-pills{grid-template-columns:1fr}.doc-footer{flex-direction:column;gap:0.5rem}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="tb-left">
+    <button class="hamburger" id="sbToggle" aria-label="Open nav" aria-expanded="false">
+      <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="tb-logo">
+      <div class="tb-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+      <span class="tb-brand">UX Exploration</span>
+    </div>
+    <div class="tb-divider"></div>
+    <span class="tb-title">Question Framework + Dashboard Cards</span>
+  </div>
+  <div class="tb-right">
+    <span class="pill pill-y"><span class="s-dot"></span>Live</span>
+    <span class="pill pill-b">FY 2025–26</span>
+  </div>
+</header>
+
+<div class="layout">
+  <div class="sb-backdrop" id="sbBackdrop"></div>
+  <nav class="sidebar" id="sidebar">
+    <button class="sb-close" id="sbClose"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    <div class="ngl">Overview</div>
+    <a class="nl active" href="#intro">Introduction</a>
+    <a class="nl" href="#mindmap">Platform Mind Map</a>
+    <a class="nl" href="#spatial">Spatial Model</a>
+    <a class="nl" href="#users">User Groups</a>
+    <a class="nl" href="#stages">Stage Legend</a>
+    <div class="ngl">Operations</div>
+    <a class="nl" href="#ops-city">City Level</a>
+    <a class="nl" href="#ops-corridor">Corridor Level</a>
+    <a class="nl" href="#ops-intersection">Intersection Level</a>
+    <div class="ngl">Analysis</div>
+    <a class="nl" href="#ana-city">City Level</a>
+    <a class="nl" href="#ana-corridor">Corridor Level</a>
+    <a class="nl" href="#ana-intersection">Intersection Level</a>
+    <div class="ngl">Strategy</div>
+    <a class="nl" href="#str-city">City Level</a>
+    <a class="nl" href="#str-corridor">Corridor Level</a>
+    <a class="nl" href="#str-intersection">Intersection Level</a>
+  </nav>
+
+  <main class="main">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-ey">Product Documentation · Road Safety Analytics Platform</div>
+      <h1 class="hero-t">User Groups<br/><span>Question Framework</span></h1>
+      <p class="hero-sub">This document defines the structured question framework used across the road safety analytics platform. Each section includes a <strong>platform mind map</strong> showing how spatial levels connect to their tabs, and <strong>supporting dashboard cards</strong> showing exactly how each question is answered on screen.</p>
+      <div class="hero-meta">
+        <div class="hmi"><span class="hml">Audience</span><span class="hmv">Operations · Analysis · Strategy</span></div>
+        <div class="hmi"><span class="hml">Spatial Levels</span><span class="hmv">City · Corridor · Intersection</span></div>
+        <div class="hmi"><span class="hml">Period</span><span class="hmv">FY 2025–26</span></div>
+      </div>
+    </div>
+
+    <!-- INTRO -->
+    <section id="intro">
+      <div class="sl">01 · Introduction</div>
+      <h2>Objective</h2>
+      <p>The question framework structures how different user groups interrogate road safety data. Each question is mapped to a <strong>user group</strong>, a <strong>spatial level</strong>, and a <strong>stage</strong> — ensuring that insights flow progressively from macro city-wide awareness down to granular intersection-level root causes.</p>
+      <div class="callout yellow">
+        <span class="ci">⚡</span>
+        <div class="cb"><strong>Core Flow:</strong> Every question set follows the same analytical progression — Overview → Type → Factors → Anomalies — applied at each spatial level and tailored to the needs of each user group.</div>
+      </div>
+    </section>
+
+    <!-- PLATFORM MIND MAP -->
+    <section id="mindmap">
+      <div class="sl">02 · System Architecture</div>
+      <h2>Platform Mind Map — How Everything Connects</h2>
+      <p>Each spatial level hosts four analytical tabs. Each tab answers specific questions through purpose-built dashboard cards. The map below shows the full structure from level → tab → card type.</p>
+
+      <div class="mm-wrap">
+        <div class="mm-col">
+
+          <!-- City row -->
+          <div class="mm-row">
+            <span class="mm-level-tag" style="color:var(--lb);">City</span>
+            <div class="mm-node city">City Level</div>
+            <div class="mm-arrow">
+              <svg width="32" height="14" viewBox="0 0 32 14"><path d="M0 7 H26 M20 1 L26 7 L20 13" stroke="#4D6280" stroke-width="1" fill="none" stroke-dasharray="3,2"/></svg>
+            </div>
+            <div class="mm-tabs">
+              <div class="mm-tab ov">📊 Overview<span>Hotspot map · KPI tiles · Trend chart · Zone comparison</span></div>
+              <div class="mm-tab ty">🏷 Type<span>Distribution donut · Severity bar · Type trend · City avg</span></div>
+              <div class="mm-tab fa">⚙️ Factors<span>PCF donut · Weather share · VRU risk · Time heatmap</span></div>
+              <div class="mm-tab an">🔺 Anomalies<span>Spike timeline · Peer ranking · AI summary · Outlier map</span></div>
+            </div>
+          </div>
+
+          <!-- drilldown arrow -->
+          <div class="mm-drilldown">
+            <svg width="14" height="16" viewBox="0 0 14 16"><path d="M7 0 V12 M1 6 L7 12 L13 6" stroke="#4D6280" stroke-width="1" fill="none" stroke-dasharray="3,2"/></svg>
+            <span>drills into corridor</span>
+          </div>
+
+          <!-- Corridor row -->
+          <div class="mm-row">
+            <span class="mm-level-tag" style="color:var(--green);">Corridor</span>
+            <div class="mm-node corridor">Corridor Level</div>
+            <div class="mm-arrow">
+              <svg width="32" height="14" viewBox="0 0 32 14"><path d="M0 7 H26 M20 1 L26 7 L20 13" stroke="#4D6280" stroke-width="1" fill="none" stroke-dasharray="3,2"/></svg>
+            </div>
+            <div class="mm-tabs">
+              <div class="mm-tab ov">📊 Overview<span>Segment ranking · Risk dist · Corridor vs city · Trend</span></div>
+              <div class="mm-tab ty">🏷 Type<span>Dominant type card · Type breakdown · Context combos</span></div>
+              <div class="mm-tab fa">⚙️ Factors<span>24h time chart · Night split · Dark table · PCF donut · VRU</span></div>
+              <div class="mm-tab an">🔺 Anomalies<span>Segment deviations · Localised spikes · Behaviour shifts</span></div>
+            </div>
+          </div>
+
+          <!-- drilldown arrow -->
+          <div class="mm-drilldown">
+            <svg width="14" height="16" viewBox="0 0 14 16"><path d="M7 0 V12 M1 6 L7 12 L13 6" stroke="#4D6280" stroke-width="1" fill="none" stroke-dasharray="3,2"/></svg>
+            <span>drills into intersection</span>
+          </div>
+
+          <!-- Intersection row -->
+          <div class="mm-row">
+            <span class="mm-level-tag" style="color:var(--purple);">Intersection</span>
+            <div class="mm-node intersection">Intersection</div>
+            <div class="mm-arrow">
+              <svg width="32" height="14" viewBox="0 0 32 14"><path d="M0 7 H26 M20 1 L26 7 L20 13" stroke="#4D6280" stroke-width="1" fill="none" stroke-dasharray="3,2"/></svg>
+            </div>
+            <div class="mm-tabs">
+              <div class="mm-tab ov">📊 Overview<span>Crash freq · Improvement trend · Peer table</span></div>
+              <div class="mm-tab ty">🏷 Type<span>Collision pattern · Movement matrix · Rare + lethal bubble</span></div>
+              <div class="mm-tab fa">⚙️ Factors<span>Signal phases · Lighting table · Behaviour donut · AI synthesis</span></div>
+              <div class="mm-tab an">🔺 Anomalies<span>Rolling avg spike · Peer KSI · AI summary · Deviation ranked</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Stage coverage legend -->
+      <div class="stage-pills">
+        <div class="stage-pill ov"><div class="sp-label">Overview Tab</div><div class="sp-text">KPI cards · Hotspot map · Trend lines · Zone/segment risk distribution</div></div>
+        <div class="stage-pill ty"><div class="sp-label">Type Tab</div><div class="sp-text">Dominant type · Distribution donut · Severity per type · Trend over time</div></div>
+        <div class="stage-pill fa"><div class="sp-label">Factors Tab</div><div class="sp-text">Timing heatmap · Lighting table · PCF donut · VRU risk index · Weather share</div></div>
+        <div class="stage-pill an"><div class="sp-label">Anomalies Tab</div><div class="sp-text">Rolling avg spike · Peer ranking · AI anomaly summary · Deviation scored table</div></div>
+      </div>
+    </section>
+
+    <!-- SPATIAL MODEL -->
+    <section id="spatial">
+      <div class="sl">03 · Architecture</div>
+      <h2>Spatial Drill-Down Model</h2>
+      <p>The system connects three levels of analysis, each building on the previous.</p>
+      <div class="spatial-grid">
+        <div class="spatial-card"><div class="sc-label city">City</div><div class="sc-name">Identifies where problems exist</div><div class="sc-desc">Macro-level awareness of crash density, hotspots, and systemic trends across the city.</div></div>
+        <div class="spatial-card"><div class="sc-label corridor">Corridor</div><div class="sc-name">Explains how problems behave</div><div class="sc-desc">Segment-level patterns, road-specific behaviours, and corridor ranking by risk contribution.</div></div>
+        <div class="spatial-card"><div class="sc-label intersection">Intersection</div><div class="sc-name">Reveals why they occur</div><div class="sc-desc">Granular diagnosis — collision patterns, causal factors, and outlier behaviour.</div></div>
+      </div>
+    </section>
+
+    <!-- USERS -->
+    <section id="users">
+      <div class="sl">04 · User Groups</div>
+      <h2>Users</h2>
+      <p>Three distinct user groups interact with the platform, each with a different analytical purpose.</p>
+      <div class="role-grid">
+        <div class="role-card"><div class="rc-icon">🚔</div><div class="rc-name">Operations</div><div class="rc-roles ops">Police · Corridor Director</div><div class="rc-desc">Monitoring and immediate action. Fast identification of problem areas and prioritisation of response.</div></div>
+        <div class="role-card"><div class="rc-icon">🔬</div><div class="rc-name">Analysis</div><div class="rc-roles ana">Safety Analyst · Engineer</div><div class="rc-desc">Diagnosis and solution design. Deep root-cause identification and reliable correlation across variables.</div></div>
+        <div class="role-card"><div class="rc-icon">🏛</div><div class="rc-name">Strategy</div><div class="rc-roles str">City Director · Elected Official</div><div class="rc-desc">Prioritisation and investment decisions. Clear justification for funding aligned with planning.</div></div>
+      </div>
+    </section>
+
+    <!-- STAGE LEGEND -->
+    <section id="stages">
+      <div class="sl">05 · Framework</div>
+      <h2>Question Stage Legend</h2>
+      <p>Four progressive stages apply consistently across every user group and every spatial level.</p>
+      <div class="stage-legend">
+        <div class="slc sl-ov"><div class="slc-num">Stage 01</div><div class="slc-name">Overview</div><div class="slc-q">What is happening?</div></div>
+        <div class="slc sl-ty"><div class="slc-num">Stage 02</div><div class="slc-name">Type</div><div class="slc-q">What kind of problem is this?</div></div>
+        <div class="slc sl-fa"><div class="slc-num">Stage 03</div><div class="slc-name">Factors</div><div class="slc-q">Why is this happening?</div></div>
+        <div class="slc sl-an"><div class="slc-num">Stage 04</div><div class="slc-name">Anomalies</div><div class="slc-q">Where should attention go?</div></div>
+      </div>
+    </section>
+
+    <!-- ═══════════ OPERATIONS ═══════════ -->
+    <section id="ops">
+      <div class="sl">06 · User Group</div>
+      <h2>Operations — Monitoring → Immediate Action</h2>
+      <div class="grp-banner ops">
+        <div class="gb-left"><div class="gb-icon">🚔</div><div><div class="gb-name">Operations</div><div class="gb-sub">Police · Corridor Director</div></div></div>
+        <div class="gb-right"><span class="badge b-ops">Monitoring</span><span class="badge b-ops">Immediate Action</span></div>
+      </div>
+      <div class="val-strip ops"><span class="vs-label">Value Enabled</span><div class="vs-body">Fast identification of problem areas · Behaviour-driven risk awareness · Immediate prioritisation of action</div></div>
+
+      <div id="ops-city" class="lb-block" style="scroll-margin-top:80px;">
+        <div class="lb-header"><div class="lb-badge city">C</div><div><div class="lb-title">City Level</div><div class="lb-sub">Macro awareness · Hotspot identification</div></div></div>
+        <div class="lb-body">
+          <div class="sc ov"><div class="sc-lbl ov">Overview</div><ul><li>Which areas have the highest crash density?</li><li>Which zones are emerging vs. persistent hotspots?</li><li>How has risk shifted over time?</li><li>Which areas require continuous monitoring?</li></ul></div>
+          <div class="sc ty"><div class="sc-lbl ty">Type</div><ul><li>What collision types dominate these hotspots?</li><li>Which types are increasing fastest?</li><li>Are pedestrian crashes concentrated in specific areas?</li><li>Do specific types repeat across locations?</li></ul></div>
+          <div class="sc fa"><div class="sc-lbl fa">Factors</div><ul><li>What behaviours are driving crashes (speed, alcohol, violations)?</li><li>Are these behaviours time-dependent?</li><li>Do the same factors repeat across hotspots?</li><li>Are factors geographically clustered?</li></ul></div>
+          <div class="sc an"><div class="sc-lbl an">Anomalies</div><ul><li>Which areas show sudden spikes?</li><li>Which locations transitioned from low to high risk?</li><li>Where do patterns behave abnormally?</li><li>Which hotspots persist despite attention?</li></ul></div>
+        </div>
+      </div>
+
+      <div id="ops-corridor" class="lb-block" style="scroll-margin-top:80px;">
+        <div class="lb-header"><div class="lb-badge corridor">R</div><div><div class="lb-title">Corridor Level</div><div class="lb-sub">Segment risk · Behavioural patterns</div></div></div>
+        <div class="lb-body">
+          <div class="sc ov"><div class="sc-lbl ov">Overview</div><ul><li>Which corridors contribute most to crashes?</li><li>Which corridors are worsening over time?</li><li>Is risk concentrated or evenly distributed?</li></ul></div>
+          <div class="sc ty"><div class="sc-lbl ty">Type</div><ul><li>Which crash types dominate each segment?</li><li>Do patterns shift along the corridor?</li></ul></div>
+          <div class="sc fa"><div class="sc-lbl fa">Factors</div><ul><li>Do behaviours vary across segments?</li><li>Are crashes linked to infrastructure gaps?</li></ul></div>
+          <div class="sc an"><div class="sc-lbl an">Anomalies</div><ul><li>Which segments deviate from corridor behaviour?</li><li>Where are localised spikes occurring?</li></ul></div>
+        </div>
+      </div>
+
+      <div id="ops-intersection" class="lb-block" style="scroll-margin-top:80px;">
+        <div class="lb-header"><div class="lb-badge intersection">I</div><div><div class="lb-title">Intersection Level</div><div class="lb-sub">Point-level monitoring · Immediate response</div></div></div>
+        <div class="lb-body">
+          <div class="sc ov"><div class="sc-lbl ov">Overview</div><ul><li>How frequently do crashes occur here?</li><li>Is this location improving or worsening?</li></ul></div>
+          <div class="sc ty"><div class="sc-lbl ty">Type</div><ul><li>What exact collision patterns exist at this point?</li></ul></div>
+          <div class="sc fa"><div class="sc-lbl fa">Factors</div><ul><li>What behaviours consistently cause crashes here?</li></ul></div>
+          <div class="sc an"><div class="sc-lbl an">Anomalies</div><ul><li>Is this location an outlier vs. nearby intersections?</li><li>Is this part of a larger cluster?</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ ANALYSIS ═══════════ -->
+    <section id="analysis">
+      <div class="sl">07 · User Group</div>
+      <h2>Analysis — Diagnosis → Root-Cause Explanation</h2>
+      <div class="grp-banner ana">
+        <div class="gb-left"><div class="gb-icon">🔬</div><div><div class="gb-name">Analysis</div><div class="gb-sub">Safety Analyst · Engineer</div></div></div>
+        <div class="gb-right"><span class="badge b-ana">Diagnosis</span><span class="badge b-ana">Root-Cause</span></div>
+      </div>
+      <div class="val-strip ana"><span class="vs-label">Value Enabled</span><div class="vs-body">Deep root-cause identification · Reliable correlation across variables · Confidence in analytical conclusions</div></div>
+
+      <div id="ana-city" class="lb-block" style="scroll-margin-top:80px;">
+        <div class="lb-header"><div class="lb-badge city">C</div><div><div class="lb-title">City Level</div><div class="lb-sub">Long-term trends · Statistical distribution</div></div></div>
+        <div class="lb-body">
+          <div class="sc ov"><div class="sc-lbl ov">Overview</div><ul><li>What long-term trends exist across the city?</li><li>Which areas consistently show high risk?</li><li>How does the overall safety picture compare year-on-year?</li></ul></div>
+          <div class="sc ty"><div class="sc-lbl ty">Type</div><ul><li>What collision types dominate spatially?</li><li>How are crash patterns distributed across districts?</li><li>Which types are statistically over-represented?</li></ul></div>
+          <div class="sc fa"><div class="sc-lbl fa">Factors</div><ul><li>What factors correlate strongly with KSI outcomes?</li><li>How do multiple variables interact to elevate risk?</li><li>Which environmental or temporal factors amplify severity?</li></ul></div>
+          <div class="sc an"><div class="sc-lbl an">Anomalies</div><ul><li>Which areas deviate statistically from expected patterns?</li><li>Are anomalies consistent over time or episodic?</li><li>Do outliers share common underlying causes?</li></ul></div>
+        </div>
+      </div>
+
+      <!-- SUPPORTING — Type Tab (Image 5) -->
+      <div class="sup-sec">
+        <div class="sup-hdr">
+          <div class="sup-hdr-accent" style="background:var(--lb);"></div>
+          <div><div class="sup-lbl">Supporting Cards — Type Tab · City Level</div><div class="sup-title">Distribution · Severity · Ranking · Pattern DNA — from your Type Tab screen</div></div>
+        </div>
+        <div class="cards-row">
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--lb);">Type · Distribution</div><div class="dc-title">Which collision types are most common?</div></div>
+            <div class="dc-body">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                <div style="width:44px;height:44px;border-radius:50%;background:conic-gradient(#FF7B7B 0% 35%,#5aaeff 35% 59%,#FFC72C 59% 77%,#4DD68C 77% 90%,#B47BFF 90% 96%,#8CA0BE 96% 100%);flex-shrink:0;"></div>
+                <div><div style="font-size:22px;font-weight:700;color:var(--text-p);">1,499</div><div style="font-size:10px;color:var(--text-m);">total crashes</div></div>
+              </div>
+              <div class="bars">
+                <div class="bar-row"><div class="bar-l">Rear-end</div><div class="bar-track"><div class="bar-fill" style="width:35%;background:var(--red);"></div></div><div class="bar-v">35%</div></div>
+                <div class="bar-row"><div class="bar-l">Broadside</div><div class="bar-track"><div class="bar-fill" style="width:24%;background:var(--lb);"></div></div><div class="bar-v">24%</div></div>
+                <div class="bar-row"><div class="bar-l">Veh/Ped</div><div class="bar-track"><div class="bar-fill" style="width:18%;background:var(--yellow);"></div></div><div class="bar-v">18%</div></div>
+                <div class="bar-row"><div class="bar-l">Hit Object</div><div class="bar-track"><div class="bar-fill" style="width:13%;background:var(--green);"></div></div><div class="bar-v">13%</div></div>
+                <div class="bar-row"><div class="bar-l">Other</div><div class="bar-track"><div class="bar-fill" style="width:10%;background:var(--text-m);"></div></div><div class="bar-v">10%</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--lb);">Type · Severity · KSI Focus</div><div class="dc-title">Which types have the highest KSI rate?</div></div>
+            <div class="dc-body">
+              <div class="stat-list">
+                <div class="stat-row"><div class="stat-l">#1 Veh/Ped</div><div style="font-family:var(--mono);font-size:11px;color:var(--red);font-weight:700;">62% KSI</div></div>
+                <div class="stat-row"><div class="stat-l">#2 Head-On</div><div style="font-family:var(--mono);font-size:11px;color:var(--red);font-weight:700;">58% KSI</div></div>
+                <div class="stat-row"><div class="stat-l">#3 Sideswipe</div><div style="font-family:var(--mono);font-size:11px;color:var(--orange);font-weight:700;">28% KSI</div></div>
+                <div class="stat-row"><div class="stat-l">#4 Hit Object</div><div style="font-family:var(--mono);font-size:11px;color:var(--yellow);font-weight:700;">24% KSI</div></div>
+                <div class="stat-row"><div class="stat-l">#5 Broadside</div><div style="font-family:var(--mono);font-size:11px;color:var(--green);font-weight:700;">19% KSI</div></div>
+              </div>
+              <div style="background:rgba(255,199,44,0.08);border:1px solid rgba(255,199,44,0.2);border-radius:5px;padding:6px 8px;margin-top:8px;font-size:9px;color:var(--yellow);">Severe minority: 58% minor crashes vs 4% fatal</div>
+            </div>
+          </div>
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--lb);">Type · Ranking · Priority Score</div><div class="dc-title">Which types should be fixed first?</div></div>
+            <div class="dc-body">
+              <div class="anom-list">
+                <div class="anom-item" style="border-left-color:#ff5050;"><div class="anom-label">Veh/Ped <span class="tag-chip chip-crit" style="float:right;">CRITICAL</span></div><div class="anom-desc">High volume + extreme KSI + worsening trend</div></div>
+                <div class="anom-item" style="border-left-color:var(--red);"><div class="anom-label">Rear-end <span class="tag-chip chip-high" style="float:right;">HIGH</span></div><div class="anom-desc">Highest volume, moderate KSI, rising fast</div></div>
+                <div class="anom-item" style="border-left-color:var(--orange);"><div class="anom-label">Broadside <span class="tag-chip chip-high" style="float:right;">HIGH</span></div><div class="anom-desc">High volume + signal violations increasing</div></div>
+                <div class="anom-item" style="border-left-color:var(--text-m);"><div class="anom-label">Sideswipe <span class="tag-chip chip-low" style="float:right;">LOW</span></div><div class="anom-desc">Low volume, declining trend</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--lb);">Type · Pattern DNA · Archetypes</div><div class="dc-title">Common scenario archetypes</div></div>
+            <div class="dc-body">
+              <div class="anom-list">
+                <div class="anom-item" style="border-left-color:var(--purple);"><div class="anom-label">Evening Pedestrian Trap</div><div class="anom-desc">LT + Ped violation · 6–9 PM · Dark — 78% KSI · 58 crashes</div></div>
+                <div class="anom-item" style="border-left-color:var(--red);"><div class="anom-label">Signal Rear-end Cascade</div><div class="anom-desc">Rear-end + Signal stop · PM peak · High vol — 11% KSI</div></div>
+                <div class="anom-item" style="border-left-color:var(--orange);"><div class="anom-label">Night Speed Fatality</div><div class="anom-desc">Speed + Dark + Fixed object · After midnight — 65% KSI</div></div>
+                <div class="anom-item" style="border-left-color:var(--yellow);"><div class="anom-label">Broadside Conflict Zone</div><div class="anom-desc">HGV + Broadside · High-speed road — 22% KSI · 180 crashes</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--lb);">Type · Comparison · Over-rep</div><div class="dc-title">Which types are over-represented in fatalities?</div></div>
+            <div class="dc-body">
+              <div class="mini-tbl">
+                <thead><tr><th>Type</th><th>Crash %</th><th>Fatal %</th><th>Over</th></tr></thead>
+                <tbody>
+                  <tr><td>Veh/Ped</td><td>18%</td><td style="color:var(--red);">36%</td><td style="font-family:var(--mono);font-size:9px;color:var(--red);">2.0×</td></tr>
+                  <tr><td>Head-On</td><td>5%</td><td style="color:var(--red);">19%</td><td style="font-family:var(--mono);font-size:9px;color:var(--red);">3.8×</td></tr>
+                  <tr><td>Hit Object</td><td>13%</td><td style="color:var(--orange);">18%</td><td style="font-family:var(--mono);font-size:9px;color:var(--orange);">1.4×</td></tr>
+                  <tr><td>Rear-end</td><td>35%</td><td>15%</td><td style="font-family:var(--mono);font-size:9px;color:var(--green);">0.4×</td></tr>
+                  <tr><td>Broadside</td><td>24%</td><td>11%</td><td style="font-family:var(--mono);font-size:9px;color:var(--green);">0.5×</td></tr>
+                </tbody>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="ana-corridor" class="lb-block" style="scroll-margin-top:80px;">
+        <div class="lb-header"><div class="lb-badge corridor">R</div><div><div class="lb-title">Corridor Level</div><div class="lb-sub">Comparative analysis · Infrastructure correlation</div></div></div>
+        <div class="lb-body">
+          <div class="sc ov"><div class="sc-lbl ov">Overview</div><ul><li>How does this corridor compare to similar corridors?</li><li>Which segments contribute most to overall risk?</li></ul></div>
+          <div class="sc ty"><div class="sc-lbl ty">Type</div><ul><li>Are there hidden temporal patterns in crash types?</li><li>Which segment-type combinations are most diagnostic?</li></ul></div>
+          <div class="sc fa"><div class="sc-lbl fa">Factors</div><ul><li>What infrastructure or operational factors drive risk?</li><li>How do behaviours interact with physical road design?</li></ul></div>
+          <div class="sc an"><div class="sc-lbl an">Anomalies</div><ul><li>Which segments behave unexpectedly relative to corridor norms?</li><li>Are anomalies explainable by a single causal factor?</li></ul></div>
+        </div>
+      </div>
+
+      <!-- SUPPORTING — Corridor Factors (Image 1) -->
+      <div class="sup-sec">
+        <div class="sup-hdr">
+          <div class="sup-hdr-accent" style="background:var(--yellow);"></div>
+          <div><div class="sup-lbl">Supporting Cards — Corridor · Factors Tab</div><div class="sup-title">Timing · Lighting · PCF · Condition combos · VRU risk — from your Corridor Factors screen</div></div>
+        </div>
+        <div class="cards-row">
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--yellow);">Corridor · Factors · Timing</div><div class="dc-title">When do crashes happen most on this corridor?</div></div>
+            <div class="dc-body">
+              <div class="kpi-row">
+                <div class="kpi"><div class="kpi-l">Peak Hour</div><div class="kpi-v" style="color:var(--yellow);">8–9 AM</div><div class="kpi-s">Highest single-hour count</div></div>
+                <div class="kpi"><div class="kpi-l">Night Share</div><div class="kpi-v" style="color:var(--purple);">34%</div><div class="kpi-s">After dark crashes</div></div>
+              </div>
+              <div class="bars">
+                <div class="bar-row"><div class="bar-l">Mnt–6a</div><div class="bar-track"><div class="bar-fill" style="width:15%;background:var(--purple);"></div></div><div class="bar-v">Low</div></div>
+                <div class="bar-row"><div class="bar-l">6–9a AM Peak</div><div class="bar-track"><div class="bar-fill" style="width:88%;background:var(--yellow);"></div></div><div class="bar-v">High</div></div>
+                <div class="bar-row"><div class="bar-l">9a–12p Day</div><div class="bar-track"><div class="bar-fill" style="width:55%;background:var(--lb);"></div></div><div class="bar-v">Med</div></div>
+                <div class="bar-row"><div class="bar-l">3–6p FM Peak</div><div class="bar-track"><div class="bar-fill" style="width:72%;background:var(--orange);"></div></div><div class="bar-v">High</div></div>
+                <div class="bar-row"><div class="bar-l">9p–Mnt Night</div><div class="bar-track"><div class="bar-fill" style="width:22%;background:var(--purple);"></div></div><div class="bar-v">Low</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--yellow);">Corridor · Factors · Night Split</div><div class="dc-title">Are crashes higher at night on this corridor?</div></div>
+            <div class="dc-body">
+              <div class="kpi-row">
+                <div class="kpi"><div class="kpi-l">Day</div><div class="kpi-v" style="color:var(--lb);">66%</div></div>
+                <div class="kpi"><div class="kpi-l">Night</div><div class="kpi-v" style="color:var(--purple);">34%</div></div>
+              </div>
+              <div class="kpi-row" style="margin-top:4px;">
+                <div class="kpi"><div class="kpi-l">Weekday</div><div class="kpi-v" style="color:var(--lb);">61%</div></div>
+                <div class="kpi"><div class="kpi-l">Weekend</div><div class="kpi-v" style="color:var(--yellow);">39%</div></div>
+              </div>
+              <div style="background:rgba(255,123,123,0.08);border:1px solid rgba(255,123,123,0.2);border-radius:6px;padding:6px 8px;margin-top:6px;font-size:9px;color:var(--red);">⚠ Night crashes are 1.4× more likely to result in KSI than daytime crashes</div>
+              <div class="mini-tbl" style="margin-top:8px;">
+                <thead><tr><th>Condition</th><th>KSI Rate</th><th>Avg Sev</th></tr></thead>
+                <tbody>
+                  <tr><td>Daylight</td><td>12%</td><td>1.3</td></tr>
+                  <tr><td>Dusk/Dawn</td><td>21%</td><td>1.8</td></tr>
+                  <tr><td>Dark-Lit</td><td>26%</td><td>2.1</td></tr>
+                  <tr><td style="color:var(--red);font-weight:600;">Dark-Unlit</td><td style="color:var(--red);font-weight:600;">48%</td><td style="color:var(--red);">2.8</td></tr>
+                </tbody>
+              </div>
+            </div>
+          </div>
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--yellow);">Corridor · Factors · PCF</div><div class="dc-title">What are the primary contributing factors?</div></div>
+            <div class="dc-body">
+              <div class="donut-wrap">
+                <div style="width:48px;height:48px;border-radius:50%;background:conic-gradient(#FF8C42 0% 28%,#5aaeff 28% 50%,#4DD68C 50% 66%,#FFC72C 66% 78%,#B47BFF 78% 87%,#8CA0BE 87% 100%);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:var(--text-p);">28%</div>
+                <div class="donut-leg">
+                  <div class="dl-item"><div class="dl-dot" style="background:var(--orange);"></div>Speeding 28%</div>
+                  <div class="dl-item"><div class="dl-dot" style="background:var(--lb);"></div>Inattention 22%</div>
+                  <div class="dl-item"><div class="dl-dot" style="background:var(--green);"></div>Fail to Yield 16%</div>
+                  <div class="dl-item"><div class="dl-dot" style="background:var(--yellow);"></div>Alcohol 12%</div>
+                  <div class="dl-item"><div class="dl-dot" style="background:var(--text-m);"></div>Other 22%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--yellow);">Corridor · Factors · Combos</div><div class="dc-title">Most common conditions in crashes</div></div>
+            <div class="dc-body">
+              <div class="anom-list">
+                <div class="anom-item" style="border-left-color:var(--red);"><div class="anom-label">1st — Speeding + Dry Road <span class="tag-chip chip-high" style="float:right;">HIGH</span></div><div class="anom-desc">n=342</div></div>
+                <div class="anom-item" style="border-left-color:var(--yellow);"><div class="anom-label">2nd — Inattention + Daylight <span class="tag-chip chip-med" style="float:right;">MED</span></div><div class="anom-desc">n=280</div></div>
+                <div class="anom-item" style="border-left-color:#ff5050;"><div class="anom-label">3rd — Alcohol + Night <span class="tag-chip chip-crit" style="float:right;">V.HIGH</span></div><div class="anom-desc">n=154</div></div>
+                <div class="anom-item" style="border-left-color:var(--orange);"><div class="anom-label">4th — Wet Road + Speed <span class="tag-chip chip-high" style="float:right;">HIGH</span></div><div class="anom-desc">n=142</div></div>
+                <div class="anom-item" style="border-left-color:#ff5050;"><div class="anom-label">5th — Dark Unlit + No markings <span class="tag-chip chip-crit" style="float:right;">CRIT</span></div><div class="anom-desc">n=98</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--yellow);">Corridor · Factors · VRU Risk</div><div class="dc-title">Are pedestrians &amp; cyclists at higher risk?</div></div>
+            <div class="dc-body">
+              <div class="stat-list">
+                <div style="font-size:11px;font-weight:600;color:var(--text-p);margin-bottom:4px;">🚶 Pedestrian — 89 crashes</div>
+                <div class="stat-row"><div class="stat-l">Share</div><div style="font-family:var(--mono);font-size:10px;color:var(--text-d);">6.9%</div></div>
+                <div class="stat-row"><div class="stat-l">KSI Rate</div><div style="font-family:var(--mono);font-size:10px;color:var(--red);font-weight:700;">58%</div></div>
+                <div class="stat-row"><div class="stat-l">Risk Index</div><div style="font-family:var(--mono);font-size:10px;color:var(--red);">1.8×</div></div>
+              </div>
+              <div style="height:1px;background:var(--border-y);margin:8px 0;"></div>
+              <div class="stat-list">
+                <div style="font-size:11px;font-weight:600;color:var(--text-p);margin-bottom:4px;">🚲 Cyclist — 64 crashes</div>
+                <div class="stat-row"><div class="stat-l">KSI Rate</div><div style="font-family:var(--mono);font-size:10px;color:var(--orange);font-weight:700;">38%</div></div>
+                <div class="stat-row"><div class="stat-l">Risk Index</div><div style="font-family:var(--mono);font-size:10px;color:var(--orange);">2.2×</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="ana-intersection" class="lb-block" style="scroll-margin-top:80px;">
+        <div class="lb-header"><div class="lb-badge intersection">I</div><div><div class="lb-title">Intersection Level</div><div class="lb-sub">Statistical significance · Causal stability</div></div></div>
+        <div class="lb-body">
+          <div class="sc ov"><div class="sc-lbl ov">Overview</div><ul><li>What is the statistical significance of this location's crash rate?</li><li>How does it compare to similar intersections citywide?</li></ul></div>
+          <div class="sc ty"><div class="sc-lbl ty">Type</div><ul><li>What combination of collision types defines this intersection?</li><li>Does this match known high-risk patterns?</li></ul></div>
+          <div class="sc fa"><div class="sc-lbl fa">Factors</div><ul><li>What combination of factors causes crashes at this point?</li><li>Are causal factors stable or shifting over time?</li></ul></div>
+          <div class="sc an"><div class="sc-lbl an">Anomalies</div><ul><li>Is this intersection's behaviour an artefact or a genuine signal?</li><li>Does it cluster with nearby high-risk points?</li></ul></div>
+        </div>
+      </div>
+
+      <!-- SUPPORTING — Intersection Factors (Image 3) -->
+      <div class="sup-sec">
+        <div class="sup-hdr">
+          <div class="sup-hdr-accent" style="background:var(--purple);"></div>
+          <div><div class="sup-lbl">Supporting Cards — Intersection · Factors Tab</div><div class="sup-title">INT-041 · Main St &amp; Harbor Blvd — signal phases · lighting · behaviour · AI synthesis</div></div>
+        </div>
+        <div class="cards-row">
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--purple);">Intersection · Factors · KPIs</div><div class="dc-title">INT-041 key factor metrics</div></div>
+            <div class="dc-body">
+              <div class="kpi-row">
+                <div class="kpi"><div class="kpi-l">Peak Hour</div><div class="kpi-v" style="color:var(--yellow);">8–9 AM</div></div>
+                <div class="kpi"><div class="kpi-l">Night KSI Rate</div><div class="kpi-v" style="color:var(--red);">19.6%</div><div class="kpi-s">2.0× daytime</div></div>
+              </div>
+              <div class="kpi-row" style="margin-top:4px;">
+                <div class="kpi"><div class="kpi-l">Ped Share</div><div class="kpi-v" style="color:var(--purple);">9.0%</div><div class="kpi-s">58% KSI rate</div></div>
+                <div class="kpi"><div class="kpi-l">Behaviour</div><div class="kpi-v" style="color:var(--orange);">31%</div><div class="kpi-s">Speed or alcohol</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--purple);">Intersection · Factors · Signal Phase</div><div class="dc-title">Which signal phases are linked to crashes?</div></div>
+            <div class="dc-body">
+              <div class="mini-tbl">
+                <thead><tr><th>Phase</th><th>Crashes</th><th>KSI</th></tr></thead>
+                <tbody>
+                  <tr><td>NB/SB Through</td><td>142</td><td>18</td></tr>
+                  <tr><td>NB Left-Turn Prot</td><td>98</td><td style="color:var(--orange);">22</td></tr>
+                  <tr><td>NB Left-Turn Perm</td><td>62</td><td style="color:var(--red);font-weight:600;">31</td></tr>
+                  <tr><td>Ped Walk Phase</td><td>44</td><td style="color:var(--red);">24</td></tr>
+                  <tr><td>All-Red Clearance</td><td>28</td><td>3</td></tr>
+                </tbody>
+              </div>
+            </div>
+          </div>
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--purple);">Intersection · Factors · Lighting</div><div class="dc-title">Does Dark-Unlit dominate KSI here?</div></div>
+            <div class="dc-body">
+              <div class="bars">
+                <div class="bar-row"><div class="bar-l">Daylight</div><div class="bar-track"><div class="bar-fill" style="width:30%;background:var(--lb);"></div></div><div class="bar-v">9.9%</div></div>
+                <div class="bar-row"><div class="bar-l">Dusk/Dawn</div><div class="bar-track"><div class="bar-fill" style="width:55%;background:var(--yellow);"></div></div><div class="bar-v">23.8%</div></div>
+                <div class="bar-row"><div class="bar-l">Dark-Lit</div><div class="bar-track"><div class="bar-fill" style="width:62%;background:var(--orange);"></div></div><div class="bar-v">20.3%</div></div>
+                <div class="bar-row"><div class="bar-l" style="color:var(--red);">Dark-Unlit</div><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--red);"></div></div><div class="bar-v" style="color:var(--red);">59.1%</div></div>
+              </div>
+              <div style="background:rgba(255,123,123,0.08);border:1px solid rgba(255,123,123,0.2);border-radius:5px;padding:5px 7px;margin-top:6px;font-size:9px;color:var(--red);">Dark-Unlit: 6× higher KSI than daylight. No streetlight on Harbor Blvd NB arm.</div>
+            </div>
+          </div>
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--purple);">Intersection · Factors · AI Synthesis</div><div class="dc-title">AI factors summary — INT-041</div></div>
+            <div class="dc-body">
+              <div class="anom-list">
+                <div class="anom-item" style="border-left-color:var(--yellow);"><div class="anom-label" style="font-size:9px;">⏱ Timing</div><div class="anom-desc">8–9am window dominates crash volume via approach-speed rear-ends on NB arm. PM peak adds left-turn conflicts in declining light. Two different countermeasures needed.</div></div>
+                <div class="anom-item" style="border-left-color:var(--lb);"><div class="anom-label" style="font-size:9px;">🚦 Phase</div><div class="anom-desc">NB permissive LT responsible for 62 crashes including 31 KSI. Upgrading to protected-only during PM peak directly addresses the dominant movement-KSI pairing.</div></div>
+                <div class="anom-item" style="border-left-color:var(--purple);"><div class="anom-label" style="font-size:9px;">🚶 VRU</div><div class="anom-desc">Pedestrian KSI rate 59% — 34 points above city average. LT vs ped conflict causes 14 of 44 ped crashes.</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--purple);">Intersection · Factors · Ranked Conditions</div><div class="dc-title">Which conditions are most dangerous here?</div></div>
+            <div class="dc-body">
+              <div class="anom-list">
+                <div class="anom-item" style="border-left-color:#ff5050;"><div class="anom-label">#1 Dark-Unlit + Any Type <span class="tag-chip chip-crit" style="float:right;">59% KSI</span></div><div class="anom-desc">Score 96 · Streetlight installation</div></div>
+                <div class="anom-item" style="border-left-color:var(--red);"><div class="anom-label">#2 Fog + Night + LT <span class="tag-chip chip-high" style="float:right;">68% KSI</span></div><div class="anom-desc">Score 89 · Variable message signs</div></div>
+                <div class="anom-item" style="border-left-color:var(--orange);"><div class="anom-label">#3 Alcohol + Night Drive <span class="tag-chip chip-high" style="float:right;">71% KSI</span></div><div class="anom-desc">Score 82 · Late-night enforcement</div></div>
+                <div class="anom-item" style="border-left-color:var(--yellow);"><div class="anom-label">#5 Speeding + AM Peak <span class="tag-chip chip-med" style="float:right;">68% KSI</span></div><div class="anom-desc">Score 68 · Speed camera at junction</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUPPORTING — Intersection Anomalies (Image 2) -->
+      <div class="sup-sec">
+        <div class="sup-hdr">
+          <div class="sup-hdr-accent" style="background:var(--red);"></div>
+          <div><div class="sup-lbl">Supporting Cards — Intersection · Anomalies Tab</div><div class="sup-title">INT-041 · Main St &amp; Harbor Blvd — peer comparison · spike detection · AI anomaly summary · deviation table</div></div>
+        </div>
+        <div class="cards-row">
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--red);">Intersection · Anomalies · KPIs</div><div class="dc-title">INT-041 anomaly headline metrics</div></div>
+            <div class="dc-body">
+              <div class="kpi-row">
+                <div class="kpi"><div class="kpi-l">vs Similar Ints</div><div class="kpi-v" style="color:var(--red);">4.8×</div><div class="kpi-s">Area rank #1</div></div>
+                <div class="kpi"><div class="kpi-l">Largest Spike</div><div class="kpi-v" style="color:var(--orange);">+156%</div><div class="kpi-s">Nov 2023</div></div>
+              </div>
+              <div class="kpi-row" style="margin-top:4px;">
+                <div class="kpi"><div class="kpi-l">Rare High-KSI</div><div class="kpi-v" style="color:var(--purple);">2 types</div><div class="kpi-s">Head-On + Ped</div></div>
+                <div class="kpi"><div class="kpi-l">Corridor Delta</div><div class="kpi-v" style="color:var(--yellow);">+38%</div><div class="kpi-s">Above segment avg</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--red);">Intersection · Anomalies · Peer Rank</div><div class="dc-title">Worse than similar intersections?</div></div>
+            <div class="dc-body">
+              <div class="stat-list">
+                <div class="stat-row" style="background:rgba(255,123,123,0.07);border-radius:4px;padding:3px 5px;">
+                  <div style="font-size:10px;color:var(--red);font-weight:700;">INT-041 ▶ THIS</div>
+                  <div style="font-family:var(--mono);font-size:9px;color:var(--red);">14% KSI · 4.8×</div>
+                </div>
+                <div class="stat-row"><div class="stat-l">INT-039 — Oak &amp; 10th</div><div style="font-family:var(--mono);font-size:9px;color:var(--text-d);">9.7% · 1.8×</div></div>
+                <div class="stat-row"><div class="stat-l">INT-044 — Pine &amp; 1st</div><div style="font-family:var(--mono);font-size:9px;color:var(--text-d);">8.5% · 1.7×</div></div>
+                <div class="stat-row"><div class="stat-l">INT-052 — Cedar &amp; 3rd</div><div style="font-family:var(--mono);font-size:9px;color:var(--text-d);">7.2% · 1.5×</div></div>
+                <div class="stat-row"><div class="stat-l">Peer avg (signalised)</div><div style="font-family:var(--mono);font-size:9px;color:var(--text-m);">3.2% · 1×</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--red);">Intersection · Anomalies · AI Summary</div><div class="dc-title">AI anomaly synthesis — INT-041</div></div>
+            <div class="dc-body">
+              <div class="anom-list">
+                <div class="anom-item" style="border-left-color:var(--lb);"><div class="anom-label" style="font-size:9px;">🔵 Peer</div><div class="anom-desc">Ranks #1 worst among 7 comparable signalised junctions. KSI rate 4.4× peer average. Gap is not explained by volume — adjusted for AADT.</div></div>
+                <div class="anom-item" style="border-left-color:var(--orange);"><div class="anom-label" style="font-size:9px;">📈 Spike</div><div class="anom-desc">Nov 2023 produced +156% crash surge. Cause traces to contraflow diversion forcing extra HGV traffic with no signal phase adjustment.</div></div>
+                <div class="anom-item" style="border-left-color:var(--red);"><div class="anom-label" style="font-size:9px;">🔴 Rare-KSI</div><div class="anom-desc">Head-On (61% KSI) + Ped (58% KSI) represent only 14% of volume but 59% of all KSI. Frequency 3.2× peer average.</div></div>
+              </div>
+            </div>
+          </div>
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--red);">Intersection · Anomalies · Deviation Table</div><div class="dc-title">All anomaly dimensions ranked</div></div>
+            <div class="dc-body">
+              <div class="mini-tbl">
+                <thead><tr><th>#</th><th>Anomaly</th><th>Score</th><th>Action</th></tr></thead>
+                <tbody>
+                  <tr><td>1</td><td style="color:var(--red);font-size:9px;">Head-On NB 3.2× peer</td><td><span class="tag-chip chip-crit">95</span></td><td style="font-size:8px;color:var(--text-m);">Protected median</td></tr>
+                  <tr><td>2</td><td style="color:var(--red);font-size:9px;">Peer KSI 4.8× comparable</td><td><span class="tag-chip chip-crit">95</span></td><td style="font-size:8px;color:var(--text-m);">Full safety audit</td></tr>
+                  <tr><td>3</td><td style="font-size:9px;">Nov spike repeats both yrs</td><td><span class="tag-chip chip-high">86</span></td><td style="font-size:8px;color:var(--text-m);">Pre-Nov phase audit</td></tr>
+                  <tr><td>4</td><td style="font-size:9px;">Ped-LT walk signal conflict</td><td><span class="tag-chip chip-high">82</span></td><td style="font-size:8px;color:var(--text-m);">Leading ped interval</td></tr>
+                  <tr><td>5</td><td style="font-size:9px;">LT+Dark 2.8× expected</td><td><span class="tag-chip chip-med">78</span></td><td style="font-size:8px;color:var(--text-m);">Protected LT post-20</td></tr>
+                </tbody>
+              </div>
+            </div>
+          </div>
+          <div class="dc">
+            <div class="dc-hdr"><div class="dc-tag" style="color:var(--red);">Intersection · Anomalies · vs Corridor</div><div class="dc-title">Does this intersection diverge from corridor?</div></div>
+            <div class="dc-body">
+              <div class="bars">
+                <div class="bar-row"><div class="bar-l" style="color:var(--red);font-weight:600;">INT-041 ▶</div><div class="bar-track"><div class="bar-fill" style="width:97%;background:var(--red);"></div></div><div class="bar-v" style="color:var(--red);">97</div></div>
+                <div class="bar-row"><div class="bar-l">Seg 01</div><div class="bar-track"><div class="bar-fill" style="width:82%;background:var(--lb);"></div></div><div class="bar-v">82</div></div>
+                <div class="bar-row"><div class="bar-l">Seg 02</div><div class="bar-track"><div class="bar-fill" style="width:74%;background:var(--lb);"></div></div><div class="bar-v">74</div></div>
+                <div class="bar-row"><div class="bar-l">Seg 03</div><div class="bar-track"><div class="bar-fill" style="width:68%;background:var(--lb);"></div></div><div class="bar-v">68</div></div>
+                <div class="bar-row"><div class="bar-l">Corridor avg</div><div class="bar-track"><div class="bar-fill" style="width:70%;background:var(--text-m);"></div></div><div class="bar-v">70</div></div>
+              </div>
+              <div style="font-size:9px;color:var(--yellow);margin-top:6px;">+38% above corridor mean — targeted junction treatment, not corridor-wide measures</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ═══════════ STRATEGY ═══════════ -->
+    <section id="strategy">
+      <div class="sl">08 · User Group</div>
+      <h2>Strategy — Prioritisation → Investment Decisions</h2>
+      <div class="grp-banner str">
+        <div class="gb-left"><div class="gb-icon">🏛</div><div><div class="gb-name">Strategy</div><div class="gb-sub">City Director · Elected Official</div></div></div>
+        <div class="gb-right"><span class="badge b-str">Prioritisation</span><span class="badge b-str">Investment</span></div>
+      </div>
+      <div class="val-strip str"><span class="vs-label">Value Enabled</span><div class="vs-body">Clear prioritisation of high-impact areas · Strong justification for investment · Alignment between data and planning</div></div>
+
+      <div id="str-city" class="lb-block" style="scroll-margin-top:80px;">
+        <div class="lb-header"><div class="lb-badge city">C</div><div><div class="lb-title">City Level</div><div class="lb-sub">KPI tracking · Systemic risk · Investment allocation</div></div></div>
+        <div class="lb-body">
+          <div class="sc ov"><div class="sc-lbl ov">Overview</div><ul><li>Is the city improving on key safety indicators over time?</li><li>Which areas contribute most to overall risk burden?</li><li>Where are the largest gaps between current and target performance?</li></ul></div>
+          <div class="sc ty"><div class="sc-lbl ty">Type</div><ul><li>Which crash types drive the most fatalities and serious injuries?</li><li>Where should type-specific interventions be focused?</li></ul></div>
+          <div class="sc fa"><div class="sc-lbl fa">Factors</div><ul><li>What systemic issues are driving risk at scale?</li><li>Which factor clusters are most amenable to intervention?</li><li>Where will behaviour-change programmes have the greatest impact?</li></ul></div>
+          <div class="sc an"><div class="sc-lbl an">Anomalies</div><ul><li>Which areas require urgent intervention vs. planned investment?</li><li>Where will investment yield the highest safety return?</li><li>Which persistent hotspots have resisted previous efforts?</li></ul></div>
+        </div>
+      </div>
+
+      <div id="str-corridor" class="lb-block" style="scroll-margin-top:80px;">
+        <div class="lb-header"><div class="lb-badge corridor">R</div><div><div class="lb-title">Corridor Level</div><div class="lb-sub">Return on investment · Capital justification</div></div></div>
+        <div class="lb-body">
+          <div class="sc ov"><div class="sc-lbl ov">Overview</div><ul><li>Which corridors offer the highest return on safety investment?</li><li>Where can improvements be implemented quickly and cost-effectively?</li></ul></div>
+          <div class="sc ty"><div class="sc-lbl ty">Type</div><ul><li>Which crash types on this corridor are most preventable?</li><li>What intervention types are best matched to the dominant pattern?</li></ul></div>
+          <div class="sc fa"><div class="sc-lbl fa">Factors</div><ul><li>What systemic corridor-level issues justify capital investment?</li><li>How do infrastructure gaps compare in cost vs. impact?</li></ul></div>
+          <div class="sc an"><div class="sc-lbl an">Anomalies</div><ul><li>Which corridor segments are underperforming relative to investment already made?</li><li>Where are the highest-leverage quick wins?</li></ul></div>
+        </div>
+      </div>
+
+      <div id="str-intersection" class="lb-block" style="scroll-margin-top:80px;">
+        <div class="lb-header"><div class="lb-badge intersection">I</div><div><div class="lb-title">Intersection Level</div><div class="lb-sub">Point prioritisation · Engineering vs. enforcement</div></div></div>
+        <div class="lb-body">
+          <div class="sc ov"><div class="sc-lbl ov">Overview</div><ul><li>Why is this location a priority relative to others?</li><li>What is the expected impact of intervention here?</li></ul></div>
+          <div class="sc ty"><div class="sc-lbl ty">Type</div><ul><li>What intervention type is best matched to the collision pattern?</li></ul></div>
+          <div class="sc fa"><div class="sc-lbl fa">Factors</div><ul><li>What causal factors are addressable through engineering or enforcement?</li><li>How does cost of intervention compare to expected benefit?</li></ul></div>
+          <div class="sc an"><div class="sc-lbl an">Anomalies</div><ul><li>How does this compare to similar investments made elsewhere?</li><li>Is the risk profile stable enough to justify long-term investment?</li></ul></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="doc-footer">
+      <div class="df-l">Road Safety Analytics Platform · User Groups Question Framework + Dashboard Cards · FY 2025–26</div>
+      <div class="df-r">Version 2.0 · Confidential</div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.nl');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(l => l.classList.remove('active'));
+        const a = document.querySelector(`.nl[href="#${e.target.id}"]`);
+        if (a) a.classList.add('active');
+      }
+    });
+  }, { rootMargin:'-20% 0px -70% 0px' });
+  sections.forEach(s => obs.observe(s));
+
+  const sb = document.getElementById('sidebar');
+  const bd = document.getElementById('sbBackdrop');
+  const tb = document.getElementById('sbToggle');
+  const cl = document.getElementById('sbClose');
+  const open = () => { sb.classList.add('open'); bd.classList.add('visible'); tb.setAttribute('aria-expanded','true'); document.body.style.overflow='hidden'; };
+  const close = () => { sb.classList.remove('open'); bd.classList.remove('visible'); tb.setAttribute('aria-expanded','false'); document.body.style.overflow=''; };
+  if (tb) tb.addEventListener('click', open);
+  if (cl) cl.addEventListener('click', close);
+  if (bd) bd.addEventListener('click', close);
+  navLinks.forEach(l => l.addEventListener('click', () => { if (window.innerWidth <= 768) close(); }));
+</script>
+</body>
+</html>

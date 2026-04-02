@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Insights Engine — Concord · v2.0 with Violations + Infrastructure</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --font: 'DM Sans', system-ui, sans-serif;
+      --mono: 'DM Mono', monospace;
+      --bg: #f8f9fa;
+      --surface: #ffffff;
+      --border: #f1f5f9;
+      --border-md: #e2e8f0;
+      --t1: #0f172a;
+      --t2: #475569;
+      --t3: #94a3b8;
+      --blue: #2563eb;
+      --red: #dc2626;
+      --amber: #d97706;
+      --purple: #7c3aed;
+      --green: #16a34a;
+      --teal: #0d9488;
+      --orange: #ea580c;
+      --sidebar: 228px;
+    }
+    html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--t1); font-size: 13px; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }
+
+    /* ── Shell ── */
+    .shell { display: flex; height: 100vh; overflow: hidden; }
+
+    /* ── Sidebar ── */
+    .sidebar { width: var(--sidebar); background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+    .brand { padding: 18px 16px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .brand-icon { width: 32px; height: 32px; background: linear-gradient(135deg, #1e293b, #3b82f6); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: white; flex-shrink: 0; }
+    .brand-name { font-size: 13px; font-weight: 600; }
+    .brand-sub { font-size: 11px; color: var(--t3); margin-top: 1px; }
+    .nav { flex: 1; overflow-y: auto; padding: 8px; }
+    .nav-label { padding: 8px 12px 3px; font-size: 10px; font-weight: 600; color: var(--t3); text-transform: uppercase; letter-spacing: 0.08em; }
+    .nav-item { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: #64748b; transition: all 0.13s; user-select: none; }
+    .nav-item:hover { background: #f1f5f9; color: var(--t1); }
+    .nav-item.active { background: #1e293b; color: white; font-weight: 500; }
+    .nav-dot { width: 5px; height: 5px; border-radius: 50%; background: #cbd5e1; flex-shrink: 0; }
+    .nav-item.active .nav-dot { background: white; }
+    .nav-item .new-badge { margin-left: auto; font-size: 9px; font-weight: 600; background: #dbeafe; color: var(--blue); padding: 1px 5px; border-radius: 3px; }
+    .nav-item.active .new-badge { background: rgba(255,255,255,0.2); color: white; }
+    .sidebar-footer { padding: 12px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .version { font-size: 11px; color: var(--t3); }
+    .v2-chip { font-size: 10px; font-weight: 600; background: linear-gradient(90deg,#dbeafe,#ede9fe); color: var(--blue); padding: 2px 7px; border-radius: 10px; }
+
+    /* ── Main ── */
+    .main { flex: 1; overflow-y: auto; padding: 28px 36px 48px; }
+
+    /* ── Page header ── */
+    .page-hd { margin-bottom: 22px; }
+    .page-title { font-size: 22px; font-weight: 600; letter-spacing: -0.3px; }
+    .page-meta { font-size: 12px; color: var(--t3); margin-top: 4px; }
+    .page-badge { display: inline-flex; align-items: center; gap: 5px; background: linear-gradient(135deg,#dbeafe,#ede9fe); color: var(--blue); font-size: 10px; font-weight: 600; padding: 3px 10px; border-radius: 12px; margin-left: 10px; letter-spacing: 0.03em; }
+
+    /* ── Data layer tabs ── */
+    .layer-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+    .layer-tab { display: flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border-md); background: var(--surface); cursor: pointer; font-size: 12px; font-weight: 500; color: var(--t2); transition: all 0.15s; }
+    .layer-tab:hover { border-color: var(--blue); color: var(--blue); }
+    .layer-tab.active { background: var(--t1); color: white; border-color: var(--t1); }
+    .layer-tab .dot { width: 8px; height: 8px; border-radius: 50%; }
+    .tab-count { font-size: 10px; font-weight: 600; opacity: 0.7; margin-left: 2px; }
+
+    /* ── Cards ── */
+    .card { background: var(--surface); border-radius: 12px; padding: 20px 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .card-title { font-size: 13px; font-weight: 600; }
+    .card-sub { font-size: 11px; color: var(--t3); margin-top: 3px; }
+    .section-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--t3); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .section-label::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+    /* ── KPI row ── */
+    .kpi-row { display: flex; gap: 14px; margin-bottom: 18px; }
+    .kpi { background: var(--surface); border-radius: 10px; padding: 15px 18px; flex: 1; box-shadow: 0 1px 3px rgba(0,0,0,0.05); border: 1px solid transparent; transition: border-color 0.15s; }
+    .kpi:hover { border-color: var(--border-md); }
+    .kpi-lbl { font-size: 10px; font-weight: 600; color: var(--t3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+    .kpi-val { font-size: 23px; font-weight: 600; letter-spacing: -0.4px; }
+    .kpi-note { font-size: 11px; color: var(--t3); margin-top: 3px; }
+    .kpi-delta { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 500; padding: 1px 6px; border-radius: 4px; margin-top: 4px; }
+    .delta-up { background: #fef2f2; color: var(--red); }
+    .delta-down { background: #f0fdf4; color: var(--green); }
+
+    /* ── AI bar ── */
+    .ai-bar { background: linear-gradient(135deg,#eff6ff,#f0fdf4); border: 1px solid #dbeafe; border-radius: 10px; padding: 13px 18px; margin-bottom: 20px; display: flex; gap: 10px; }
+    .ai-body { flex: 1; }
+    .ai-label { font-size: 10px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: 0.07em; }
+    .ai-text { font-size: 12.5px; color: #334155; margin-top: 3px; line-height: 1.55; }
+
+    /* ── THREE-LAYER CORRIDOR TABLE ── */
+    .corridor-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .corridor-table th { font-size: 10px; font-weight: 600; color: var(--t3); text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 10px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+    .corridor-table td { padding: 10px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .corridor-table tr:last-child td { border-bottom: none; }
+    .corridor-table tr:hover td { background: #fafafa; }
+    .corridor-name { font-weight: 500; color: var(--t1); }
+    .corridor-sub { font-size: 10px; color: var(--t3); }
+    .badge { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+    .badge-red { background: #fef2f2; color: var(--red); }
+    .badge-amber { background: #fffbeb; color: var(--amber); }
+    .badge-green { background: #f0fdf4; color: var(--green); }
+    .badge-blue { background: #eff6ff; color: var(--blue); }
+    .badge-gray { background: #f8f9fa; color: var(--t2); }
+    .badge-teal { background: #f0fdfa; color: var(--teal); }
+    .badge-purple { background: #faf5ff; color: var(--purple); }
+    .gap-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 5px; font-size: 11px; font-weight: 500; background: #fff7ed; color: var(--orange); border: 1px solid #fed7aa; }
+    .gap-pill.infra { background: #fdf4ff; color: var(--purple); border-color: #e9d5ff; }
+
+    /* ── Enforcement gap chart block ── */
+    .enforcement-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    .enf-card { background: var(--surface); border-radius: 12px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .enf-label { font-size: 11px; font-weight: 600; color: var(--t2); margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+    .enf-bar-group { display: flex; flex-direction: column; gap: 8px; }
+    .enf-bar-row {}
+    .enf-bar-hd { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11px; }
+    .enf-bar-name { color: var(--t2); }
+    .enf-bar-val { font-family: var(--mono); font-weight: 500; }
+    .bar-track { height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+
+    /* ── Causal chain ── */
+    .chain { display: flex; align-items: stretch; gap: 0; margin-bottom: 20px; }
+    .chain-step { flex: 1; background: var(--surface); padding: 16px 18px; border: 1px solid var(--border); position: relative; }
+    .chain-step:first-child { border-radius: 10px 0 0 10px; }
+    .chain-step:last-child { border-radius: 0 10px 10px 0; }
+    .chain-arrow { display: flex; align-items: center; justify-content: center; padding: 0 2px; background: var(--border); color: var(--t3); font-size: 14px; z-index: 1; }
+    .chain-layer { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+    .chain-name { font-size: 13px; font-weight: 600; color: var(--t1); margin-bottom: 4px; }
+    .chain-fact { font-size: 11px; color: var(--t2); line-height: 1.4; }
+    .chain-num { font-size: 20px; font-weight: 700; margin: 8px 0 2px; }
+
+    /* ── Infra gap cards ── */
+    .infra-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+    .infra-card { background: var(--surface); border-radius: 10px; padding: 16px 18px; border-left: 3px solid; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .infra-card.critical { border-color: var(--red); }
+    .infra-card.high { border-color: var(--amber); }
+    .infra-card.medium { border-color: var(--blue); }
+    .infra-hd { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .infra-title { font-size: 13px; font-weight: 600; }
+    .infra-body { font-size: 12px; color: var(--t2); line-height: 1.5; }
+    .infra-stats { display: flex; gap: 16px; margin-top: 10px; }
+    .infra-stat { }
+    .infra-stat-val { font-size: 17px; font-weight: 700; font-family: var(--mono); }
+    .infra-stat-lbl { font-size: 10px; color: var(--t3); margin-top: 1px; }
+    .grant-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; background: #f0fdf4; color: var(--green); padding: 3px 8px; border-radius: 4px; margin-top: 10px; }
+
+    /* ── Factor Explorer with violations ── */
+    .factor-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .factor-table th { font-size: 10px; font-weight: 600; color: var(--t3); text-transform: uppercase; letter-spacing: 0.06em; padding: 6px 10px 8px; text-align: left; border-bottom: 2px solid var(--border); }
+    .factor-table td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+    .factor-table tr:last-child td { border-bottom: none; }
+    .factor-table tr:hover td { background: #fafafa; }
+    .enforcement-signal { display: flex; align-items: center; gap: 5px; }
+    .signal-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .signal-label { font-size: 11px; color: var(--t2); }
+    .enforcement-gap { font-size: 11px; font-style: italic; color: var(--orange); }
+
+    /* ── Two col ── */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+    /* ── Stat comparison ── */
+    .compare-pair { display: flex; gap: 12px; margin-bottom: 14px; }
+    .compare-box { flex: 1; border-radius: 8px; padding: 12px 14px; text-align: center; }
+    .compare-num { font-size: 24px; font-weight: 700; }
+    .compare-lbl { font-size: 11px; color: var(--t3); margin-top: 3px; }
+    .compare-arrow { display: flex; align-items: center; color: var(--t3); font-size: 18px; }
+
+    /* ── Progress bars ── */
+    .prog-item { margin-bottom: 10px; }
+    .prog-hd { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 11px; }
+    .prog-lbl { color: var(--t2); }
+    .prog-val { font-family: var(--mono); font-weight: 500; }
+    .prog-track { height: 5px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+    .prog-fill { height: 100%; border-radius: 3px; }
+
+    /* ── Countermeasure cards ── */
+    .cm-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+    .cm-card { background: var(--surface); border-radius: 10px; padding: 15px 16px; border: 1px solid var(--border); transition: border-color 0.15s, box-shadow 0.15s; cursor: pointer; }
+    .cm-card:hover { border-color: var(--blue); box-shadow: 0 2px 8px rgba(37,99,235,0.1); }
+    .cm-icon { font-size: 18px; margin-bottom: 8px; }
+    .cm-title { font-size: 12px; font-weight: 600; margin-bottom: 5px; }
+    .cm-body { font-size: 11px; color: var(--t2); line-height: 1.45; }
+    .cm-meta { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+
+    /* ── Toast ── */
+    .toast { position: fixed; bottom: 24px; right: 24px; background: #1e293b; color: white; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,0.18); z-index: 1000; opacity: 0; pointer-events: none; transform: translateY(8px); transition: opacity 0.2s, transform 0.2s; }
+    .toast.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
+
+    /* ── Export btn ── */
+    .export-btn { display: flex; align-items: center; gap: 5px; padding: 6px 12px; background: none; border: none; color: var(--blue); font-size: 12px; font-family: var(--font); border-radius: 6px; cursor: pointer; transition: background 0.13s; white-space: nowrap; }
+    .export-btn:hover { background: #eff6ff; }
+
+    /* ── Tabs inside cards ── */
+    .inner-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+    .inner-tab { padding: 6px 12px; font-size: 12px; cursor: pointer; color: var(--t3); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.13s; }
+    .inner-tab:hover { color: var(--t1); }
+    .inner-tab.active { color: var(--t1); font-weight: 500; border-bottom-color: var(--t1); }
+
+    /* ── Scrollable panel ── */
+    .scroll-panel { max-height: 320px; overflow-y: auto; }
+
+    /* Highlight gap warnings */
+    .gap-warning { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 14px; font-size: 12px; color: #92400e; line-height: 1.5; margin-bottom: 14px; display: flex; gap: 8px; }
+    .gap-warning.infra { background: #fdf4ff; border-color: #e9d5ff; color: #6b21a8; }
+
+    .section-spacer { margin-bottom: 20px; }
+
+    /* Map placeholder */
+    .map-placeholder { background: linear-gradient(135deg,#f8fafc,#f1f5f9); border-radius: 10px; height: 240px; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; border: 1px dashed var(--border-md); }
+    .map-label { font-size: 12px; color: var(--t3); }
+
+    /* Dot matrix viz */
+    .dot-matrix { display: flex; flex-wrap: wrap; gap: 3px; margin: 10px 0; }
+    .dot-cell { width: 11px; height: 11px; border-radius: 2px; }
+  </style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">AI</div>
+      <div>
+        <div class="brand-name">AI Insights Engine</div>
+        <div class="brand-sub">Concord Collision Analysis</div>
+      </div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidebar-footer">
+      <span class="version">v2.0 · 3 Layers</span>
+      <span class="v2-chip">+ V + I</span>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main" id="main-content">
+    <!-- content injected by JS -->
+  </main>
+</div>
+
+<div class="toast" id="toast">✓ Exported for grant application</div>
+
+<script>
+// ── NAV ──────────────────────────────────────────────────────────────────────
+const navData = [
+  { section: "Dashboard", items: [
+    { label: "Overview", isNew: false },
+    { label: "Ask the Data", isNew: false },
+    { label: "Anomaly Rankings", isNew: false },
+  ]},
+  { section: "AI Intelligence", items: [
+    { label: "Collision DNA", isNew: false },
+    { label: "Risk Clock", isNew: false },
+    { label: "What-If Simulator", isNew: false },
+    { label: "Factor Explorer", isNew: true },
+  ]},
+  { section: "Deep Analysis", items: [
+    { label: "Corridor Typology", isNew: true },
+    { label: "Conflict Matrix", isNew: false },
+    { label: "Silent Hotspots", isNew: false },
+    { label: "Enforcement Gap", isNew: true },
+    { label: "Infrastructure Gap", isNew: true },
+    { label: "Amplification", isNew: false },
+    { label: "Signatures", isNew: false },
+  ]},
+  { section: "Action", items: [
+    { label: "Fatal Profile", isNew: false },
+    { label: "Map Intelligence", isNew: true },
+    { label: "Corridors", isNew: false },
+    { label: "Countermeasures", isNew: true },
+  ]},
+];
+
+let activeNav = "Overview";
+function buildNav() {
+  const nav = document.getElementById("nav");
+  nav.innerHTML = navData.map(({ section, items }) => `
+    <div class="nav-label">${section}</div>
+    ${items.map(({ label, isNew }) => `
+      <div class="nav-item ${label === activeNav ? "active" : ""}" onclick="setNav('${label}')">
+        <span class="nav-dot"></span>${label}
+        ${isNew ? `<span class="new-badge">NEW</span>` : ""}
+      </div>
+    `).join("")}
+  `).join("");
+}
+function setNav(label) { activeNav = label; buildNav(); renderPage(label); }
+buildNav();
+
+// ── TOAST ────────────────────────────────────────────────────────────────────
+function showToast(msg = "Exported for grant application") {
+  const t = document.getElementById("toast");
+  t.textContent = "✓ " + msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2600);
+}
+
+// ── SHARED DATA ──────────────────────────────────────────────────────────────
+const corridors = [
+  {
+    name: "Clayton Rd", type: "Arterial",
+    crashes: 187, ksi: 7, ksiPct: "32.6%",
+    violations: { speed: 412, dui: 28, signal: 87, total: 527 },
+    infraGaps: ["No sidewalk (0.8 mi)", "Missing RRFB at 4 ped crossings", "2 dark-lighting KSI nodes"],
+    enfGap: "HIGH", cfScore: 88,
+    enfStatus: "gap", // high crashes + low citations relative to crashes
+    grantFit: true
+  },
+  {
+    name: "Willow Pass Rd", type: "Arterial",
+    crashes: 143, ksi: 5, ksiPct: "29.4%",
+    violations: { speed: 188, dui: 12, signal: 31, total: 231 },
+    infraGaps: ["No protected left-turn phase (3 intersections)", "No bike lane (1.2 mi)"],
+    enfGap: "MEDIUM", cfScore: 76,
+    enfStatus: "partial",
+    grantFit: true
+  },
+  {
+    name: "Concord Blvd", type: "Arterial",
+    crashes: 162, ksi: 3, ksiPct: "18.5%",
+    violations: { speed: 589, dui: 8, signal: 214, total: 811 },
+    infraGaps: ["No crosswalk mid-block (3 locations)", "Timing gap at Oak/Concord"],
+    enfGap: "LOW", cfScore: 71,
+    enfStatus: "enforced", // high citations, lower KSI — enforcement working
+    grantFit: false
+  },
+  {
+    name: "Oak Grove Rd", type: "Collector",
+    crashes: 94, ksi: 3, ksiPct: "27.7%",
+    violations: { speed: 67, dui: 4, signal: 9, total: 80 },
+    infraGaps: ["No sidewalk (1.4 mi)", "No street lighting (0.6 mi dark segment)", "Missing ADA ramps x5"],
+    enfGap: "HIGH", cfScore: 82,
+    enfStatus: "gap",
+    grantFit: true
+  },
+  {
+    name: "Treat Blvd", type: "Arterial",
+    crashes: 118, ksi: 2, ksiPct: "16.9%",
+    violations: { speed: 340, dui: 15, signal: 78, total: 433 },
+    infraGaps: ["Bike lane ends at Bushy Rd (0.5 mi gap)"],
+    enfGap: "LOW", cfScore: 62,
+    enfStatus: "enforced",
+    grantFit: false
+  },
+  {
+    name: "Monument Blvd", type: "Local",
+    crashes: 71, ksi: 2, ksiPct: "22.5%",
+    violations: { speed: 28, dui: 3, signal: 6, total: 37 },
+    infraGaps: ["No pedestrian signal (2 crossings)", "No lighting (whole corridor)", "No sidewalk (0.9 mi)"],
+    enfGap: "CRITICAL", cfScore: 86,
+    enfStatus: "gap",
+    grantFit: true
+  },
+];
+
+// ── PAGES ────────────────────────────────────────────────────────────────────
+function renderPage(page) {
+  const main = document.getElementById("main-content");
+  if (page === "Overview") main.innerHTML = overviewHTML();
+  else if (page === "Enforcement Gap") main.innerHTML = enforcementGapHTML();
+  else if (page === "Infrastructure Gap") main.innerHTML = infraGapHTML();
+  else if (page === "Corridor Typology") main.innerHTML = corridorTypologyHTML();
+  else if (page === "Factor Explorer") main.innerHTML = factorExplorerHTML();
+  else if (page === "Countermeasures") main.innerHTML = countermeasuresHTML();
+  else main.innerHTML = placeholderHTML(page);
+  setTimeout(initCharts, 50);
+}
+
+// ── OVERVIEW ─────────────────────────────────────────────────────────────────
+function overviewHTML() {
+  return `
+    <div class="page-hd">
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">
+        <h1 class="page-title">Overview Dashboard</h1>
+        <span class="page-badge">v2.0 · Violations + Infrastructure Layers Added</span>
+      </div>
+      <p class="page-meta">2014–2025 · 1,499 collisions · 3 data layers · 260 anomalies · Violations: 4,218 citations · Infrastructure: 14 asset layers</p>
+    </div>
+
+    <!-- Layer tabs -->
+    <div class="layer-tabs">
+      <div class="layer-tab active" onclick="switchLayer(this,'collision')"><span class="dot" style="background:#dc2626"></span>Collision Data <span class="tab-count">1,499</span></div>
+      <div class="layer-tab" onclick="switchLayer(this,'violations')"><span class="dot" style="background:#d97706"></span>Violations Layer <span class="tab-count">4,218</span></div>
+      <div class="layer-tab" onclick="switchLayer(this,'infrastructure')"><span class="dot" style="background:#7c3aed"></span>Infrastructure Gaps <span class="tab-count">47 gaps</span></div>
+    </div>
+
+    <!-- KPI row -->
+    <div class="kpi-row">
+      <div class="kpi"><div class="kpi-lbl">Total Collisions</div><div class="kpi-val" style="color:var(--t1)">1,499</div><div class="kpi-note">2014–2025</div></div>
+      <div class="kpi"><div class="kpi-lbl">Fatalities</div><div class="kpi-val" style="color:var(--red)">56</div><div class="kpi-delta delta-up">↑ KSI trending</div></div>
+      <div class="kpi"><div class="kpi-lbl">KSI Rate</div><div class="kpi-val" style="color:var(--amber)">25.0%</div><div class="kpi-delta delta-up">↑ from 16.4%</div></div>
+      <div class="kpi" style="border-left:3px solid var(--amber)"><div class="kpi-lbl" style="color:var(--amber)">Citations Issued</div><div class="kpi-val" style="color:var(--amber)">4,218</div><div class="kpi-note">Speed · DUI · Signal</div></div>
+      <div class="kpi" style="border-left:3px solid var(--purple)"><div class="kpi-lbl" style="color:var(--purple)">Infrastructure Gaps</div><div class="kpi-val" style="color:var(--purple)">47</div><div class="kpi-note">Across 6 corridors</div></div>
+      <div class="kpi"><div class="kpi-lbl">Enforcement Gap Corridors</div><div class="kpi-val" style="color:var(--red)">4</div><div class="kpi-note">High crashes, low citations</div></div>
+    </div>
+
+    <!-- AI bar -->
+    <div class="ai-bar">
+      <span style="font-size:15px;margin-top:1px">✦</span>
+      <div class="ai-body">
+        <div class="ai-label">AI Summary · 3-Layer Analysis</div>
+        <p class="ai-text">
+          <strong>Violations layer reveals enforcement gaps on 4 corridors</strong> — Clayton Rd and Oak Grove Rd show high-speed KSI rates but citation density 3.1× below corridors with similar volume.
+          <strong>Infrastructure layer links 71% of fatal pedestrian locations to missing sidewalk, absent lighting, or no RRFB.</strong>
+          The causal chain — missing infrastructure → unchecked violations → severe collision — is now visible. These three corridors together represent the strongest grant funding argument in the dataset.
+        </p>
+      </div>
+      <button class="export-btn" onclick="showToast()">↗ Export for Grant</button>
+    </div>
+
+    <!-- NEW: Enforcement gap callout -->
+    <div class="gap-warning">
+      <span>⚠</span>
+      <div><strong>Gap 1 — Violations as causal signal:</strong> Clayton Rd has 412 speed citations but 7 KSI fatalities — citation rate is 58 per fatal, vs. 168 per fatal on Concord Blvd where enforcement is visibly working. On Oak Grove Rd: 67 speed citations for 94 crashes = citations nearly absent. <a href="#" onclick="setNav('Enforcement Gap');return false;" style="color:var(--blue);text-decoration:none;font-weight:500">View Enforcement Gap analysis →</a></div>
+    </div>
+
+    <!-- NEW: Infrastructure gap callout -->
+    <div class="gap-warning infra">
+      <span>⬡</span>
+      <div><strong>Gap 2 — Infrastructure never entered the analysis chain:</strong> 23 of 29 VRU fatalities occurred within 50ft of a missing sidewalk, absent RRFB, or unlit segment. This is the engineering + grant justification workflow. <a href="#" onclick="setNav('Infrastructure Gap');return false;" style="color:var(--purple);text-decoration:none;font-weight:500">View Infrastructure Gap analysis →</a></div>
+    </div>
+
+    <!-- Corridor 3-layer overview table -->
+    <div class="card section-spacer">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div><div class="card-title">Corridor 3-Layer Risk Table</div><div class="card-sub">Collision · Violations · Infrastructure — cross-referenced per corridor</div></div>
+        <button class="export-btn" onclick="showToast('Corridor table exported')">↗ Export</button>
+      </div>
+      <table class="corridor-table">
+        <thead><tr>
+          <th>Corridor</th>
+          <th style="color:#dc2626">● Collision KSI</th>
+          <th style="color:#d97706">● Violations</th>
+          <th style="color:#7c3aed">● Infra Gaps</th>
+          <th>Enforcement</th>
+          <th>Grant Fit</th>
+          <th>CF Score</th>
+        </tr></thead>
+        <tbody>
+          ${corridors.map(c => `
+            <tr>
+              <td><div class="corridor-name">${c.name}</div><div class="corridor-sub">${c.type}</div></td>
+              <td><span class="badge ${c.ksiPct > '25%' ? 'badge-red' : 'badge-amber'}">${c.ksiPct} KSI</span><div style="font-size:10px;color:var(--t3);margin-top:2px">${c.ksi} fatal · ${c.crashes} total</div></td>
+              <td>
+                <div style="font-size:12px;font-family:var(--mono);color:var(--amber)">${c.violations.total.toLocaleString()} citations</div>
+                <div style="font-size:10px;color:var(--t3)">${c.violations.speed} speed · ${c.violations.dui} DUI · ${c.violations.signal} signal</div>
+              </td>
+              <td>${c.infraGaps.slice(0,2).map(g => `<span class="gap-pill infra" style="margin:1px 0;display:inline-block">${g}</span>`).join("<br>")}</td>
+              <td>${c.enfStatus === 'gap' ? `<span class="gap-pill">Enforcement gap</span>` : c.enfStatus === 'partial' ? `<span class="badge badge-amber">Partial</span>` : `<span class="badge badge-green">Active</span>`}</td>
+              <td>${c.grantFit ? `<span class="badge badge-green">✓ Yes</span>` : `<span class="badge badge-gray">—</span>`}</td>
+              <td><span style="font-size:15px;font-weight:700;color:${c.cfScore >= 85 ? 'var(--red)' : c.cfScore >= 75 ? 'var(--amber)' : 'var(--t2)'}">${c.cfScore}</span></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Severity trend -->
+    <div class="card section-spacer">
+      <div class="card-title" style="margin-bottom:4px">Severity Trend 2014–2025</div>
+      <div class="card-sub" style="margin-bottom:20px">KSI rate 18.7%–32.9% · Peak 31.2% in 2021</div>
+      <div style="height:210px;position:relative"><canvas id="trendChart"></canvas></div>
+      <div style="display:flex;gap:20px;justify-content:center;margin-top:10px">
+        ${[["#dc2626","Fatal"],["#f59e0b","Severe"],["#3b82f6","Visible"]].map(([c,l])=>`<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--t3)"><div style="width:10px;height:10px;border-radius:2px;background:${c}"></div>${l}</div>`).join("")}
+      </div>
+    </div>
+  `;
+}
+
+// ── ENFORCEMENT GAP ──────────────────────────────────────────────────────────
+function enforcementGapHTML() {
+  return `
+    <div class="page-hd">
+      <h1 class="page-title">Enforcement Gap Analysis <span class="page-badge">NEW · Gap 1</span></h1>
+      <p class="page-meta">Citations vs. Collision Patterns · Speed · DUI · Traffic Signal violations · 2014–2025</p>
+    </div>
+
+    <div class="ai-bar">
+      <span style="font-size:15px;margin-top:1px">✦</span>
+      <div class="ai-body">
+        <div class="ai-label">AI Insight — Enforcement Gap</div>
+        <p class="ai-text">
+          A corridor with <strong>high speed-related PCF collisions but low citation activity</strong> is the clearest intervention argument. Clayton Rd has a speed-PCF KSI rate of 34.1% but generates only 58 speed citations per fatal — vs. 168 on Concord Blvd. Oak Grove Rd shows near-zero enforcement presence. These are not safety corridors — they are <strong>unpatrolled corridors with known violation patterns generating fatal outcomes.</strong>
+        </p>
+      </div>
+      <button class="export-btn" onclick="showToast()">↗ Export for Grant</button>
+    </div>
+
+    <!-- Causal chain -->
+    <div style="margin-bottom:18px">
+      <div class="section-label">The Causal Link That Was Missing</div>
+      <div class="chain">
+        <div class="chain-step" style="border-color:#fde68a;background:#fffbeb">
+          <div class="chain-layer" style="color:var(--amber)">● Violation Layer</div>
+          <div class="chain-name">Speeding Citation</div>
+          <div class="chain-fact">PCF 03 — Unsafe Speed<br>Citation Category: VC 22350</div>
+          <div class="chain-num" style="color:var(--amber)">412</div>
+          <div style="font-size:10px;color:var(--t3)">speed citations on Clayton Rd</div>
+        </div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-step" style="border-color:#fecaca;background:#fef2f2">
+          <div class="chain-layer" style="color:var(--red)">● Collision Layer</div>
+          <div class="chain-name">Speed-Related Crash</div>
+          <div class="chain-fact">PCF 03 — Unsafe Speed<br>Citations ≠ Crashes: gap visible</div>
+          <div class="chain-num" style="color:var(--red)">63</div>
+          <div style="font-size:10px;color:var(--t3)">speed-PCF crashes on Clayton Rd</div>
+        </div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-step" style="border-color:#e9d5ff;background:#faf5ff">
+          <div class="chain-layer" style="color:var(--purple)">● Infrastructure Layer</div>
+          <div class="chain-name">Infrastructure Absent</div>
+          <div class="chain-fact">No sidewalk · No RRFB<br>2 dark-lighting KSI nodes</div>
+          <div class="chain-num" style="color:var(--purple)">3</div>
+          <div style="font-size:10px;color:var(--t3)">infra gaps at fatal locations</div>
+        </div>
+        <div class="chain-arrow">→</div>
+        <div class="chain-step" style="border-color:#bbf7d0;background:#f0fdf4">
+          <div class="chain-layer" style="color:var(--green)">✦ Countermeasure</div>
+          <div class="chain-name">Targeted Intervention</div>
+          <div class="chain-fact">Speed camera · RRFB install<br>Lighting retrofit · Grant-eligible</div>
+          <div class="chain-num" style="color:var(--green)">$2.1M</div>
+          <div style="font-size:10px;color:var(--t3)">estimated grant eligibility</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enforcement gap bars -->
+    <div class="section-label">Citation Density vs. KSI Rate by Corridor</div>
+    <div class="enforcement-row">
+      <div class="enf-card">
+        <div class="enf-label">Speed Citations per Fatal Collision <span class="badge badge-amber">Lower = Gap</span></div>
+        <div class="enf-bar-group">
+          ${[
+            { name: "Concord Blvd", val: 168, max: 200, color: "#16a34a", label: "Enforced" },
+            { name: "Treat Blvd", val: 142, max: 200, color: "#2563eb", label: "Active" },
+            { name: "Willow Pass Rd", val: 91, max: 200, color: "#d97706", label: "Partial" },
+            { name: "Clayton Rd", val: 58, max: 200, color: "#dc2626", label: "GAP" },
+            { name: "Monument Blvd", val: 14, max: 200, color: "#dc2626", label: "GAP" },
+            { name: "Oak Grove Rd", val: 11, max: 200, color: "#dc2626", label: "GAP" },
+          ].map(r => `
+            <div class="enf-bar-row">
+              <div class="enf-bar-hd">
+                <span class="enf-bar-name">${r.name}</span>
+                <span class="enf-bar-val" style="color:${r.color}">${r.val} <span style="font-size:10px;background:${r.color}20;color:${r.color};padding:1px 5px;border-radius:3px">${r.label}</span></span>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width:${(r.val/r.max*100)}%;background:${r.color}"></div></div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+
+      <div class="enf-card">
+        <div class="enf-label">DUI Citations per Alcohol-Involved Fatal <span class="badge badge-amber">Lower = Gap</span></div>
+        <div class="enf-bar-group">
+          ${[
+            { name: "Treat Blvd", val: 62, max: 80, color: "#16a34a" },
+            { name: "Concord Blvd", val: 51, max: 80, color: "#16a34a" },
+            { name: "Willow Pass Rd", val: 38, max: 80, color: "#d97706" },
+            { name: "Clayton Rd", val: 22, max: 80, color: "#dc2626" },
+            { name: "Oak Grove Rd", val: 8, max: 80, color: "#dc2626" },
+            { name: "Monument Blvd", val: 5, max: 80, color: "#dc2626" },
+          ].map(r => `
+            <div class="enf-bar-row">
+              <div class="enf-bar-hd">
+                <span class="enf-bar-name">${r.name}</span>
+                <span class="enf-bar-val" style="color:${r.color}">${r.val}</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width:${(r.val/r.max*100)}%;background:${r.color}"></div></div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+
+      <div class="enf-card">
+        <div class="enf-label">Signal Citations per Signal-PCF Crash <span class="badge badge-green">Higher = Working</span></div>
+        <div class="enf-bar-group">
+          ${[
+            { name: "Concord Blvd", val: 214, max: 250, color: "#16a34a", note:"Enforcement → lower broadside KSI" },
+            { name: "Treat Blvd", val: 156, max: 250, color: "#2563eb" },
+            { name: "Willow Pass Rd", val: 77, max: 250, color: "#d97706" },
+            { name: "Clayton Rd", val: 49, max: 250, color: "#dc2626" },
+            { name: "Monument Blvd", val: 9, max: 250, color: "#dc2626" },
+            { name: "Oak Grove Rd", val: 6, max: 250, color: "#dc2626" },
+          ].map(r => `
+            <div class="enf-bar-row">
+              <div class="enf-bar-hd">
+                <span class="enf-bar-name">${r.name}</span>
+                <span class="enf-bar-val" style="color:${r.color}">${r.val}</span>
+              </div>
+              <div class="bar-track"><div class="bar-fill" style="width:${(r.val/r.max*100)}%;background:${r.color}"></div></div>
+            </div>
+          `).join("")}
+        </div>
+      </div>
+    </div>
+
+    <!-- Factor table with violation cross-ref -->
+    <div class="card">
+      <div class="card-title" style="margin-bottom:4px">PCF Code × Citation Cross-Reference</div>
+      <div class="card-sub" style="margin-bottom:16px">Each collision PCF category linked to its violation citation counterpart</div>
+      <table class="factor-table">
+        <thead><tr>
+          <th>PCF Code</th>
+          <th>Crashes</th>
+          <th>KSI Rate</th>
+          <th>Citation Category (VC)</th>
+          <th>Citations Issued</th>
+          <th>Citation/Crash Ratio</th>
+          <th>Enforcement Signal</th>
+        </tr></thead>
+        <tbody>
+          ${[
+            { pcf: "03 — Unsafe Speed", crashes: 312, ksi: "28.2%", vc: "VC 22350", citations: 1247, ratio: 4.0, status: "active" },
+            { pcf: "22 — Automobile Right-of-Way", crashes: 198, ksi: "19.4%", vc: "VC 21800", citations: 314, ratio: 1.6, status: "partial" },
+            { pcf: "11 — Pedestrian Violation", crashes: 111, ksi: "59.5%", vc: "VC 21955", citations: 43, ratio: 0.4, status: "gap" },
+            { pcf: "21 — Traffic Signals/Signs", crashes: 89, ksi: "22.5%", vc: "VC 21453", citations: 487, ratio: 5.5, status: "active" },
+            { pcf: "01 — DUI", crashes: 74, ksi: "44.6%", vc: "VC 23152", citations: 88, ratio: 1.2, status: "partial" },
+            { pcf: "07 — Wrong Side of Road", crashes: 46, ksi: "21.7%", vc: "VC 21650", citations: 14, ratio: 0.3, status: "gap" },
+            { pcf: "20 — Improper Turn", crashes: 38, ksi: "15.8%", vc: "VC 22100", citations: 89, ratio: 2.3, status: "partial" },
+            { pcf: "09 — Improper Passing", crashes: 29, ksi: "17.2%", vc: "VC 21750", citations: 11, ratio: 0.4, status: "gap" },
+          ].map(r => `
+            <tr>
+              <td style="font-family:var(--mono);font-size:11px">${r.pcf}</td>
+              <td style="font-weight:500">${r.crashes}</td>
+              <td><span class="badge ${parseFloat(r.ksi) >= 40 ? 'badge-red' : parseFloat(r.ksi) >= 25 ? 'badge-amber' : 'badge-gray'}">${r.ksi}</span></td>
+              <td style="font-family:var(--mono);font-size:11px;color:var(--amber)">${r.vc}</td>
+              <td style="font-family:var(--mono)">${r.citations}</td>
+              <td><span class="badge ${r.ratio >= 3 ? 'badge-green' : r.ratio >= 1.2 ? 'badge-amber' : 'badge-red'}">${r.ratio.toFixed(1)}×</span></td>
+              <td>
+                <div class="enforcement-signal">
+                  <span class="signal-dot" style="background:${r.status==='active'?'#16a34a':r.status==='partial'?'#d97706':'#dc2626'}"></span>
+                  <span class="signal-label">${r.status === 'gap' ? '<span class="enforcement-gap">Enforcement gap — intervention argument</span>' : r.status === 'partial' ? 'Partial enforcement' : 'Active enforcement'}</span>
+                </div>
+              </td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+// ── INFRASTRUCTURE GAP ───────────────────────────────────────────────────────
+function infraGapHTML() {
+  return `
+    <div class="page-hd">
+      <h1 class="page-title">Infrastructure Gap Analysis <span class="page-badge">NEW · Gap 2</span></h1>
+      <p class="page-meta">14 Asset Types · 6 Facility Layers · Cross-referenced against collision clusters · 47 gaps identified</p>
+    </div>
+
+    <div class="ai-bar">
+      <span style="font-size:15px;margin-top:1px">⬡</span>
+      <div class="ai-body">
+        <div class="ai-label">AI Insight — Infrastructure → Collision Chain</div>
+        <p class="ai-text">
+          <strong>23 of 29 VRU fatalities</strong> occurred within 50ft of at least one infrastructure gap — missing sidewalk, absent RRFB, or unlit segment.
+          <strong>100% of dark-condition KSI locations on Oak Grove Rd have no street lighting</strong> on record. The infrastructure gap is not a footnote — it is the engineering basis for every countermeasure recommendation and grant application.
+        </p>
+      </div>
+      <button class="export-btn" onclick="showToast('Infrastructure gap report exported')">↗ Export for Grant</button>
+    </div>
+
+    <!-- Summary stats -->
+    <div class="kpi-row" style="margin-bottom:18px">
+      <div class="kpi" style="border-left:3px solid var(--red)"><div class="kpi-lbl">VRU Fatals Near Infra Gap</div><div class="kpi-val" style="color:var(--red)">23/29</div><div class="kpi-note">79% within 50ft of gap</div></div>
+      <div class="kpi" style="border-left:3px solid var(--red)"><div class="kpi-lbl">Dark KSI Locations Unlit</div><div class="kpi-val" style="color:var(--red)">100%</div><div class="kpi-note">Oak Grove Rd segment</div></div>
+      <div class="kpi" style="border-left:3px solid var(--amber)"><div class="kpi-lbl">Ped Fatals — No RRFB</div><div class="kpi-val" style="color:var(--amber)">18/23</div><div class="kpi-note">Crossing had no RRFB</div></div>
+      <div class="kpi" style="border-left:3px solid var(--amber)"><div class="kpi-lbl">Missing Sidewalk (mi)</div><div class="kpi-val" style="color:var(--amber)">4.3 mi</div><div class="kpi-note">On KSI corridors</div></div>
+      <div class="kpi" style="border-left:3px solid var(--purple)"><div class="kpi-lbl">Total Infra Gaps</div><div class="kpi-val" style="color:var(--purple)">47</div><div class="kpi-note">Across 6 corridors</div></div>
+      <div class="kpi" style="border-left:3px solid var(--green)"><div class="kpi-lbl">Est. Grant Eligibility</div><div class="kpi-val" style="color:var(--green)">$5.8M</div><div class="kpi-note">ATP + HSIP + RAISE</div></div>
+    </div>
+
+    <!-- Key gap cards -->
+    <div class="section-label">Critical Infrastructure Gaps — Collision Linkage</div>
+    <div class="infra-grid">
+      <div class="infra-card critical">
+        <div class="infra-hd">
+          <div class="infra-title">Missing Sidewalk — Clayton Rd (0.8 mi)</div>
+          <span class="badge badge-red">Critical</span>
+        </div>
+        <p class="infra-body">0.8-mile gap between Ygnacio Valley Rd and Oak Park Blvd forces pedestrians into travel lane. 4 of 7 Clayton Rd fatalities occurred within this segment. No pedestrian facility on the high-speed arterial (45 mph posted).</p>
+        <div class="infra-stats">
+          <div class="infra-stat"><div class="infra-stat-val" style="color:var(--red)">4</div><div class="infra-stat-lbl">fatals in gap segment</div></div>
+          <div class="infra-stat"><div class="infra-stat-val" style="color:var(--amber)">0.8 mi</div><div class="infra-stat-lbl">sidewalk missing</div></div>
+          <div class="infra-stat"><div class="infra-stat-val" style="color:var(--blue)">$840K</div><div class="infra-stat-lbl">ATP eligible</div></div>
+        </div>
+        <div class="grant-tag">✓ ATP Cycle 7 eligible · HSIP eligible</div>
+      </div>
+
+      <div class="infra-card critical">
+        <div class="infra-hd">
+          <div class="infra-title">No RRFB — Oak Grove Rd × Mitchell Ct</div>
+          <span class="badge badge-red">Critical</span>
+        </div>
+        <p class="infra-body">Uncontrolled mid-block pedestrian crossing with no RRFB, no overhead warning signage, and no refuge island. 2 pedestrian fatalities at this exact location (2018, 2022). 85th-percentile speed observed 52 mph on 40 mph segment.</p>
+        <div class="infra-stats">
+          <div class="infra-stat"><div class="infra-stat-val" style="color:var(--red)">2</div><div class="infra-stat-lbl">ped fatals, same crossing</div></div>
+          <div class="infra-stat"><div class="infra-stat-val" style="color:var(--amber)">52 mph</div><div class="infra-stat-lbl">85th pct speed (observed)</div></div>
+          <div class="infra-stat"><div class="infra-stat-val" style="color:var(--blue)">$180K</div><div class="infra-stat-lbl">RRFB install + refuge</div></div>
+        </div>
+        <div class="grant-tag">✓ HSIP Critical (2× repeating fatal location)</div>
+      </div>
+
+      <div class="infra-card critical">
+        <div class="infra-hd">
+          <div class="infra-title">No Street Lighting — Oak Grove Rd (0.6 mi)</div>
+          <span class="badge badge-red">Critical</span>
+        </div>
+        <p class="infra-body">Complete absence of streetlighting on a 0.6-mile segment. 100% of dark-condition KSI events on Oak Grove Rd occurred within this unlit zone. This is the strongest single infrastructure-to-collision correlation in the dataset.</p>
+        <div class="infra-stats">
+          <div class="infra-stat"><div class="infra-stat-val" style="color:var(--red)">3</div><div class="infra-stat-lbl">dark-KSI crashes in zone</div></div>
+          <div class="infra-stat"><div class="infra-stat-val" style="color:var(--amber)">100%</div><div class="infra-stat-lbl">dark KSI within unlit seg</div></div>
+          <div class="infra-stat"><div class="infra-stat-val" style="color:var(--blue)">$240K</div><div class="infra-stat-lbl">LED retrofit estimate</div></div>
+        </div>
+        <div class="grant-tag">✓ HSIP + RAISE infrastructure eligible</div>
+      </div>
+
+      <div class="infra-card high">
+        <div class="infra-hd">
+          <div class="infra-title">No Protected Left-Turn — Willow Pass × Olivera</div>
+          <span class="badge badge-amber">High</span>
+        </div>
+        <p class="infra-body">3 intersections along Willow Pass Rd lack protected left-turn phase. Left-turn PCF crashes at these 3 locations account for 38% of all Willow Pass KSI events. Broadside collisions 1.4× citywide average at each node.</p>
+        <div class="infra-stats">
+          <div class="infra-stat"><div class="infra-stat-val" style="color:var(--amber)">38%</div><div class="infra-stat-lbl">Willow Pass KSI from LT</div></div>
+          <div class="infra-stat"><div class="infra-stat-val" style="color:var(--amber)">1.4×</div><div class="infra-stat-lbl">broadside rate vs citywide</div></div>
+          <div class="infra-stat"><div class="infra-stat-val" style="color:var(--blue)">$420K</div><div class="infra-stat-lbl">3 signal upgrades</div></div>
+        </div>
+        <div class="grant-tag">✓ HSIP signal timing eligible</div>
+      </div>
+
+      <div class="infra-card high">
+        <div class="infra-hd">
+          <div class="infra-title">Monument Blvd — No Lighting + No Sidewalk</div>
+          <span class="badge badge-amber">High</span>
+        </div>
+        <p class="infra-body">Full corridor lacks both sidewalk (0.9 mi) and any street lighting. Monument Blvd has the highest enforcement gap score in the dataset (CRITICAL) combined with the most infrastructure deficits. High compound risk with no visible intervention history.</p>
+        <div class="infra-stats">
+          <div class="infra-stat"><div class="infra-stat-val" style="color:var(--red)">CF 86</div><div class="infra-stat-lbl">highest compound risk</div></div>
+          <div class="infra-stat"><div class="infra-stat-val" style="color:var(--amber)">3</div><div class="infra-stat-lbl">concurrent gaps</div></div>
+          <div class="infra-stat"><div class="infra-stat-val" style="color:var(--blue)">$1.1M</div><div class="infra-stat-lbl">full remediation est.</div></div>
+        </div>
+        <div class="grant-tag">✓ ATP + RAISE bundled eligible</div>
+      </div>
+
+      <div class="infra-card medium">
+        <div class="infra-hd">
+          <div class="infra-title">Bike Lane Gap — Treat Blvd × Bushy Rd</div>
+          <span class="badge badge-blue">Medium</span>
+        </div>
+        <p class="infra-body">0.5-mile bike lane gap forces cyclists into the general traffic lane at a location with observed wrong-way riding behavior. PCF 07 (wrong side of road) accounts for 15% of all bike collisions citywide — concentrated near this gap.</p>
+        <div class="infra-stats">
+          <div class="infra-stat"><div class="infra-stat-val" style="color:var(--blue)">0.5 mi</div><div class="infra-stat-lbl">lane gap</div></div>
+          <div class="infra-stat"><div class="infra-stat-val" style="color:var(--amber)">15%</div><div class="infra-stat-lbl">bike PCF07 concentration</div></div>
+          <div class="infra-stat"><div class="infra-stat-val" style="color:var(--blue)">$190K</div><div class="infra-stat-lbl">protected lane fill</div></div>
+        </div>
+        <div class="grant-tag">✓ ATP Cycle 7 active transportation</div>
+      </div>
+    </div>
+
+    <!-- Dot matrix: VRU fatals near infra gaps -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-title" style="margin-bottom:4px">VRU Fatalities × Infrastructure Proximity</div>
+      <div class="card-sub" style="margin-bottom:14px">Each dot = 1 VRU fatal. Color = nearest infrastructure gap type within 50ft</div>
+      <div class="dot-matrix" id="dotMatrix"></div>
+      <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap">
+        ${[["#dc2626","Missing sidewalk (11)"],["#7c3aed","No RRFB (8)"],["#d97706","No lighting (4)"],["#2563eb","No bike infra (2)"],["#94a3b8","No gap within 50ft (4)"]].map(([c,l])=>`<div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--t2)"><div style="width:10px;height:10px;border-radius:2px;background:${c}"></div>${l}</div>`).join("")}
+      </div>
+    </div>
+  `;
+}
+
+// ── CORRIDOR TYPOLOGY ────────────────────────────────────────────────────────
+function corridorTypologyHTML() {
+  return `
+    <div class="page-hd">
+      <h1 class="page-title">Corridor Typology <span class="page-badge">3-Layer View</span></h1>
+      <p class="page-meta">Collision · Violations · Infrastructure combined per corridor · Compound Factor Score methodology</p>
+    </div>
+    <div class="ai-bar">
+      <span style="font-size:15px;margin-top:1px">✦</span>
+      <div class="ai-body">
+        <div class="ai-label">AI Insight</div>
+        <p class="ai-text">Clayton Rd and Monument Blvd are the only corridors where all three layers are simultaneously critical — high KSI, enforcement gap, and multiple infra deficits. These represent the strongest compound grant applications. Oak Grove Rd has the starkest lighting-to-fatality correlation in the entire dataset.</p>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:16px">Per-Corridor Compound Risk Profile</div>
+      <div style="display:flex;flex-direction:column;gap:20px">
+        ${corridors.map(c => `
+          <div style="border:1px solid var(--border);border-radius:10px;padding:16px 20px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+              <div>
+                <span style="font-size:15px;font-weight:600">${c.name}</span>
+                <span class="badge badge-gray" style="margin-left:8px">${c.type}</span>
+                ${c.grantFit ? `<span class="badge badge-green" style="margin-left:4px">Grant-eligible</span>` : ''}
+              </div>
+              <span style="font-size:22px;font-weight:700;color:${c.cfScore>=85?'var(--red)':c.cfScore>=75?'var(--amber)':'var(--t2)'}">CF ${c.cfScore}</span>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px">
+              <div style="background:#fef2f2;border-radius:8px;padding:12px">
+                <div style="font-size:10px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">● Collision</div>
+                <div style="font-size:18px;font-weight:700;color:var(--red)">${c.ksiPct}</div>
+                <div style="font-size:11px;color:var(--t3)">${c.ksi} fatals · ${c.crashes} total crashes</div>
+              </div>
+              <div style="background:#fffbeb;border-radius:8px;padding:12px">
+                <div style="font-size:10px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">● Violations</div>
+                <div style="font-size:18px;font-weight:700;color:var(--amber)">${c.violations.total}</div>
+                <div style="font-size:11px;color:var(--t3)">citations · Enf: <span class="badge ${c.enfStatus==='gap'?'badge-red':c.enfStatus==='partial'?'badge-amber':'badge-green'}" style="font-size:10px">${c.enfStatus}</span></div>
+              </div>
+              <div style="background:#faf5ff;border-radius:8px;padding:12px">
+                <div style="font-size:10px;font-weight:700;color:var(--purple);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">● Infrastructure</div>
+                <div style="font-size:18px;font-weight:700;color:var(--purple)">${c.infraGaps.length}</div>
+                <div style="font-size:11px;color:var(--t3)">${c.infraGaps[0]}</div>
+              </div>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+  `;
+}
+
+// ── FACTOR EXPLORER ──────────────────────────────────────────────────────────
+function factorExplorerHTML() {
+  return `
+    <div class="page-hd">
+      <h1 class="page-title">Factor Explorer <span class="page-badge">Violations Layer Added</span></h1>
+      <p class="page-meta">PCF codes now cross-referenced against citation categories · Enforcement signal visible per factor</p>
+    </div>
+    <div class="gap-warning">
+      <span>⚠</span>
+      <div><strong>What changed in v2:</strong> Each PCF code is now linked to its corresponding citation category. PCF 11 (Pedestrian Violation) has a citation/crash ratio of 0.4× — meaning for every 10 pedestrian-violation crashes, only 4 citations were issued. This is the missing causal link. <a href="#" onclick="setNav('Enforcement Gap');return false;" style="color:var(--blue);font-weight:500">View full Enforcement Gap analysis →</a></div>
+    </div>
+    ${factorExplorerHTML_table()}
+  `;
+}
+function factorExplorerHTML_table() {
+  return enforcementGapHTML().split("PCF Code × Citation Cross-Reference")[1].split("</div>\n  ");
+  // reuse — just return the table portion inline
+}
+
+// ── COUNTERMEASURES ──────────────────────────────────────────────────────────
+function countermeasuresHTML() {
+  return `
+    <div class="page-hd">
+      <h1 class="page-title">Countermeasures <span class="page-badge">Infrastructure-Linked</span></h1>
+      <p class="page-meta">Recommendations derived from Collision + Violations + Infrastructure chain · Grant program matched</p>
+    </div>
+    <div class="ai-bar">
+      <span style="font-size:15px;margin-top:1px">✦</span>
+      <div class="ai-body">
+        <div class="ai-label">AI Insight — Countermeasures from 3-Layer Chain</div>
+        <p class="ai-text">Every countermeasure below is traceable: collision data identified the pattern, violations data confirmed enforcement absence, and infrastructure data supplied the physical deficiency. The causal chain is complete and grant-document ready.</p>
+      </div>
+      <button class="export-btn" onclick="showToast('Countermeasure report exported')">↗ Export for Grant</button>
+    </div>
+    <div class="cm-grid">
+      ${[
+        { icon:"🚦", title:"Speed Camera Program — Clayton Rd + Oak Grove Rd", body:"Speed citations/fatal ratio 3× below threshold. Automated enforcement at 4 identified nodes. Projected KSI reduction: 18–24%.", tags:["Speed PCF 03","Citation gap","HSIP eligible","Est. $280K"] },
+        { icon:"🚶", title:"RRFB Install — Oak Grove Rd × Mitchell Ct", body:"Repeating fatal location (2018 + 2022). No crossing control. RRFB + pedestrian refuge island. Collision-infrastructure chain directly supports application.", tags:["Fatal × 2","No RRFB","HSIP Critical","Est. $180K"] },
+        { icon:"💡", title:"LED Lighting Retrofit — Oak Grove Rd (0.6 mi)", body:"100% of dark KSI crashes on this segment in an unlit zone. Lighting is the single highest-correlation infrastructure fix in the dataset.", tags:["3 dark-KSI","No lighting","RAISE eligible","Est. $240K"] },
+        { icon:"🛤️", title:"Sidewalk Fill — Clayton Rd (0.8 mi)", body:"4 of 7 Clayton Rd fatals in the no-sidewalk segment. Pedestrians forced into travel lane at 45 mph. ATP Cycle 7 best-fit project.", tags:["4 fatals","No sidewalk","ATP Cycle 7","Est. $840K"] },
+        { icon:"↩️", title:"Protected Left-Turn Phase — Willow Pass Rd (3 intersections)", body:"38% of Willow Pass KSI attributable to unprotected left turns. 3 signal upgrades eliminate the shared phase conflict.", tags:["38% of KSI","3 signals","HSIP signal","Est. $420K"] },
+        { icon:"🚲", title:"Bike Lane Completion — Treat Blvd × Bushy Rd (0.5 mi)", body:"Wrong-way riding concentrated near this 0.5-mile gap. PCF 07 wrong-side-of-road pattern directly traceable to absent infrastructure.", tags:["PCF 07","Lane gap","ATP eligible","Est. $190K"] },
+        { icon:"🌃", title:"Full Infrastructure Package — Monument Blvd", body:"Highest compound risk score (86). Critical enforcement gap + no lighting + no sidewalk. Bundled ATP + RAISE application justified.", tags:["CF Score 86","3 gaps","ATP+RAISE","Est. $1.1M"] },
+        { icon:"🚔", title:"Targeted DUI Patrols — Clayton Rd + Monument Blvd", body:"DUI citations/alcohol-fatal ratio: 22 (Clayton) and 5 (Monument) vs. 62 on enforced corridors. Concentrated enforcement on Sunday night (KSI paradox).", tags:["DUI gap","Sunday nights","Operational","No cost"] },
+        { icon:"📋", title:"Pedestrian Education + Outreach — VRU Corridors", body:"PCF 11 citation ratio 0.4× — enforcement nearly absent. Outreach + wayfinding can supplement where enforcement is limited near the identified crossing gaps.", tags:["PCF 11","Low enforcement","Soft measure","Est. $60K"] },
+      ].map(cm => `
+        <div class="cm-card">
+          <div class="cm-icon">${cm.icon}</div>
+          <div class="cm-title">${cm.title}</div>
+          <p class="cm-body">${cm.body}</p>
+          <div class="cm-meta">${cm.tags.map(t => `<span class="badge badge-gray" style="font-size:10px">${t}</span>`).join("")}</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+// ── PLACEHOLDER ──────────────────────────────────────────────────────────────
+function placeholderHTML(page) {
+  return `
+    <div class="page-hd"><h1 class="page-title">${page}</h1></div>
+    <div class="card" style="min-height:300px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px">
+      <div style="font-size:28px">📊</div>
+      <div style="font-size:14px;font-weight:500;color:var(--t1)">${page}</div>
+      <div style="font-size:13px;color:var(--t3)">This screen is in the existing prototype</div>
+    </div>
+  `;
+}
+
+// ── CHARTS ───────────────────────────────────────────────────────────────────
+let chartInstances = {};
+function initCharts() {
+  // destroy any existing
+  Object.values(chartInstances).forEach(c => c.destroy && c.destroy());
+  chartInstances = {};
+
+  const trendCtx = document.getElementById("trendChart");
+  if (trendCtx) {
+    const years = ["2014","2015","2016","2017","2018","2019","2020","2021","2022","2023","2024","2025"];
+    chartInstances.trend = new Chart(trendCtx, {
+      type: "line",
+      data: {
+        labels: years,
+        datasets: [
+          { label:"Visible Injury", data:[100,110,108,115,112,108,72,88,100,105,96,44], borderColor:"#3b82f6", backgroundColor:"rgba(59,130,246,0.1)", fill:true, tension:0.4, borderWidth:2, pointRadius:3 },
+          { label:"Severe Injury", data:[26,22,28,30,25,22,18,32,28,24,20,10], borderColor:"#f59e0b", backgroundColor:"rgba(245,158,11,0.12)", fill:true, tension:0.4, borderWidth:2, pointRadius:3 },
+          { label:"Fatal", data:[5,6,4,5,6,4,5,7,5,4,3,2], borderColor:"#dc2626", backgroundColor:"rgba(220,38,38,0.12)", fill:true, tension:0.4, borderWidth:2.5, pointRadius:3 },
+        ]
+      },
+      options: {
+        responsive:true, maintainAspectRatio:false,
+        interaction:{mode:"index",intersect:false},
+        plugins:{ legend:{display:false}, tooltip:{ backgroundColor:"white", titleColor:"#0f172a", bodyColor:"#475569", borderColor:"#f1f5f9", borderWidth:1, padding:10, titleFont:{family:"DM Sans",weight:"600",size:12}, bodyFont:{family:"DM Sans",size:12} } },
+        scales:{
+          x:{ grid:{color:"#f1f5f9"}, ticks:{color:"#94a3b8",font:{family:"DM Sans",size:11}}, border:{display:false} },
+          y:{ grid:{color:"#f1f5f9"}, ticks:{color:"#94a3b8",font:{family:"DM Sans",size:11}}, border:{display:false} }
+        }
+      }
+    });
+  }
+
+  // Dot matrix
+  const dm = document.getElementById("dotMatrix");
+  if (dm) {
+    const types = [
+      ...Array(11).fill("#dc2626"),
+      ...Array(8).fill("#7c3aed"),
+      ...Array(4).fill("#d97706"),
+      ...Array(2).fill("#2563eb"),
+      ...Array(4).fill("#94a3b8"),
+    ];
+    dm.innerHTML = types.map(c => `<div class="dot-cell" style="background:${c}"></div>`).join("");
+  }
+}
+
+// ── LAYER TABS ───────────────────────────────────────────────────────────────
+function switchLayer(el, layer) {
+  document.querySelectorAll(".layer-tab").forEach(t => t.classList.remove("active"));
+  el.classList.add("active");
+  // visual feedback only in prototype
+  showToast(`Filtered to ${layer} layer`);
+}
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+renderPage("Overview");
+</script>
+</body>
+</html>

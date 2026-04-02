@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TMS Insights — Concord Collision Analytics</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+  <!-- Stylesheets (order matters) -->
+  <link rel="stylesheet" href="css/tokens.css" />
+  <link rel="stylesheet" href="css/shell.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">AI</div>
+      <div>
+        <div class="brand-name">TMS Insights</div>
+        <div class="brand-sub">Concord Collision Analytics</div>
+      </div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="sidebar-footer">
+      <span class="version">v2.0 · 3 Layers</span>
+      <span class="v2-chip">+ V + I</span>
+    </div>
+  </aside>
+
+  <!-- Main content area — filled by renderPage() -->
+  <main class="main" id="main-content"></main>
+
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<!-- ── JS: Data first, then utils/charts, then pages, then nav/router last ── -->
+<script src="js/data.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/charts.js"></script>
+
+<!-- Pages — add new page scripts here as you build them -->
+<script src="pages/placeholder.js"></script>
+<script src="pages/overview.js"></script>
+<script src="pages/enforcement-gap.js"></script>
+<script src="pages/infra-gap.js"></script>
+<script src="pages/corridor-typology.js"></script>
+<script src="pages/factor-explorer.js"></script>
+<script src="pages/countermeasures.js"></script>
+<script src="pages/map.js"></script>
+
+<!-- Nav router last — depends on all page functions being defined -->
+<script src="js/nav.js"></script>
+
+<!-- Boot -->
+<script>
+  buildNav();
+  renderPage("Overview");
+</script>
+
+</body>
+</html>

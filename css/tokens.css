@@ -1,0 +1,49 @@
+/* ── Design Tokens ────────────────────────────────────────────────────────────
+   Single source of truth for all colours, typography, and sizing.
+   Edit here — everything updates everywhere.
+─────────────────────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Fonts */
+  --font: 'DM Sans', system-ui, sans-serif;
+  --mono: 'DM Mono', monospace;
+
+  /* Backgrounds */
+  --bg:      #f8f9fa;
+  --surface: #ffffff;
+
+  /* Borders */
+  --border:    #f1f5f9;
+  --border-md: #e2e8f0;
+
+  /* Text */
+  --t1: #0f172a;
+  --t2: #475569;
+  --t3: #94a3b8;
+
+  /* Brand colours */
+  --blue:   #2563eb;
+  --red:    #dc2626;
+  --amber:  #d97706;
+  --purple: #7c3aed;
+  --green:  #16a34a;
+  --teal:   #0d9488;
+  --orange: #ea580c;
+
+  /* Layout */
+  --sidebar: 228px;
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--t1);
+  font-size: 13px;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 2px; }

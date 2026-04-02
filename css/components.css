@@ -1,0 +1,242 @@
+/* ── Components ───────────────────────────────────────────────────────────────
+   Reusable UI components. Add new components here as the product grows.
+─────────────────────────────────────────────────────────────────────────────── */
+
+/* ── Page header ── */
+.page-hd        { margin-bottom: 22px; }
+.page-title     { font-size: 22px; font-weight: 600; letter-spacing: -0.3px; }
+.page-meta      { font-size: 12px; color: var(--t3); margin-top: 4px; }
+.page-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: linear-gradient(135deg, #dbeafe, #ede9fe);
+  color: var(--blue);
+  font-size: 10px; font-weight: 600;
+  padding: 3px 10px; border-radius: 12px; margin-left: 10px;
+  letter-spacing: 0.03em;
+}
+
+/* ── Data layer tabs ── */
+.layer-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+.layer-tab {
+  display: flex; align-items: center; gap: 7px;
+  padding: 7px 14px; border-radius: 8px;
+  border: 1px solid var(--border-md); background: var(--surface);
+  cursor: pointer; font-size: 12px; font-weight: 500; color: var(--t2);
+  transition: all 0.15s;
+}
+.layer-tab:hover        { border-color: var(--blue); color: var(--blue); }
+.layer-tab.active       { background: var(--t1); color: white; border-color: var(--t1); }
+.layer-tab .dot         { width: 8px; height: 8px; border-radius: 50%; }
+.tab-count              { font-size: 10px; font-weight: 600; opacity: 0.7; margin-left: 2px; }
+
+/* ── Card ── */
+.card {
+  background: var(--surface); border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+.card-title { font-size: 13px; font-weight: 600; }
+.card-sub   { font-size: 11px; color: var(--t3); margin-top: 3px; }
+
+.section-label {
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--t3); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-label::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+/* ── KPI row ── */
+.kpi-row { display: flex; gap: 14px; margin-bottom: 18px; }
+.kpi {
+  background: var(--surface); border-radius: 10px;
+  padding: 15px 18px; flex: 1;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  border: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+.kpi:hover          { border-color: var(--border-md); }
+.kpi-lbl    { font-size: 10px; font-weight: 600; color: var(--t3); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+.kpi-val    { font-size: 23px; font-weight: 600; letter-spacing: -0.4px; }
+.kpi-note   { font-size: 11px; color: var(--t3); margin-top: 3px; }
+.kpi-delta  { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 500; padding: 1px 6px; border-radius: 4px; margin-top: 4px; }
+.delta-up   { background: #fef2f2; color: var(--red); }
+.delta-down { background: #f0fdf4; color: var(--green); }
+
+/* ── AI bar ── */
+.ai-bar {
+  background: linear-gradient(135deg, #eff6ff, #f0fdf4);
+  border: 1px solid #dbeafe; border-radius: 10px;
+  padding: 13px 18px; margin-bottom: 20px;
+  display: flex; gap: 10px;
+}
+.ai-body  { flex: 1; }
+.ai-label { font-size: 10px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: 0.07em; }
+.ai-text  { font-size: 12.5px; color: #334155; margin-top: 3px; line-height: 1.55; }
+
+/* ── Badges ── */
+.badge         { display: inline-block; padding: 2px 7px; border-radius: 4px; font-size: 11px; font-weight: 500; }
+.badge-red     { background: #fef2f2; color: var(--red); }
+.badge-amber   { background: #fffbeb; color: var(--amber); }
+.badge-green   { background: #f0fdf4; color: var(--green); }
+.badge-blue    { background: #eff6ff; color: var(--blue); }
+.badge-gray    { background: #f8f9fa; color: var(--t2); }
+.badge-teal    { background: #f0fdfa; color: var(--teal); }
+.badge-purple  { background: #faf5ff; color: var(--purple); }
+
+/* ── Gap pills ── */
+.gap-pill {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 8px; border-radius: 5px;
+  font-size: 11px; font-weight: 500;
+  background: #fff7ed; color: var(--orange); border: 1px solid #fed7aa;
+}
+.gap-pill.infra { background: #fdf4ff; color: var(--purple); border-color: #e9d5ff; }
+
+/* ── Tables ── */
+.corridor-table,
+.factor-table   { width: 100%; border-collapse: collapse; font-size: 12px; }
+
+.corridor-table th,
+.factor-table th {
+  font-size: 10px; font-weight: 600; color: var(--t3);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  padding: 6px 10px 8px; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.factor-table th { border-bottom-width: 2px; }
+
+.corridor-table td,
+.factor-table td  { padding: 10px 10px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+
+.corridor-table tr:last-child td,
+.factor-table tr:last-child td  { border-bottom: none; }
+
+.corridor-table tr:hover td,
+.factor-table tr:hover td       { background: #fafafa; }
+
+.corridor-name { font-weight: 500; color: var(--t1); }
+.corridor-sub  { font-size: 10px; color: var(--t3); }
+
+/* ── Enforcement gap chart block ── */
+.enforcement-row  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.enf-card         { background: var(--surface); border-radius: 12px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.enf-label        { font-size: 11px; font-weight: 600; color: var(--t2); margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; }
+.enf-bar-group    { display: flex; flex-direction: column; gap: 8px; }
+.enf-bar-hd       { display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 11px; }
+.enf-bar-name     { color: var(--t2); }
+.enf-bar-val      { font-family: var(--mono); font-weight: 500; }
+.bar-track        { height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+.bar-fill         { height: 100%; border-radius: 3px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+
+/* ── Causal chain ── */
+.chain        { display: flex; align-items: stretch; gap: 0; margin-bottom: 20px; }
+.chain-step   { flex: 1; background: var(--surface); padding: 16px 18px; border: 1px solid var(--border); position: relative; }
+.chain-step:first-child { border-radius: 10px 0 0 10px; }
+.chain-step:last-child  { border-radius: 0 10px 10px 0; }
+.chain-arrow  { display: flex; align-items: center; justify-content: center; padding: 0 2px; background: var(--border); color: var(--t3); font-size: 14px; z-index: 1; }
+.chain-layer  { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+.chain-name   { font-size: 13px; font-weight: 600; color: var(--t1); margin-bottom: 4px; }
+.chain-fact   { font-size: 11px; color: var(--t2); line-height: 1.4; }
+.chain-num    { font-size: 20px; font-weight: 700; margin: 8px 0 2px; }
+
+/* ── Infrastructure gap cards ── */
+.infra-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+.infra-card   { background: var(--surface); border-radius: 10px; padding: 16px 18px; border-left: 3px solid; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.infra-card.critical { border-color: var(--red); }
+.infra-card.high     { border-color: var(--amber); }
+.infra-card.medium   { border-color: var(--blue); }
+.infra-hd     { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.infra-title  { font-size: 13px; font-weight: 600; }
+.infra-body   { font-size: 12px; color: var(--t2); line-height: 1.5; }
+.infra-stats  { display: flex; gap: 16px; margin-top: 10px; }
+.infra-stat-val { font-size: 17px; font-weight: 700; font-family: var(--mono); }
+.infra-stat-lbl { font-size: 10px; color: var(--t3); margin-top: 1px; }
+.grant-tag    { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; font-weight: 600; background: #f0fdf4; color: var(--green); padding: 3px 8px; border-radius: 4px; margin-top: 10px; }
+
+/* ── Factor Explorer — enforcement signal ── */
+.enforcement-signal { display: flex; align-items: center; gap: 5px; }
+.signal-dot         { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.signal-label       { font-size: 11px; color: var(--t2); }
+.enforcement-gap    { font-size: 11px; font-style: italic; color: var(--orange); }
+
+/* ── Countermeasure cards ── */
+.cm-grid  { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px; }
+.cm-card  { background: var(--surface); border-radius: 10px; padding: 15px 16px; border: 1px solid var(--border); transition: border-color 0.15s, box-shadow 0.15s; cursor: pointer; }
+.cm-card:hover { border-color: var(--blue); box-shadow: 0 2px 8px rgba(37,99,235,0.1); }
+.cm-icon  { font-size: 18px; margin-bottom: 8px; }
+.cm-title { font-size: 12px; font-weight: 600; margin-bottom: 5px; }
+.cm-body  { font-size: 11px; color: var(--t2); line-height: 1.45; }
+.cm-meta  { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+
+/* ── Map placeholder ── */
+.map-placeholder {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-radius: 10px; height: 240px;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 8px;
+  border: 1px dashed var(--border-md);
+}
+.map-label { font-size: 12px; color: var(--t3); }
+
+/* ── Layout helpers ── */
+.two-col      { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.three-col    { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.section-spacer { margin-bottom: 20px; }
+.scroll-panel { max-height: 320px; overflow-y: auto; }
+
+/* ── Progress bars ── */
+.prog-item  { margin-bottom: 10px; }
+.prog-hd    { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 11px; }
+.prog-lbl   { color: var(--t2); }
+.prog-val   { font-family: var(--mono); font-weight: 500; }
+.prog-track { height: 5px; background: #f1f5f9; border-radius: 3px; overflow: hidden; }
+.prog-fill  { height: 100%; border-radius: 3px; }
+
+/* ── Tabs inside cards ── */
+.inner-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
+.inner-tab  { padding: 6px 12px; font-size: 12px; cursor: pointer; color: var(--t3); border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.13s; }
+.inner-tab:hover      { color: var(--t1); }
+.inner-tab.active     { color: var(--t1); font-weight: 500; border-bottom-color: var(--t1); }
+
+/* ── Gap warnings ── */
+.gap-warning {
+  background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px;
+  padding: 10px 14px; font-size: 12px; color: #92400e; line-height: 1.5;
+  margin-bottom: 14px; display: flex; gap: 8px;
+}
+.gap-warning.infra { background: #fdf4ff; border-color: #e9d5ff; color: #6b21a8; }
+
+/* ── Dot matrix ── */
+.dot-matrix { display: flex; flex-wrap: wrap; gap: 3px; margin: 10px 0; }
+.dot-cell   { width: 11px; height: 11px; border-radius: 2px; }
+
+/* ── Compare pair ── */
+.compare-pair  { display: flex; gap: 12px; margin-bottom: 14px; }
+.compare-box   { flex: 1; border-radius: 8px; padding: 12px 14px; text-align: center; }
+.compare-num   { font-size: 24px; font-weight: 700; }
+.compare-lbl   { font-size: 11px; color: var(--t3); margin-top: 3px; }
+.compare-arrow { display: flex; align-items: center; color: var(--t3); font-size: 18px; }
+
+/* ── Export button ── */
+.export-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 12px; background: none; border: none;
+  color: var(--blue); font-size: 12px; font-family: var(--font);
+  border-radius: 6px; cursor: pointer;
+  transition: background 0.13s; white-space: nowrap;
+}
+.export-btn:hover { background: #eff6ff; }
+
+/* ── Toast ── */
+.toast {
+  position: fixed; bottom: 24px; right: 24px;
+  background: #1e293b; color: white;
+  padding: 10px 18px; border-radius: 8px;
+  font-size: 13px; font-weight: 500;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+  z-index: 1000; opacity: 0; pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity 0.2s, transform 0.2s;
+}
+.toast.show { opacity: 1; pointer-events: auto; transform: translateY(0); }
