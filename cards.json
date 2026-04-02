@@ -1,0 +1,232 @@
+{
+  "tabs": [
+    {
+      "id": "documentation",
+      "label": "Documentation",
+      "sections": [
+        {
+          "label": "Product Design",
+          "cards": [
+            {
+              "file": "user_groups_documentation.html",
+              "title": "User Groups — Documentation",
+              "tag": "Research",
+              "icon": "📄",
+              "author": "Ashish",
+              "desc": "Comprehensive text documentation expanding upon the user groups question framework.",
+              "highlights": []
+            },
+            {
+              "file": "transportation_analytics_documentation.html",
+              "title": "TMS Insights — Product Overview",
+              "tag": "Strategy",
+              "icon": "🌅",
+              "author": "UX Team",
+              "desc": "High-level product documentation covering the full redesign journey — from initial site work to the current vision. Captures where we are leading on a product level and the direction for future developments.",
+              "highlights": [
+                "📐 Redesign exercise overview",
+                "🧭 Product-level direction",
+                "🔭 Future development roadmap"
+              ]
+            },
+            {
+              "file": "grant_intelligence_glossary.html",
+              "title": "Grant Intelligence — Glossary",
+              "tag": "Reference",
+              "icon": "📖",
+              "author": "UX Team",
+              "desc": "Complete terminology reference for the Grant Intelligence suite. Defines all key terms, program names, and acronyms used across HSIP, SS4A, and TMS grant workflows.",
+              "highlights": [
+                "📖 Full grant terminology",
+                "🏷️ Program & acronym index"
+              ]
+            },
+            {
+              "file": "TMS-Insights-Redesign-Brief.pdf",
+              "title": "TMS Insights — Redesign Brief",
+              "tag": "Reference",
+              "icon": "📑",
+              "author": "UX Team",
+              "desc": "Official redesign brief for the TMS Insights platform. Outlines scope, design direction, and product goals for the current redesign cycle.",
+              "highlights": [
+                "📑 Redesign scope & goals",
+                "🎨 Design direction"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "links",
+      "label": "Links",
+      "links": [
+        {
+          "name": "Netlify — tms.dezinardo.com",
+          "url": "https://tms.dezinardo.com",
+          "notes": "Live deployment of TMS Insights project hub"
+        },
+        {
+          "name": "GitHub — tms-2/tms-insights",
+          "url": "https://github.com/ashishnum/tms-2",
+          "notes": "Source repository for all prototype and documentation files"
+        }
+      ]
+    },
+    {
+      "id": "prototypes",
+      "label": "Prototypes",
+      "sections": [
+        {
+          "label": "Dashboards",
+          "cards": [
+            {
+              "file": "Concord_Dashboard_v2.html",
+              "title": "Concord Collision Safety Dashboard",
+              "tag": "Dashboard",
+              "icon": "🚦",
+              "author": "Abhishek",
+              "desc": "Alternate MSN-style dashboard with Overview, HIN, Compare, Story, AI Insights, and Map tabs.",
+              "highlights": [
+                "HIN (High Injury Network) tab",
+                "Story narrative tab",
+                "AI Insights tab",
+                "Collision map with cluster/dot toggle"
+              ]
+            },
+            {
+              "file": "tms-expanded-dashboard_1.html",
+              "title": "AI Insights Engine — v2.0",
+              "tag": "Dashboard",
+              "icon": "🤖",
+              "author": "Ashish",
+              "desc": "First wide-coded version highlighting the enforcement gap and impression gap. Post-PMMS insights build with advanced quantum measures analytics for Concord.",
+              "highlights": []
+            }
+          ]
+        },
+        {
+          "label": "Explorers & Maps",
+          "cards": [
+            {
+              "file": "concord_tms_v6.html",
+              "title": "Concord TMS — Map Concept v1",
+              "tag": "Map",
+              "icon": "📊",
+              "author": "UX Team",
+              "desc": "Map layout with all layers toggleable. First version of map concepts for Concord TMS.",
+              "highlights": []
+            },
+            {
+              "file": "corridor-explorer_2.html",
+              "title": "Corridor Explorer — v2",
+              "tag": "Explorer",
+              "icon": "🛣️",
+              "author": "UX Team",
+              "desc": "Most insightful corridor view with an embedded explorer, AI chat suggestion bubbles, and a detailed intersection profile panel.",
+              "highlights": [
+                "💬 Chat suggestion bubbles",
+                "🔍 Corridor mini-explorer",
+                "📍 Intersection profile panel"
+              ]
+            },
+            {
+              "file": "concord_ksi_hexmap.html",
+              "title": "Concord KSI Hexmap",
+              "tag": "Map",
+              "icon": "🛑",
+              "author": "Lakshan",
+              "desc": "Collision heatmap broken down by severity and contributing factors. Distinct UI style — one of the more experimental visual approaches in the set.",
+              "highlights": [
+                "🔶 Hex collision density",
+                "⚡ Severity rate breakdown",
+                "🎛️ Collision factor filters"
+              ]
+            },
+            {
+              "file": "spatial-risk.html",
+              "title": "Spatial Risk Intelligence",
+              "tag": "Map",
+              "icon": "⚠️",
+              "author": "UX Team",
+              "desc": "Nav-preserved version of TMS Live with map intelligence retooled for spatial risk analysis.",
+              "highlights": [
+                "🗺️ Map Intelligence tab"
+              ]
+            },
+            {
+              "file": "tms-dark.html",
+              "title": "Corridor Explorer — Dark/Purple",
+              "tag": "Theme",
+              "icon": "🌑",
+              "author": "UX Team",
+              "desc": "Dark-themed alternate interface built upon the foundational Corridor Explorer view.",
+              "highlights": [
+                "🗺️ Map-level grant analysis",
+                "🧪 Simulation mode"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "grant",
+      "label": "Grant",
+      "sections": [
+        {
+          "label": "Grant Packages",
+          "cards": [
+            {
+              "file": "grant-intel-map.html",
+              "title": "Grant Intelligence Map",
+              "tag": "Map",
+              "icon": "🗺️",
+              "author": "UX Team",
+              "desc": "Map-level grant analysis covering funding history, before/after impact, and Cycle 13 gap analysis across investments vs. incidents. Includes a what-if simulator driven by programs and packages, with a PDF export for ready-to-submit applications.",
+              "highlights": [
+                "🗺️ Map-level grant analysis",
+                "📊 Investment vs. incident gap",
+                "🔁 Cycle 13 recommendations",
+                "🧪 What-if simulator",
+                "📄 PDF export"
+              ]
+            },
+            {
+              "file": "Grant_Intelligence_Module.html",
+              "title": "Grant Intelligence Module",
+              "tag": "Grant",
+              "icon": "💰",
+              "author": "Abhishek",
+              "desc": "Historical grant intelligence for Concord — covering Cycles 8–12 funding trajectory, HSIP application log, countermeasure budget trends, SS4A strategy, and Cycle 13 gap analysis with recommendations.",
+              "highlights": [
+                "📋 Concord Funding History (C8–C12)",
+                "📁 HSIP Application Log",
+                "📈 Countermeasure Budget Trends",
+                "🎯 Gap Analysis",
+                "🏆 HSIP C13 Recommendations",
+                "🛡 SS4A Strategy",
+                "💰 Other Funding Wins"
+              ]
+            },
+            {
+              "file": "vision-layout.html",
+              "title": "Vision Layout — Grant Dashboard",
+              "tag": "Map",
+              "icon": "📋",
+              "author": "Ashish",
+              "desc": "Map-based grant dashboard with two core modes — Simulation and Analysis. Select countermeasures, run corridor simulations, review outcomes, and generate a ready grant package.",
+              "highlights": [
+                "🧪 Simulation mode",
+                "📊 Analysis mode",
+                "🗺️ Map views",
+                "🤖 AI mode",
+                "📄 Generate Grant Recommendations"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
