@@ -1,0 +1,1221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATP Intelligence Module — Active Transportation Program | TrafficGrants.ai</title>
+<meta name="description" content="ATP grant intelligence: Cycles 1–8 award history, scoring rubric, eligible project types, and Cycle 8 strategy for California agencies.">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://trafficgrants.ai/atp-intelligence-module.html">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0A1628;
+  --surface: #111f35;
+  --surface2: #1a2d4a;
+  --surface3: #243a5e;
+  --border: #2a3f60;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --accent: #005EB8;
+  --accent-glow: rgba(0,94,184,0.15);
+  --gold: #FFC72C;
+  --gold-dark: #D4A010;
+  --gold-glow: rgba(255,199,44,0.15);
+  --green: #38A169;
+  --green-glow: rgba(56,161,105,0.15);
+  --red: #E53E3E;
+  --red-glow: rgba(229,62,62,0.15);
+  --purple: #805AD5;
+  --cyan: #3182CE;
+  --orange: #DD6B20;
+  --teal: #2C7A7B;
+  --navy: #003F7F;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+/* ── HEADER ── */
+.header {
+  background: #003F7F;
+  border-bottom: 3px solid #FFC72C;
+  padding: 40px 40px 36px;
+  position: relative; overflow: hidden; text-align: center;
+}
+.header::before {
+  content:''; position:absolute; inset:0;
+  background:repeating-linear-gradient(-45deg,transparent,transparent 24px,rgba(255,255,255,0.018) 24px,rgba(255,255,255,0.018) 25px);
+}
+.header-inner { max-width:1600px; margin:0 auto; position:relative; z-index:1; }
+.header-logo { display:flex; align-items:center; justify-content:center; gap:12px; margin-bottom:4px; }
+.header-wordmark { display:flex; align-items:baseline; font-family:'DM Serif Display',serif; font-size:38px; line-height:1; }
+.header-wordmark .traffic { color:#fff; }
+.header-wordmark .grants  { color:#FFC72C; }
+.header-wordmark .dot-ai  { color:#fff; }
+.header-tagline { font-size:13px; color:rgba(255,255,255,0.55); letter-spacing:3px; text-transform:uppercase; margin-bottom:12px; }
+.header-subtitle { font-family:'DM Serif Display',serif; font-size:22px; color:rgba(255,255,255,0.9); font-weight:400; margin-bottom:24px; }
+.header-stats { display:flex; gap:40px; flex-wrap:wrap; justify-content:center; }
+.header-stat { text-align:center; }
+.header-stat .val { font-family:'DM Serif Display',serif; font-size:32px; color:var(--gold); }
+.header-stat .lbl { font-size:11px; color:rgba(255,255,255,0.45); text-transform:uppercase; letter-spacing:2px; margin-top:2px; }
+
+/* ── BACK LINK ── */
+.back-bar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  height: 40px;
+}
+.back-link {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s;
+}
+.back-link:hover { color: var(--gold); }
+
+/* ── TABS ── */
+.tab-bar { background:var(--surface); border-bottom:1px solid var(--border); padding:0 40px; display:flex; gap:0; overflow-x:auto; }
+.tab-bar::-webkit-scrollbar { height:3px; }
+.tab-bar::-webkit-scrollbar-thumb { background:var(--border); }
+.tab-btn { padding:14px 22px; font-size:14px; font-weight:600; color:rgba(255,255,255,0.45); cursor:pointer; border:none; background:none; border-bottom:3px solid transparent; transition:all 0.2s; white-space:nowrap; font-family:'DM Sans',sans-serif; }
+.tab-btn:hover { color:rgba(255,255,255,0.8); background:var(--surface2); }
+.tab-btn.active { color:var(--gold); border-bottom-color:var(--gold); }
+
+/* ── CONTENT ── */
+.content { max-width:1600px; margin:0 auto; padding:32px 40px; }
+.tab-content { display:none; }
+.tab-content.active { display:block; }
+
+/* ── CARDS ── */
+.card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:24px; margin-bottom:20px; }
+.card-header { font-family:'DM Serif Display',serif; font-size:20px; margin-bottom:16px; color:#fff; display:flex; align-items:center; gap:10px; }
+.card-header .icon { font-size:22px; }
+.card p { font-size:13px; color:var(--text-muted); margin-bottom:12px; line-height:1.6; }
+
+/* ── GRID ── */
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
+.grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
+@media(max-width:1100px) { .grid-2,.grid-3,.grid-4 { grid-template-columns:1fr; } }
+
+/* ── METRICS ── */
+.metric-box { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:20px; text-align:center; }
+.metric-box .val { font-family:'DM Serif Display',serif; font-size:32px; }
+.metric-box .lbl { font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; margin-top:4px; }
+.metric-box .sub { font-size:11px; color:var(--text-muted); margin-top:2px; }
+.metric-box.gold .val { color:var(--gold); }
+.metric-box.blue .val { color:var(--accent); }
+.metric-box.green .val { color:var(--green); }
+.metric-box.purple .val { color:var(--purple); }
+.metric-box.red .val { color:var(--red); }
+.metric-box.teal .val { color:#4FD1C5; }
+
+/* ── TABLES ── */
+.data-table { width:100%; border-collapse:collapse; font-size:13px; }
+.data-table th { background:var(--surface2); color:var(--gold); font-weight:600; text-align:left; padding:10px 14px; border-bottom:2px solid var(--border); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; position:sticky; top:0; z-index:2; }
+.data-table td { padding:10px 14px; border-bottom:1px solid var(--border); vertical-align:middle; }
+.data-table tr:hover { background:var(--surface2); }
+.data-table .money { font-weight:600; color:var(--green); }
+.data-table .highlight { background:rgba(255,199,44,0.06); }
+.table-wrap { max-height:520px; overflow-y:auto; border-radius:8px; }
+.table-wrap::-webkit-scrollbar { width:6px; }
+.table-wrap::-webkit-scrollbar-track { background:var(--surface); }
+.table-wrap::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+
+/* ── TAGS ── */
+.tag { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+.tag-gold { background:var(--gold-glow); color:var(--gold); border:1px solid rgba(255,199,44,0.35); }
+.tag-green { background:var(--green-glow); color:var(--green); border:1px solid rgba(56,161,105,0.35); }
+.tag-blue { background:var(--accent-glow); color:#63b3ed; border:1px solid rgba(0,94,184,0.35); }
+.tag-red { background:var(--red-glow); color:var(--red); border:1px solid rgba(229,62,62,0.35); }
+.tag-purple { background:rgba(128,90,213,0.15); color:var(--purple); border:1px solid rgba(128,90,213,0.3); }
+.tag-orange { background:rgba(221,107,32,0.15); color:var(--orange); border:1px solid rgba(221,107,32,0.3); }
+.tag-teal { background:rgba(79,209,197,0.12); color:#4FD1C5; border:1px solid rgba(79,209,197,0.3); }
+
+/* ── INSIGHT CARDS ── */
+.insight-card { background:var(--surface2); border:1px solid var(--border); border-left:4px solid var(--gold); border-radius:10px; padding:18px 20px; margin-bottom:12px; }
+.insight-card.blue { border-left-color:var(--accent); }
+.insight-card.green { border-left-color:var(--green); }
+.insight-card.red { border-left-color:var(--red); }
+.insight-card.purple { border-left-color:var(--purple); }
+.insight-card.teal { border-left-color:#4FD1C5; }
+.insight-card.orange { border-left-color:var(--orange); }
+.insight-card h4 { font-size:14px; font-weight:700; margin-bottom:6px; color:#fff; }
+.insight-card p { font-size:13px; color:var(--text-muted); line-height:1.6; margin:0; }
+
+/* ── NOFO ITEMS ── */
+.nofo-item { display:flex; gap:14px; padding:14px 0; border-bottom:1px solid var(--border); align-items:flex-start; }
+.nofo-item:last-child { border-bottom:none; }
+.nofo-item .num { width:28px; height:28px; background:var(--gold); color:var(--navy); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0; margin-top:2px; }
+.nofo-item h4 { font-size:14px; font-weight:700; color:#fff; margin-bottom:4px; }
+.nofo-item p { font-size:13px; color:var(--text-muted); line-height:1.6; margin:0; }
+.nofo-item .deadline { display:inline-block; background:var(--red-glow); color:var(--red); border:1px solid rgba(229,62,62,0.3); border-radius:4px; padding:2px 8px; font-size:11px; font-weight:700; margin-top:4px; }
+.nofo-item .tip { display:inline-block; background:var(--gold-glow); color:var(--gold); border:1px solid rgba(255,199,44,0.3); border-radius:4px; padding:2px 8px; font-size:11px; font-weight:700; margin-top:4px; }
+.nofo-item .new { display:inline-block; background:rgba(79,209,197,0.12); color:#4FD1C5; border:1px solid rgba(79,209,197,0.3); border-radius:4px; padding:2px 8px; font-size:11px; font-weight:700; margin-top:4px; }
+
+/* ── STRATEGY CARDS ── */
+.strategy-card { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:20px; margin-bottom:12px; }
+.strategy-card.tier1 { border-left:4px solid var(--gold); }
+.strategy-card.tier2 { border-left:4px solid var(--green); }
+.strategy-card.tier3 { border-left:4px solid var(--cyan); }
+.strategy-card .strat-title { font-weight:700; font-size:15px; margin-bottom:6px; color:#fff; display:flex; align-items:center; gap:8px; }
+.strategy-card .strat-desc { font-size:13px; color:var(--text-muted); line-height:1.6; margin-bottom:10px; }
+.strategy-card .examples { display:flex; flex-wrap:wrap; gap:6px; }
+
+/* ── CHART WRAP ── */
+.chart-wrap { position:relative; height:300px; margin:16px 0; }
+.chart-wrap-tall { position:relative; height:420px; margin:16px 0; }
+
+/* ── SECTION DIVIDER ── */
+.section-divider { height:1px; background:var(--border); margin:24px 0; }
+
+/* ── CHECKLIST ── */
+.checklist-item { display:flex; gap:10px; padding:8px 0; border-bottom:1px solid rgba(42,63,96,0.5); align-items:flex-start; }
+.checklist-item:last-child { border-bottom:none; }
+.checklist-item .check { color:var(--green); font-size:16px; flex-shrink:0; margin-top:1px; }
+.checklist-item .cross { color:var(--red); font-size:16px; flex-shrink:0; margin-top:1px; }
+.checklist-item p { font-size:13px; color:var(--text-muted); line-height:1.5; margin:0; }
+.checklist-item strong { color:var(--text); }
+
+/* ── SCORING TABLE ── */
+.score-table { width:100%; border-collapse:collapse; font-size:13px; }
+.score-table th { background:var(--surface3); color:var(--gold); padding:11px 14px; text-align:center; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; border:1px solid var(--border); font-weight:700; }
+.score-table th:first-child { text-align:left; }
+.score-table td { padding:10px 14px; border:1px solid var(--border); text-align:center; vertical-align:middle; }
+.score-table td:first-child { text-align:left; font-weight:600; color:var(--text); }
+.score-table tr:hover td { background:var(--surface2); }
+.score-table tr.total-row td { background:var(--surface3); font-weight:700; }
+.score-num { display:inline-block; background:rgba(255,199,44,0.12); color:var(--gold); border:1px solid rgba(255,199,44,0.3); border-radius:4px; padding:3px 9px; font-weight:700; font-size:12px; }
+.score-minus { display:inline-block; background:rgba(229,62,62,0.12); color:var(--red); border:1px solid rgba(229,62,62,0.3); border-radius:4px; padding:3px 9px; font-weight:700; font-size:12px; }
+.score-total { display:inline-block; background:rgba(255,199,44,0.2); color:var(--gold); border:1px solid rgba(255,199,44,0.5); border-radius:4px; padding:3px 9px; font-weight:800; font-size:13px; }
+.score-na { color:var(--text-dim); font-size:16px; }
+.score-section-label { font-size:10px; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:1px; padding:6px 14px; background:rgba(0,0,0,0.2); border:1px solid var(--border); }
+
+/* ── ALERT / INFO BOX ── */
+.alert-box { background:rgba(229,62,62,0.08); border:1px solid rgba(229,62,62,0.3); border-left:4px solid var(--red); border-radius:10px; padding:16px 20px; margin:14px 0; }
+.alert-box h4 { color:var(--red); font-size:13px; font-weight:700; margin-bottom:5px; }
+.alert-box p { font-size:13px; color:var(--text-muted); line-height:1.6; margin:0; }
+.info-box { background:rgba(0,94,184,0.08); border:1px solid rgba(0,94,184,0.3); border-left:4px solid var(--accent); border-radius:10px; padding:16px 20px; margin:14px 0; }
+.info-box h4 { color:#63b3ed; font-size:13px; font-weight:700; margin-bottom:5px; }
+.info-box p { font-size:13px; color:var(--text-muted); line-height:1.6; margin:0; }
+.gold-box { background:rgba(255,199,44,0.07); border:1px solid rgba(255,199,44,0.25); border-left:4px solid var(--gold); border-radius:10px; padding:16px 20px; margin:14px 0; }
+.gold-box h4 { color:var(--gold); font-size:13px; font-weight:700; margin-bottom:5px; }
+.gold-box p { font-size:13px; color:var(--text-muted); line-height:1.6; margin:0; }
+
+/* ── FOOTER ── */
+.footer { text-align:center; padding:30px 40px; background:var(--bg); border-top:1px solid var(--border); margin-top:40px; }
+.footer .brand { font-family:'DM Serif Display',serif; font-size:20px; color:var(--text); margin-bottom:6px; }
+.footer .brand span { color:var(--gold); }
+.footer .sub { font-size:11px; color:rgba(255,255,255,0.3); letter-spacing:1px; line-height:1.8; }
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px) {
+  .header { padding:28px 16px; }
+  .header-wordmark { font-size:clamp(1.5rem,8vw,2rem); }
+  .header-stats { gap:20px; }
+  .header-stat .val { font-size:24px; }
+  .tab-bar { padding:0 12px; }
+  .tab-btn { padding:12px 14px; font-size:12px; }
+  .content { padding:20px 16px; }
+  .back-bar { padding:0 16px; }
+  .footer { padding:24px 16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="header-logo">
+      <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" style="width:52px;height:52px;flex-shrink:0;">
+        <rect x="0" y="0" width="80" height="80" rx="16" fill="#FFC72C"/>
+        <rect x="30" y="4" width="20" height="72" fill="#003F7F" opacity="0.15"/>
+        <rect x="4" y="30" width="72" height="20" fill="#003F7F" opacity="0.15"/>
+        <rect x="30" y="30" width="20" height="20" fill="#003F7F" opacity="0.25"/>
+        <line x1="40" y1="4" x2="40" y2="28" stroke="#003F7F" stroke-width="0.7" stroke-dasharray="2,2.5" opacity="0.5"/>
+        <line x1="40" y1="52" x2="40" y2="76" stroke="#003F7F" stroke-width="0.7" stroke-dasharray="2,2.5" opacity="0.5"/>
+        <line x1="4" y1="40" x2="28" y2="40" stroke="#003F7F" stroke-width="0.7" stroke-dasharray="2,2.5" opacity="0.5"/>
+        <line x1="52" y1="40" x2="76" y2="40" stroke="#003F7F" stroke-width="0.7" stroke-dasharray="2,2.5" opacity="0.5"/>
+        <rect x="28" y="28" width="3" height="3" rx="0.5" fill="#003F7F" opacity="0.35"/>
+        <rect x="49" y="28" width="3" height="3" rx="0.5" fill="#003F7F" opacity="0.35"/>
+        <rect x="28" y="49" width="3" height="3" rx="0.5" fill="#003F7F" opacity="0.35"/>
+        <rect x="49" y="49" width="3" height="3" rx="0.5" fill="#003F7F" opacity="0.35"/>
+        <g transform="translate(5,5)"><rect x="0" y="0" width="14" height="20" rx="3" fill="#003F7F"/><circle cx="7" cy="6" r="2.8" fill="#ef4444" opacity="0.3"/><circle cx="7" cy="12" r="2.8" fill="#fbbf24" opacity="0.3"/><circle cx="7" cy="18" r="2.8" fill="#22c55e"/><circle cx="7" cy="18" r="1.4" fill="#fff" opacity="0.4"/></g>
+        <g transform="translate(60,6)"><circle cx="5" cy="2.5" r="2.5" fill="#003F7F"/><path d="M5 5.5 L5 14" stroke="#22c55e" stroke-width="1.8" stroke-linecap="round"/><path d="M2 9 L5 6.5" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/><path d="M8 9.5 L5 6.5" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/><path d="M2 20 L5 14" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/><path d="M8 20 L5 14" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></g>
+        <rect x="6" y="68" width="68" height="6" rx="2" fill="#003F7F" opacity="0.45"/>
+        <rect x="8" y="69.5" width="7" height="3" rx="1" fill="#22c55e" opacity="0.9"/>
+        <rect x="17" y="69.5" width="7" height="3" rx="1" fill="#22c55e" opacity="0.7"/>
+        <rect x="26" y="69.5" width="7" height="3" rx="1" fill="#22c55e" opacity="0.5"/>
+        <rect x="35" y="69.5" width="7" height="3" rx="1" fill="#22c55e" opacity="0.3"/>
+        <rect x="44" y="69.5" width="7" height="3" rx="1" fill="#22c55e" opacity="0.18"/>
+        <text x="57" y="73" font-family="DM Sans,sans-serif" font-size="7" font-weight="700" fill="#003F7F" opacity="0.55">$</text>
+      </svg>
+      <div class="header-wordmark">
+        <span class="traffic">traffic</span><span class="grants">grants</span><span class="dot-ai">.ai</span>
+      </div>
+    </div>
+    <div class="header-tagline">Grant Intelligence for Transportation Professionals</div>
+    <div class="header-subtitle">ATP Intelligence Module — Active Transportation Program (Cycles 1–8)</div>
+    <div class="header-stats">
+      <div class="header-stat"><div class="val">8</div><div class="lbl">Program Cycles (2014–2027)</div></div>
+      <div class="header-stat"><div class="val">$3.8B+</div><div class="lbl">Total Funded (Cycles 1–7)</div></div>
+      <div class="header-stat"><div class="val">800+</div><div class="lbl">Projects Funded Statewide</div></div>
+      <div class="header-stat"><div class="val">85%+</div><div class="lbl">Funds to DACs Every Cycle</div></div>
+      <div class="header-stat"><div class="val">Jun 2026</div><div class="lbl">Cycle 8 App Deadline</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- BACK NAV -->
+<div class="back-bar">
+  <a href="https://trafficgrants.ai/" class="back-link">← TrafficGrants.ai</a>
+</div>
+
+<!-- TABS -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('overview')">📊 Program Overview</button>
+  <button class="tab-btn" onclick="switchTab('cycles')">🔄 Cycle-by-Cycle Awards</button>
+  <button class="tab-btn" onclick="switchTab('scoring')">🎯 Scoring & Criteria</button>
+  <button class="tab-btn" onclick="switchTab('projects')">🏗️ What Gets Funded</button>
+  <button class="tab-btn" onclick="switchTab('strategy')">📋 Application Strategy</button>
+  <button class="tab-btn" onclick="switchTab('cycle8')">⚡ Cycle 8 (2027) Key Facts</button>
+</div>
+
+<div class="content">
+
+<!-- ═══ TAB 1: OVERVIEW ═══ -->
+<div id="tab-overview" class="tab-content active">
+
+  <div class="grid-4" style="margin-bottom:20px;">
+    <div class="metric-box gold">
+      <div class="val">$1.07B</div><div class="lbl">Cycle 6 Total (2023)</div><div class="sub">~$1.7B with SB1 boost · Largest cycle ever</div>
+    </div>
+    <div class="metric-box red">
+      <div class="val">$168M</div><div class="lbl">Cycle 7 Total (2025)</div><div class="sub">Budget cuts → 4% funded · 13 projects only</div>
+    </div>
+    <div class="metric-box blue">
+      <div class="val">$500M+</div><div class="lbl">Cycle 8 Expected (2027)</div><div class="sub">~$275M statewide · $46M MTC region</div>
+    </div>
+    <div class="metric-box green">
+      <div class="val">$2.5B</div><div class="lbl">Cycle 7 Requests</div><div class="sub">vs. $168M available → 15:1 oversubscribed</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><span class="icon">📈</span> Program Funding by Cycle — ATP Total ($M)</div>
+      <p>ATP funding has fluctuated dramatically by cycle, peaking at ~$1.7B in Cycle 6 due to a one-time $1.05B SB budget surplus augmentation. Cycle 7 was cut to $168M — the lowest since Cycle 2 — reflecting fiscal pressures. Cycle 8 is expected to return to ~$500M.</p>
+      <div class="chart-wrap"><canvas id="chartCycleFunding"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="icon">🥧</span> Fund Distribution — Three Components</div>
+      <p>ATP is split by statute: 50% Statewide (CTC-awarded), 10% Small Urban &amp; Rural, and 40% MPO Component distributed by population to the 10 largest MPOs. Every component must direct ≥25% to disadvantaged communities and no more than 2% to plan projects.</p>
+      <div class="chart-wrap"><canvas id="chartComponents"></canvas></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><span class="icon">🏛️</span> Who Wins ATP Funding? Applicant Types</div>
+      <p>Cities and counties dominate, but school districts, tribal governments, transit agencies, and nonprofits are all eligible. Tribal projects get full leveraging points automatically — no letter of commitment required.</p>
+      <div class="chart-wrap"><canvas id="chartApplicants"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="icon">📐</span> Project Type Mix — All Cycles</div>
+      <p>Infrastructure projects (sidewalks, bikeways, crosswalks, signals) dominate. Plan projects are capped at 2% of any component. Non-infrastructure must be new programs or new components of existing ones — continuation is ineligible.</p>
+      <div class="chart-wrap"><canvas id="chartProjectTypes"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="icon">💡</span> ATP vs. Other Programs — Strategic Context</div>
+    <div class="grid-3">
+      <div class="insight-card">
+        <h4>🚲 California's Only Dedicated Active Transportation Fund</h4>
+        <p>ATP is the sole statewide program exclusively for biking and walking infrastructure. Unlike HSIP or SS4A, there is no motor vehicle safety focus — projects must primarily benefit non-motorized users. This makes it the natural funding home for any bike/ped capital project with a clear active transportation benefit.</p>
+      </div>
+      <div class="insight-card blue">
+        <h4>📊 Chronically Oversubscribed at 3:1 to 15:1</h4>
+        <p>In Cycle 6, $3.1B in applications competed for $1.07B. In Cycle 7, $2.5B competed for $168M — a 15:1 ratio with only 4% of projects funded. Even in a well-funded cycle, a score of 89+ is typically required to win. This is California's most competitive transportation grant program by application volume.</p>
+      </div>
+      <div class="insight-card green">
+        <h4>🤝 Stacks Well with SS4A and HSIP</h4>
+        <p>ATP infrastructure projects (sidewalks, bike lanes, crosswalks) pair naturally with SS4A safety countermeasures and HSIP safety-focused improvements. A jurisdiction can apply for the same corridor in multiple programs if the project elements are distinct. ATP for bike/ped infrastructure + SS4A for signal/crosswalk safety = complementary project bundles.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ TAB 2: CYCLES ═══ -->
+<div id="tab-cycles" class="tab-content">
+
+  <div class="alert-box">
+    <h4>⚠️ Cycle 7 Was an Anomaly — Critical Context</h4>
+    <p>Cycle 7 (2025 ATP) was funded at only $168M due to Governor Newsom's 2024 budget cuts — down from $1.07B in Cycle 6. Only 13 projects were funded statewide (9 statewide + 4 small urban/rural), all scoring 95+ points. This was the most competitive cycle in program history. Cycle 8 is expected to return to normal (~$500M), making it substantially more accessible.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="icon">🔄</span> All Cycles Summary — ATP Award History</div>
+    <div class="table-wrap">
+      <table class="data-table" id="tableCycles"></table>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><span class="icon">🏆</span> Cycle 7 (2025) — Funded Projects: Statewide &amp; Small Urban/Rural</div>
+      <p>Only projects scoring 95+ received funding. All 13 awarded projects directly benefit disadvantaged communities. Infrastructure was the dominant type — 5 of 9 statewide projects included Safe Routes to School components.</p>
+      <div class="table-wrap">
+        <table class="data-table" id="tableCy7"></table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="icon">🌉</span> Cycle 7 (2025) — MPO Component</div>
+      <p>The MPO component ($67.5M across 10 MPOs) was adopted June 2025. Each MPO ran its own competitive process. MTC (Bay Area) had ~$49M; SACOG adopted $4.72M; SJCOG awarded $14.7M to 3 projects. Scores in the MPO component are typically lower than statewide (80s range).</p>
+      <div class="table-wrap">
+        <table class="data-table" id="tableCy7MPO"></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="icon">📋</span> Cycle 6 (2023) — Program Summary &amp; Notable Awards</div>
+    <p>Cycle 6 was the largest ATP cycle in program history, totaling ~$1.07B ($1.7B with MPO component), funded 67 projects in the statewide component (score threshold: 89+), and 134 MPO projects ($539M). The one-time $1.05B SB 1 augmentation enabled this unprecedented scale. All funds benefited DACs.</p>
+    <div class="grid-3">
+      <div class="metric-box gold">
+        <div class="val">$1.07B</div><div class="lbl">Cycle 6 Statewide + SUR</div><div class="sub">Adopted Dec 2022</div>
+      </div>
+      <div class="metric-box blue">
+        <div class="val">$539M</div><div class="lbl">Cycle 6 MPO Component</div><div class="sub">134 projects · Adopted Jun 2023</div>
+      </div>
+      <div class="metric-box green">
+        <div class="val">89+</div><div class="lbl">Score Threshold (Cycle 6)</div><div class="sub">vs. 95+ in Cycle 7</div>
+      </div>
+    </div>
+    <div style="margin-top:16px;">
+      <div style="font-size:12px; color:var(--gold); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px;">Notable Cycle 6 Awards — Illustrative Examples</div>
+      <div class="table-wrap">
+        <table class="data-table" id="tableCy6Notable"></table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="icon">📊</span> Competitive Intensity — Score Thresholds by Cycle</div>
+    <p>The minimum score to receive funding has varied significantly by cycle and available budget. In Cycle 6 (high budget), projects scoring 89+ were funded. In Cycle 7 (deep budget cuts), only 95+ received funding. Cycle 8 at ~$500M is expected to fund projects in the 88–92 range based on historical patterns.</p>
+    <div class="chart-wrap"><canvas id="chartScoreThreshold"></canvas></div>
+  </div>
+
+</div>
+
+<!-- ═══ TAB 3: SCORING ═══ -->
+<div id="tab-scoring" class="tab-content">
+
+  <div class="card">
+    <div class="card-header"><span class="icon">🎯</span> 2027 ATP (Cycle 8) — Scoring Rubric by Application Type</div>
+    <p>All applications are scored out of 100 points. The rubric varies by application type — large infrastructure projects have additional criteria (Transformative, Context-Sensitive) that smaller projects do not. Corps Use can deduct up to 5 points; Past Performance can deduct up to 10 points.</p>
+
+    <div style="overflow-x:auto; margin-top:20px;">
+      <table class="score-table">
+        <thead>
+          <tr>
+            <th style="text-align:left; min-width:220px;">Scoring Topic</th>
+            <th>Large Infra<br><span style="font-weight:400;opacity:0.7;">&gt;$10M total</span></th>
+            <th>Medium Infra<br><span style="font-weight:400;opacity:0.7;">$3.5M–$10M</span></th>
+            <th>Small Infra<br><span style="font-weight:400;opacity:0.7;">≤$3.5M total</span></th>
+            <th>Plan</th>
+            <th>Non-Infra<br><span style="font-weight:400;opacity:0.7;">Only</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Positive criteria -->
+          <tr>
+            <td>Benefit to Disadvantaged Communities</td>
+            <td><span class="score-num">10</span></td>
+            <td><span class="score-num">10</span></td>
+            <td><span class="score-num">10</span></td>
+            <td><span class="score-num">30</span></td>
+            <td><span class="score-num">10</span></td>
+          </tr>
+          <tr>
+            <td>Need</td>
+            <td><span class="score-num">38</span></td>
+            <td><span class="score-num">40</span></td>
+            <td><span class="score-num">52</span></td>
+            <td><span class="score-num">20</span></td>
+            <td><span class="score-num">40</span></td>
+          </tr>
+          <tr>
+            <td>Safety</td>
+            <td><span class="score-num">20</span></td>
+            <td><span class="score-num">25</span></td>
+            <td><span class="score-num">25</span></td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-num">10</span></td>
+          </tr>
+          <tr>
+            <td>Public Participation &amp; Planning</td>
+            <td><span class="score-num">10</span></td>
+            <td><span class="score-num">10</span></td>
+            <td><span class="score-num">10</span></td>
+            <td><span class="score-num">25</span></td>
+            <td><span class="score-num">15</span></td>
+          </tr>
+          <tr>
+            <td>Scope + Cost Effectiveness</td>
+            <td><span class="score-num">7</span></td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-na">—</span></td>
+          </tr>
+          <tr>
+            <td>Scope + Plan Consistency</td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-num">5</span></td>
+            <td><span class="score-num">3</span></td>
+            <td><span class="score-num">10</span></td>
+            <td><span class="score-na">—</span></td>
+          </tr>
+          <tr>
+            <td>Context-Sensitive / Innovation <span class="tag tag-blue" style="font-size:9px;margin-left:4px;">Large &amp; Medium only</span></td>
+            <td><span class="score-num">5</span></td>
+            <td><span class="score-num">5</span></td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-na">—</span></td>
+          </tr>
+          <tr>
+            <td>Transformative Projects <span class="tag tag-gold" style="font-size:9px;margin-left:4px;">Large only</span></td>
+            <td><span class="score-num">5</span></td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-na">—</span></td>
+          </tr>
+          <tr>
+            <td>Evaluation &amp; Sustainability</td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-num">10</span></td>
+          </tr>
+          <tr>
+            <td>Leveraging <span class="tag tag-green" style="font-size:9px;margin-left:4px;">Large &amp; Medium only</span></td>
+            <td><span class="score-num">5</span></td>
+            <td><span class="score-num">5</span></td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-na">—</span></td>
+          </tr>
+          <tr>
+            <td>Implementation &amp; Plan Development</td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-na">—</span></td>
+            <td><span class="score-num">25</span></td>
+            <td><span class="score-na">—</span></td>
+          </tr>
+          <!-- Deductions -->
+          <tr style="background:rgba(229,62,62,0.04);">
+            <td>Corps Use (Deduction) <span class="tag tag-red" style="font-size:9px;margin-left:4px;">Avoid -5</span></td>
+            <td><span class="score-minus">0 or −5</span></td>
+            <td><span class="score-minus">0 or −5</span></td>
+            <td><span class="score-minus">0 or −5</span></td>
+            <td><span class="score-minus">0 or −5</span></td>
+            <td><span class="score-na">—</span></td>
+          </tr>
+          <tr style="background:rgba(229,62,62,0.04);">
+            <td>Past Performance (Deduction) <span class="tag tag-red" style="font-size:9px;margin-left:4px;">Up to −10</span></td>
+            <td><span class="score-minus">0 to −10</span></td>
+            <td><span class="score-minus">0 to −10</span></td>
+            <td><span class="score-minus">0 to −10</span></td>
+            <td><span class="score-minus">0 to −10</span></td>
+            <td><span class="score-minus">0 to −10</span></td>
+          </tr>
+          <!-- Total row -->
+          <tr class="total-row">
+            <td><strong>TOTAL (before deductions)</strong></td>
+            <td><span class="score-total">100</span></td>
+            <td><span class="score-total">100</span></td>
+            <td><span class="score-total">100</span></td>
+            <td><span class="score-total">100</span></td>
+            <td><span class="score-total">100</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid-3" style="margin-top:20px;">
+      <div class="insight-card">
+        <h4>🏗️ Large Project (&gt;$10M total)</h4>
+        <p>Extra scoring criteria: Transformative Projects (5 pts), Context-Sensitive Bikeways (5 pts), Scope/Cost Effectiveness (7 pts), Leveraging (5 pts). Randomized field reviews possible. CEO or authorized officer signature required.</p>
+      </div>
+      <div class="insight-card blue">
+        <h4>🏘️ Medium Project ($3.5M–$10M total)</h4>
+        <p>Context-Sensitive (5 pts), Leveraging (5 pts). No Transformative criterion. Must include construction application unless applying for pre-construction only. Most Bay Area city-scale projects fall here. Minimum $250K ATP request.</p>
+      </div>
+      <div class="insight-card green">
+        <h4>🏡 Small Project (≤$3.5M total)</h4>
+        <p>No Leveraging or Context-Sensitive scoring. Simpler rubric. SRTS, non-infrastructure, recreational trail, and plan projects are exempt from the $250K minimum request. High success rate in properly funded cycles.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><span class="icon">📌</span> Scoring Criteria Deep Dive — What Each Category Measures</div>
+
+      <div class="nofo-item">
+        <div class="num" style="background:var(--red);color:#fff;">A</div>
+        <div>
+          <h4>Benefit to Disadvantaged Communities (10–30 pts)</h4>
+          <p>Three subsections: direct benefit, project location, and severity. Also scores anti-displacement policies. Worth 10 pts for infrastructure, 30 pts for plans. Five DAC qualifiers: Median Income &lt;$79,298 (ACS 2020-2024), CalEnviroScreen ≥40.05, 75%+ NSLP-eligible students, HPI ≤25th percentile, or Tribal Lands.</p>
+        </div>
+      </div>
+      <div class="nofo-item">
+        <div class="num" style="background:var(--orange);color:#fff;">B</div>
+        <div>
+          <h4>Need (38–52 pts for Infrastructure)</h4>
+          <p>Highest-weighted criterion for infrastructure. Must demonstrate: connectivity to key destinations, transit access, everyday needs/services access, local public health concerns, and student active transportation needs. Need score considers children, older adults, persons with disabilities, and mobility device users specifically.</p>
+        </div>
+      </div>
+      <div class="nofo-item">
+        <div class="num" style="background:var(--gold);color:var(--navy);">C</div>
+        <div>
+          <h4>Safety (20–25 pts)</h4>
+          <p>Must address fatality/serious injury reduction potential. Score considers: identified hazards, collision history, selected countermeasures, and whether the project location is a priority. Must demonstrate both that the location is a priority AND the project will remedy identified hazards.</p>
+        </div>
+      </div>
+      <div class="nofo-item">
+        <div class="num" style="background:var(--green);color:#fff;">D</div>
+        <div>
+          <h4>Public Participation &amp; Planning (10–25 pts)</h4>
+          <p>Document specific outreach activities, evidence of engagement, and community feedback received. Large project applications score higher if the project is specifically listed in an adopted bicycle, pedestrian, SRTS, or active transportation plan (Section 891.2 compliant).</p>
+        </div>
+      </div>
+      <div class="nofo-item">
+        <div class="num" style="background:var(--purple);color:#fff;">E</div>
+        <div>
+          <h4>Corps Use (0 or −5 pts)</h4>
+          <p>Applicants must consult California Conservation Corps AND local conservation corps for every application, every cycle — prior cycle consultation does not count. Failure to consult or intent not to use = −5 points. Submit via JotForm to both CCC and Local Corps.</p>
+          <span class="deadline">ACTION ITEM: Consult Corps immediately — before application is due</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="icon">⚠️</span> Past Performance Deductions &amp; Screening Criteria</div>
+
+      <div class="alert-box">
+        <h4>Past Performance — Up to −10 Points</h4>
+        <p>CTC deducts up to 10 points for: non-use of Corps as committed in prior ATP award, adverse audit findings on past ATP projects, or failure to deliver ATP project phases from prior cycles. Agencies with outstanding corrective action plans should resolve them before applying.</p>
+      </div>
+
+      <div class="alert-box">
+        <h4>Purposeful Misrepresentation = Disqualification</h4>
+        <p>If CTC determines an applicant intentionally misrepresented information that could affect score, ALL applications from that applicant in the current AND subsequent cycle may be removed. This applies to inflated cost estimates, fabricated community support, or inaccurate DAC qualifications.</p>
+      </div>
+
+      <div class="info-box">
+        <h4>Screening Criteria (Pass/Fail — Applied Before Scoring)</h4>
+        <p>Applications that fail screening are not evaluated. Key screening items: application complete per Guidelines, consistent with adopted RTP, all other funds committed, not supplanting committed funds, correct application type used, minimum funding request met ($250K general; no min for SRTS, NI, recreation trails, plans), not required as condition of private development, pre-construction phases also apply for construction funding.</p>
+      </div>
+
+      <div class="info-box">
+        <h4>Tiebreaker Priority Order</h4>
+        <p>1) Project readiness (completed environmental docs) · 2) Highest score on highest point-value question · 3) Highest score on second-highest point-value question. Tiebreakers are used only at the funding cut-off score. Always target readiness as your tiebreaker advantage.</p>
+      </div>
+
+      <div class="gold-box" style="margin-top:16px;">
+        <h4>📋 Scoring Rubrics Released March 27, 2026</h4>
+        <p>CTC published Cycle 8 scoring rubrics March 27, 2026. Use them! All evaluator teams must use the official rubric. Rubrics specify exact point allocations for each response quality level. Applications prepared against the rubric consistently outperform those that ignore it.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="icon">📊</span> Score Distribution Analysis — Cycles 6 &amp; 7</div>
+    <p>Understanding how scores cluster helps calibrate expectations. In Cycle 6, the funded range was 89–100 with hundreds of applications in the 70–88 "unfunded but meritorious" band. In Cycle 7, the threshold jumped to 95+ due to budget cuts. Cycle 8 at ~$500M is expected to fund into the high 80s.</p>
+    <div class="chart-wrap"><canvas id="chartScoreDist"></canvas></div>
+  </div>
+
+</div>
+
+<!-- ═══ TAB 4: WHAT GETS FUNDED ═══ -->
+<div id="tab-projects" class="tab-content">
+
+  <div class="card">
+    <div class="card-header"><span class="icon">🏗️</span> Infrastructure Project Types That Win ATP</div>
+    <p>Based on Cycles 5–7 funded applications and the 2027 Guidelines (Appendix A). Infrastructure is the dominant funded category. Projects must have independent utility (standalone benefits), a complete PSR equivalent, and be consistent with a regional transportation plan.</p>
+
+    <div class="strategy-card tier1">
+      <div class="strat-title">🥇 TIER 1 — Core ATP Winners (Appear in Most Funded Projects)</div>
+      <div class="strat-desc">These project types appear consistently across all funded infrastructure applications. Applications should anchor around multiple Tier 1 elements. All must improve mobility, access, or safety for non-motorized users.</div>
+      <div class="examples">
+        <span class="tag tag-gold">Sidewalk Construction &amp; Gap Closures</span>
+        <span class="tag tag-gold">ADA Curb Ramps &amp; Accessible Paths</span>
+        <span class="tag tag-gold">High-Visibility Crosswalks</span>
+        <span class="tag tag-gold">Class I Multi-Use Paths / Trails</span>
+        <span class="tag tag-gold">Class II Bike Lanes</span>
+        <span class="tag tag-gold">Class IV Protected Bikeways</span>
+        <span class="tag tag-gold">Rapid Flashing Beacons (RRFB / HAWK)</span>
+        <span class="tag tag-gold">Safe Routes to School Infrastructure</span>
+        <span class="tag tag-gold">Pedestrian-Scale Lighting</span>
+      </div>
+    </div>
+
+    <div class="strategy-card tier2">
+      <div class="strat-title">🥈 TIER 2 — Strong Supporting Elements (Frequently Combined)</div>
+      <div class="strat-desc">These elements frequently appear alongside Tier 1 projects, adding connectivity, safety, and usability. They score well under "Need" and "Safety" when data-supported.</div>
+      <div class="examples">
+        <span class="tag tag-green">Bicycle Highways (High-Speed Commuter Routes)</span>
+        <span class="tag tag-green">Complete Low-Stress Bicycle Networks</span>
+        <span class="tag tag-green">Safe Routes to Transit Connections</span>
+        <span class="tag tag-green">Traffic Circles / Roundabouts (Pedestrian Safety)</span>
+        <span class="tag tag-green">Protected Intersections</span>
+        <span class="tag tag-green">Secure Bicycle Parking</span>
+        <span class="tag tag-green">Wayfinding Signage</span>
+        <span class="tag tag-green">Trail-Transit Connectivity</span>
+        <span class="tag tag-green">Bike Share Infrastructure</span>
+      </div>
+    </div>
+
+    <div class="strategy-card tier3">
+      <div class="strat-title">🥉 TIER 3 — Specialized / Supplementary (Context-Dependent)</div>
+      <div class="strat-desc">These elements are eligible and score well in appropriate contexts but are rarely the core of a winning application alone. Strong in combination with Tier 1/2 or in rural/tribal applications.</div>
+      <div class="examples">
+        <span class="tag tag-blue">Recreational Trails (Trailhead Access, Rail-to-Trail)</span>
+        <span class="tag tag-blue">E-Bike Infrastructure (Charging, Parking)</span>
+        <span class="tag tag-blue">Preventive Maintenance (Bikeways with safety improvement goal)</span>
+        <span class="tag tag-blue">Ferry/Rail Bike-Carry Facilities</span>
+        <span class="tag tag-blue">Quick-Build Interim Improvements (MPO Only)</span>
+        <span class="tag tag-blue">Senior-Focused Active Transportation Routes</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><span class="icon">✅</span> Project Characteristics That Score High</div>
+      <div class="checklist-item"><span class="check">✓</span><p><strong>Located in or Adjacent to a Disadvantaged Community:</strong> Must directly serve a DAC (not just be nearby). Demonstrate direct, meaningful, assured benefit. Projects in CalEnviroScreen top 25% or Median HH Income &lt;$79,298 automatically qualify.</p></div>
+      <div class="checklist-item"><span class="check">✓</span><p><strong>Connectivity to Schools, Transit, and Essential Services:</strong> Projects connecting neighborhoods to schools, transit stops, medical facilities, grocery stores, and employment score significantly higher on "Need." Map all destinations within 1 mile of project.</p></div>
+      <div class="checklist-item"><span class="check">✓</span><p><strong>Documented Crash History at Project Locations:</strong> Use SWITRS/TIMS 5-year collision data. Show pedestrian and bicyclist KSI patterns. Locations with documented fatalities or serious injuries score highest on "Safety."</p></div>
+      <div class="checklist-item"><span class="check">✓</span><p><strong>Listed in an Adopted Active Transportation Plan:</strong> Large project applications score higher if specifically listed in an adopted bicycle plan, pedestrian plan, SRTS plan, or comprehensive active transportation plan per Section 891.2.</p></div>
+      <div class="checklist-item"><span class="check">✓</span><p><strong>Robust Community Engagement Including Disadvantaged Voices:</strong> Document meetings, surveys, walk audits, flyers, multilingual outreach. Show feedback received AND how project design incorporates it. Engagement in the project-specific area, not general citywide surveys.</p></div>
+      <div class="checklist-item"><span class="check">✓</span><p><strong>Committed Matching Funds (Though Not Required):</strong> While ATP does not require match, leveraged funds improve score on "Leveraging" (Large/Medium apps) and signal project strength. SB 1 LSRP funds are an excellent match source.</p></div>
+      <div class="checklist-item"><span class="check">✓</span><p><strong>Anti-Displacement Policies and Actions:</strong> Explicitly required in the "Benefit to Disadvantaged Communities" score. Document any local anti-displacement ordinances, tenant protections, or affordable housing programs in the project area.</p></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="icon">❌</span> ATP Funding Restrictions — What Is NOT Eligible</div>
+      <div class="checklist-item"><span class="cross">✗</span><p><strong>New Sharrows on Roads &gt;30 MPH:</strong> Expressly prohibited by Streets &amp; Highways Code §891.9. Sharrows over 30 MPH require justification showing local context appropriateness and advancing low-stress network — reviewers scrutinize this heavily.</p></div>
+      <div class="checklist-item"><span class="cross">✗</span><p><strong>Class III Bikeways (Generally):</strong> Cannot fund new Class III unless: road is ≤25 MPH design speed, project reduces design speed to ≤25 MPH, or applicant demonstrates appropriateness for local community context advancing low-stress network.</p></div>
+      <div class="checklist-item"><span class="cross">✗</span><p><strong>Supplanting Other Committed Funds:</strong> A project already fully funded cannot receive ATP. ATP cannot replace committed funding already obligated to the project.</p></div>
+      <div class="checklist-item"><span class="cross">✗</span><p><strong>Cost Increases:</strong> ATP will not fund cost increases to already-programmed projects. Agency must absorb overruns. Exception only for Caltrans on-system projects (Supplemental process).</p></div>
+      <div class="checklist-item"><span class="cross">✗</span><p><strong>Ongoing/Existing NI Programs Without New Components:</strong> Non-infrastructure projects must be new programs or new components. You cannot use ATP to continue a program already operating — must demonstrate how ATP starts something new.</p></div>
+      <div class="checklist-item"><span class="cross">✗</span><p><strong>Pre-Construction Without Construction Application:</strong> If applying for PAED, PSE, or RW, you MUST also apply for construction funding in the same application. Exceptions exist only for Large Infrastructure pre-construction only and MPO supplemental applications.</p></div>
+      <div class="checklist-item"><span class="cross">✗</span><p><strong>Projects Required by Private Development:</strong> Mitigations required as conditions of private development approvals or permits are ineligible. Screened out before scoring.</p></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ TAB 5: STRATEGY ═══ -->
+<div id="tab-strategy" class="tab-content">
+
+  <div class="card">
+    <div class="card-header"><span class="icon">📋</span> Expert Playbook — Maximizing Your ATP Cycle 8 Score</div>
+
+    <div style="font-size:12px; color:var(--gold); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-bottom:16px;">STRATEGIC FOUNDATION</div>
+
+    <div class="nofo-item">
+      <div class="num">1</div>
+      <div>
+        <h4>Lead with "Need" — Not Just Safety</h4>
+        <p>Unlike SS4A which is safety-first, ATP's highest-weighted criterion for infrastructure is "Need" (38–52 pts). Open with connectivity data: how many people currently lack access to transit, schools, medical facilities, or employment by walking or biking? Combine origin-destination analysis, land use maps, and community survey data to build a compelling need narrative. Need score requires demonstrating student active transportation needs explicitly.</p>
+        <span class="tip">TIP: Use SACOG's ATP Data Mapping Tool to identify connectivity gaps in your jurisdiction</span>
+      </div>
+    </div>
+
+    <div class="nofo-item">
+      <div class="num">2</div>
+      <div>
+        <h4>DAC Documentation Is Non-Negotiable</h4>
+        <p>Every funded project must demonstrate direct, meaningful, assured benefit to a disadvantaged community — even if it's within one. The CTC warns: "there is no presumption of benefit, even for projects located within a disadvantaged community." Map your CalEnviroScreen scores, ACS income data, and NSLP eligibility rates for schools within project reach. Anti-displacement: document City policies (rent stabilization, affordable housing programs) even if citywide — it signals awareness.</p>
+        <span class="tip">TIP: Use CalEnviroScreen 4.0 (score ≥40.05) as your qualifier — most reliable and widely accepted</span>
+      </div>
+    </div>
+
+    <div class="nofo-item">
+      <div class="num">3</div>
+      <div>
+        <h4>Consult the Corps — Right Now, Before the Application Opens</h4>
+        <p>California Conservation Corps consultation is required every cycle for every application — your prior consultation doesn't carry over. Submit via the JotForm (for both CCC and Local Corps) as soon as the Cycle 8 window opens. Failure to consult = automatic −5 points. Intent not to use = −5 points. This is the single easiest deduction to avoid and one of the most common mistakes.</p>
+        <span class="deadline">ACTION REQUIRED: Submit JotForm to CCC and Local Corps immediately when application opens</span>
+      </div>
+    </div>
+
+    <div class="nofo-item">
+      <div class="num">4</div>
+      <div>
+        <h4>Large Infrastructure: Target Transformative, Not Just Incremental</h4>
+        <p>CTC explicitly wants "transformative projects that significantly expand the active transportation opportunities in a community or region." For Large applications (5 pts), Transformative scoring considers: project as part of a larger walking/biking network, local fatality/injury reduction goals, prohousing policies, and support for existing/planned affordable housing. A corridor project connecting 3 neighborhoods to a major transit hub outscores a single-block sidewalk gap by design.</p>
+        <span class="tip">TIP: If your city is in HCD's Prohousing Designation Program, document it explicitly in the Transformative criterion</span>
+      </div>
+    </div>
+
+    <div class="nofo-item">
+      <div class="num">5</div>
+      <div>
+        <h4>Get Listed in Your Active Transportation Plan Before Applying</h4>
+        <p>Large project applications explicitly score higher under "Public Participation &amp; Planning" if the project is listed in an adopted bicycle plan, pedestrian plan, SRTS plan, or ATP plan. Your CSAP (if it includes bike/ped elements) may qualify if adopted. For Cycle 8, any adoption before June 2026 works. ATP Plan projects (funded under the Plan application type) get 30 pts for DAC benefit and 25 pts for Implementation — most successful if applicant has NO existing eligible plan (first priority).</p>
+        <span class="new">FOR CSAP: Adoption before June 2026 positions projects as plan-listed before Cycle 8 deadline</span>
+      </div>
+    </div>
+
+    <div class="nofo-item">
+      <div class="num">6</div>
+      <div>
+        <h4>Use LSRP as Match — And Document It Precisely</h4>
+        <p>No match is required for ATP, but leveraged funds boost score for Large and Medium applications (up to 5 pts). SB 1 LSRP apportionments are among the best match sources: no federal strings, received monthly, no competing application required. The signed commitment letter must be from your CEO or authorized officer. STIP funds are excluded from leveraging. In-kind, staff time, and non-infrastructure activities are not eligible for leveraging points.</p>
+        <span class="tip">TIP: Phase-by-phase funding plan through construction must be complete — partial funding plans receive zero leveraging points</span>
+      </div>
+    </div>
+
+    <div class="nofo-item">
+      <div class="num">7</div>
+      <div>
+        <h4>Safe Routes to School Projects Are Strategically Valuable</h4>
+        <p>SRTS projects are exempt from the $250K minimum funding request. They score under "Need" on student active transportation criteria and under "Safety" for school proximity. Projects must be within 2 miles of a public school, with school community as intended beneficiaries. SRTS designations significantly boost visibility in staff recommendations. In Cycle 7, 5 of 9 statewide-funded projects had SRTS components — showing the strategic value of school alignment even in large infrastructure applications.</p>
+        <span class="tip">TIP: Add an SRTS component to any infrastructure project within 2 miles of a school to gain scoring advantages</span>
+      </div>
+    </div>
+
+    <div class="nofo-item">
+      <div class="num">8</div>
+      <div>
+        <h4>PSR Equivalency Must Be Airtight</h4>
+        <p>Every application functions as a PSR equivalent — defining scope, cost, and schedule. The ATP application IS the PSR if it defines and justifies scope, provides a complete cost estimate for ALL phases (even pre-construction-only applications must show preliminary estimates for all phases), and the scope has independent utility. Caltrans staff specifically review PSR equivalency — applications that fail this review are flagged before scoring. Use the Caltrans PSR Equivalency Workshop materials as a checklist.</p>
+        <span class="deadline">CRITICAL: Feasibility studies are NOT PSR equivalents. Cost estimates must cover all phases, not just ATP-funded phases.</span>
+      </div>
+    </div>
+
+    <div class="nofo-item">
+      <div class="num">9</div>
+      <div>
+        <h4>MPO vs. Statewide — Know Your Competition Tier</h4>
+        <p>If your project is in an MPO region (Bay Area, LA, SD, Sacramento, etc.), it competes in BOTH the statewide component AND is eligible for the MPO component if not funded statewide. Projects not selected statewide must be considered by the MPO — you can't opt out. Bay Area: MTC has ~$46M for Cycle 8 with regional guidelines that include equity priority community requirements. Scores in the 80s range can win MPO funding vs. 89–95 required statewide. MTC also allows matching fund waivers for low-income communities.</p>
+        <span class="tip">TIP: For Bay Area agencies — a strong application that just misses statewide funding still has a strong path through MTC's regional component</span>
+      </div>
+    </div>
+
+    <div class="nofo-item">
+      <div class="num">10</div>
+      <div>
+        <h4>Past Performance Cleanup Before Cycle 8</h4>
+        <p>CTC will assess and potentially deduct up to 10 points for poor past performance on any ATP project — including non-use of Corps as committed, adverse audits, or undelivered prior cycle phases. Run an audit of all your ATP project statuses now: Are user counts submitted? Are expenditure reports current? Any open corrective action plans with Caltrans? Resolve these before the application deadline. Non-compliance can also trigger placement on a Commission watch list requiring appearance.</p>
+        <span class="deadline">CHECK NOW: Verify all prior ATP project reports and Corps use commitments are current at dot.ca.gov/programs/local-assistance</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header"><span class="icon">📊</span> Competitive Benchmarking — Strong vs. Typical ATP Application</div>
+    <div id="benchmarkBars"></div>
+  </div>
+
+</div>
+
+<!-- ═══ TAB 6: CYCLE 8 KEY FACTS ═══ -->
+<div id="tab-cycle8" class="tab-content">
+
+  <div class="grid-4" style="margin-bottom:20px;">
+    <div class="metric-box red">
+      <div class="val">Jun 22</div><div class="lbl">Application Deadline</div><div class="sub">2026 · Via Submittable portal</div>
+    </div>
+    <div class="metric-box gold">
+      <div class="val">Mar 19</div><div class="lbl">Guidelines Adopted + Call Opens</div><div class="sub">March 19–20, 2026 · CTC</div>
+    </div>
+    <div class="metric-box blue">
+      <div class="val">~$500M</div><div class="lbl">Expected Available</div><div class="sub">$275M statewide · $46M MTC</div>
+    </div>
+    <div class="metric-box green">
+      <div class="val">None</div><div class="lbl">Match Required</div><div class="sub">MPOs may require match; statewide does not</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><span class="icon">📅</span> Cycle 8 Key Timeline</div>
+      <div id="timeline8"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="icon">💰</span> Fund Estimate — Component Distribution</div>
+      <div class="grid-3" style="margin-bottom:16px;">
+        <div class="metric-box gold">
+          <div class="val">50%</div><div class="lbl">Statewide Component</div><div class="sub">~$250M · CTC competitive</div>
+        </div>
+        <div class="metric-box blue">
+          <div class="val">40%</div><div class="lbl">MPO Component</div><div class="sub">~$200M · by population</div>
+        </div>
+        <div class="metric-box green">
+          <div class="val">10%</div><div class="lbl">Small Urban &amp; Rural</div><div class="sub">~$50M · pops 5K–200K</div>
+        </div>
+      </div>
+      <div class="insight-card">
+        <h4>🏘️ Bay Area (MTC) — Cycle 8 Regional Allocation</h4>
+        <p>MTC expects ~$46M for the Bay Area MPO component in Cycle 8 (FFY27–30 programming years). MTC requires 11.47% match from project sponsors, waivable for low-income communities. Equity Priority Community projects get additional scoring consideration. Applications due to MTC as part of MPO process — check MTC for regional guidelines timeline (typically fall 2026).</p>
+      </div>
+      <div class="insight-card blue">
+        <h4>📋 Fund Estimate Adoption — March 2026</h4>
+        <p>The 2027 ATP Fund Estimate was adopted at the same CTC meeting as the Guidelines (March 19–20, 2026). The Fund Estimate sets the exact dollar amount per component. Review it immediately — it determines whether Small Urban &amp; Rural is open to your jurisdiction and shows the exact federal/state funding split.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header"><span class="icon">⚠️</span> New in Cycle 8 — Key Changes from Cycle 7 Guidelines</div>
+
+      <div class="nofo-item">
+        <div class="num" style="background:#4FD1C5;color:#0A1628;">★</div>
+        <div>
+          <h4>Quick-Build Pilot Program Returns — MPO Component Only</h4>
+          <p>Quick-Build Projects return in the MPO Component via supplemental calls for projects. Must be submitted directly to the MPO — not the statewide competition. State-only funding designation required. Testing period of at least 6 months required. Semi-permanent materials that don't require excavation. Design-build preferred delivery method.</p>
+          <span class="new">NEW: Quick-Build design costs may be included in the construction phase budget</span>
+        </div>
+      </div>
+
+      <div class="nofo-item">
+        <div class="num" style="background:#4FD1C5;color:#0A1628;">★</div>
+        <div>
+          <h4>Updated Disadvantaged Community Income Threshold</h4>
+          <p>Cycle 8 uses updated ACS 2020-2024 data with a new statewide median. Median Household Income threshold: &lt;$79,297.60 (80% of 2020-2024 statewide median, Census Tract ID 140 data). Verify your project area qualifies against the new threshold — some communities that qualified in prior cycles may not under updated data.</p>
+          <span class="tip">CHECK: Run your census tracts against updated ACS 2020-2024 data at data.census.gov</span>
+        </div>
+      </div>
+
+      <div class="nofo-item">
+        <div class="num" style="background:#4FD1C5;color:#0A1628;">★</div>
+        <div>
+          <h4>NSLP Threshold — 2024-2025 School Year Data</h4>
+          <p>National School Lunch Program qualifier now uses 2024-2025 school year data (75%+ eligible students). Projects must be within 2 miles of qualifying schools. California Department of Education data is the required source. Update your DAC qualification analysis to use current-year school data — prior year data is not acceptable.</p>
+        </div>
+      </div>
+
+      <div class="nofo-item">
+        <div class="num" style="background:#4FD1C5;color:#0A1628;">★</div>
+        <div>
+          <h4>Cycle 8 Programming Years: FY27-28 through FY30-31</h4>
+          <p>The 2027 ATP programs projects in four fiscal years: 2027-28, 2028-29, 2029-30, and 2030-31. Projects requesting PAED/PSE funding now must also include a construction application (with exceptions). Timeline this against your design completion, environmental clearance, and construction readiness for each programmed year.</p>
+          <span class="tip">TIP: Request construction funding in FY29-30 or FY30-31 if your project is early in design — more realistic than FY27-28</span>
+        </div>
+      </div>
+
+      <div class="nofo-item">
+        <div class="num" style="background:#4FD1C5;color:#0A1628;">★</div>
+        <div>
+          <h4>Baseline Agreement Threshold — $25M Total or $10M ATP</h4>
+          <p>SB 1 Accountability requires Baseline Agreements for projects with total cost ≥$25M (all funds) or ATP funding ≥$10M — including large infrastructure projects programmed for pre-construction only. CTC will not approve allocations (except environmental phase and NI for combo projects) without an approved Baseline Agreement. Factor this into your project management timeline.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="icon">📋</span> Delivery Rules — What Triggers Fund Lapse</div>
+
+      <div class="nofo-item">
+        <div class="num">1</div>
+        <div>
+          <h4>Allocation Deadline — June 30 of Programmed Year</h4>
+          <p>Funds programmed to a project phase expire on June 30 of the programmed fiscal year. Allocation request must be on a Commission meeting agenda no later than the June CTC meeting of that year. CTC meets 6x/year — plan allocation requests 60 days in advance. Extension: up to 20 months additional (one time only).</p>
+        </div>
+      </div>
+
+      <div class="nofo-item">
+        <div class="num">2</div>
+        <div>
+          <h4>Contract Award — Within 6 Months of Construction Allocation</h4>
+          <p>Construction contracts must be awarded within 6 months of allocation approval. Do not award contract until CTC allocates — premature award makes costs ineligible. Extension: up to 12 months (one time). Alert: You should not even request construction allocation unless you are ready to advertise immediately.</p>
+          <span class="deadline">RULE: Never award construction contract before CTC allocation — costs are permanently ineligible</span>
+        </div>
+      </div>
+
+      <div class="nofo-item">
+        <div class="num">3</div>
+        <div>
+          <h4>Project Completion — 36 Months from Contract Award</h4>
+          <p>After construction award, agency has 36 months to complete and accept the contract. Invoice Caltrans within 180 days after completion deadline. Extension: up to 12 months (one time). Final invoice triggers Local Agency Project Audit — retain all records 3 years post-final payment.</p>
+        </div>
+      </div>
+
+      <div class="nofo-item">
+        <div class="num">4</div>
+        <div>
+          <h4>10-Year Rule — Pre-Construction to Construction</h4>
+          <p>Projects must commence ROW acquisition or construction within 10 years of receiving pre-construction (PAED/PSE) funding. Must commence construction within 10 years of ROW funding. Violation requires repayment of ATP funds. Plan long projects carefully across funding cycles.</p>
+        </div>
+      </div>
+
+      <div class="nofo-item">
+        <div class="num">5</div>
+        <div>
+          <h4>User Counts — Before, After, and 5-Year Post-Construction</h4>
+          <p>Every project with programmed construction funds (including NI and combo projects) must submit: (1) pre-construction count, (2) at-construction-completion count, (3) 5-year post-construction count per the Count Methodology Guide. Failure = corrective action plan, Commission watch list, possible future ineligibility.</p>
+          <span class="tip">PLAN AHEAD: Build user count methodology into construction contract or consultant scope</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- /content -->
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="brand">traffic<span>grants</span>.ai</div>
+  <div class="sub">© 2026 TrafficGrants.ai — ATP Intelligence Module · Built for California Transportation Professionals<br>Sources: California Transportation Commission, Caltrans DLA, ATRC, CalBike, MTC · Last Updated April 2026</div>
+</div>
+
+<script>
+Chart.defaults.color = '#94a3b8';
+Chart.defaults.borderColor = '#2a3f60';
+Chart.defaults.font.family = 'DM Sans';
+
+const GOLD='#FFC72C', BLUE='#005EB8', GREEN='#38A169', RED='#E53E3E',
+      PURPLE='#805AD5', CYAN='#3182CE', ORANGE='#DD6B20', TEAL='#4FD1C5';
+
+// ── TAB 1: OVERVIEW CHARTS ──
+
+new Chart(document.getElementById('chartCycleFunding'), {
+  type:'bar',
+  data:{
+    labels:['Cy1\n2014','Cy2\n2016','Cy3\n2017','Cy3 Aug\n2018','Cy4\n2019','Cy5\n2021','Cy6\n2023','Cy7\n2025','Cy8\n2027E'],
+    datasets:[{
+      label:'Total ATP Funding ($M)',
+      data:[121,215,240,200,440,440,1700,168,500],
+      backgroundColor:[BLUE,BLUE,BLUE,GREEN,BLUE,BLUE,GOLD,RED,TEAL],
+      borderRadius:4
+    }]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`$${c.parsed.y.toLocaleString()}M`}}},scales:{y:{title:{display:true,text:'Total ATP Funding ($M)'}}}}
+});
+
+new Chart(document.getElementById('chartComponents'), {
+  type:'doughnut',
+  data:{
+    labels:['Statewide Component (50%)','MPO Component (40%)','Small Urban & Rural (10%)'],
+    datasets:[{data:[50,40,10],backgroundColor:[GOLD,BLUE,GREEN],borderWidth:0,hoverOffset:8}]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},padding:12}}}}
+});
+
+new Chart(document.getElementById('chartApplicants'), {
+  type:'doughnut',
+  data:{
+    labels:['Cities & Counties','School Districts','Transit Agencies','Tribal Governments','Regional/MPO Agencies','Nonprofits (Recreational Trails)','Natural Resources/Public Land'],
+    datasets:[{data:[55,15,10,8,7,3,2],backgroundColor:[BLUE,GOLD,GREEN,ORANGE,PURPLE,CYAN,RED],borderWidth:0}]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:8}}}}
+});
+
+new Chart(document.getElementById('chartProjectTypes'), {
+  type:'doughnut',
+  data:{
+    labels:['Infrastructure Only','Infrastructure + Non-Infrastructure','Non-Infrastructure Only','Plans (≤2% cap)'],
+    datasets:[{data:[55,25,12,8],backgroundColor:[BLUE,GREEN,ORANGE,GOLD],borderWidth:0}]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:10},padding:8}}}}
+});
+
+// ── TAB 2: CYCLES TABLES ──
+
+const cyclesData = [
+  ['Cycle 1','2014','~$121M','~120','N/A','Program launched · Bike/ped consolidation','SB99/AB101'],
+  ['Cycle 2','2016','~$215M','~207','N/A','First full MPO component · 88% to DACs','SB99'],
+  ['Cycle 3','2017','~$240M','~180','N/A','First SB1 funds · Augmented with $200M GHG funds','SB1 added'],
+  ['Cycle 3 Aug.','2018','~$200M','~130','N/A','SB1 $100M/yr augmentation added to Cy3','SB1'],
+  ['Cycle 4','2019','~$440M','~290','N/A','Score threshold ~92 · 4-year programming','Normal cycle'],
+  ['Cycle 5','2021','~$440M','~300','~92+','Score 92+ funded statewide · COVID-delayed call','COVID impact'],
+  ['Cycle 6','2023','~$1.07B + $539M MPO','~200 + 134 MPO','89+','$1B SB budget surplus boost · All-time largest · 432 apps/$3.1B requests','Record cycle'],
+  ['Cycle 7','2025','$168M (all 3 components)','13 SW/SUR + MPO','95+','Deep budget cuts · Only 4% funded · $2.5B in requests · 15:1 oversubscription','Budget crisis'],
+  ['Cycle 8','2027','~$500M (expected)','TBD','~88–92 expected','Call open Mar 2026 · Apps due Jun 22, 2026 · FY27-31 programming','Active'],
+];
+
+const cTbl = document.getElementById('tableCycles');
+cTbl.innerHTML = `<thead><tr><th>Cycle</th><th>Year Adopted</th><th>Total Funding</th><th>Projects Funded</th><th>Score Threshold</th><th>Key Context</th><th>Authority</th></tr></thead><tbody>`;
+cyclesData.forEach(r => {
+  const hl = (r[0]==='Cycle 8')?'class="highlight"':((r[0]==='Cycle 6')?'style="background:rgba(255,199,44,0.04)"':'');
+  cTbl.innerHTML += `<tr ${hl}><td><strong>${r[0]}</strong></td><td>${r[1]}</td><td class="money">${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td><td style="font-size:11px;color:var(--text-muted);">${r[5]}</td><td style="font-size:11px;color:var(--text-dim);">${r[6]}</td></tr>`;
+});
+cTbl.innerHTML += '</tbody>';
+
+const cy7Data = [
+  ['City of Visalia','Statewide','Large Infra','Beyond the Lanes – Santa Fe Street','Multi-use trail, protected intersections, traffic circle, bike/ped facilities','DAC, SRTS','95+'],
+  ['City of Salinas','Statewide','Plan','Safe Routes to School Plan','Comprehensive SRTS plan with walk audits, 1,282 parent/student surveys','SRTS, DAC','95+'],
+  ['Del Norte Co. Unified SD','Statewide','NI','SRTS Non-Infrastructure Program','Education/encouragement for students','SRTS, Tribal-adjacent','95+'],
+  ['City of Fresno','Statewide','Large Infra','Pedestrian Safety Infrastructure','Sidewalks, crosswalks, ADA ramps in DAC corridors','DAC, SRTS','95+'],
+  ['County of Tulare','Statewide','Medium Infra','Rural Active Transportation','Bike lanes, sidewalk gaps, safe crossings in unincorporated areas','Rural, DAC','95+'],
+  ['City of Stockton','Statewide','Large Infra','South Stockton Active Transportation','Complete streets, bike/ped improvements in high-need corridors','DAC, SRTS','95+'],
+  ['Contra Costa Co.','Statewide','Medium Infra','Unincorporated Communities Network','Sidewalk gaps, crosswalks, active transportation access','DAC, Unincorporated','95+'],
+  ['City of Coachella','Statewide','Large Infra','Coachella Valley Connections','Class II/IV bikeways, pedestrian improvements, crosswalks','DAC, SoCal','95+'],
+  ['Mono Co. / Tribal','Statewide','Small Infra','Eastern Sierra AT Improvements','Trail connectivity, bike/ped safety in rural tribal-adjacent areas','Rural, Tribal','95+'],
+  ['Various (4 projects)','Small Urban/Rural','Mixed','4 SUR Component Projects','$16.87M total · 2 include SRTS · 1 Tribal ATP Plan','DAC 100%','95+'],
+];
+
+const cy7Tbl = document.getElementById('tableCy7');
+cy7Tbl.innerHTML = `<thead><tr><th>Applicant</th><th>Component</th><th>Type</th><th>Project</th><th>Elements</th><th>DAC/SRTS</th><th>Score</th></tr></thead><tbody>`;
+cy7Data.forEach(r => {
+  cy7Tbl.innerHTML += `<tr><td><strong>${r[0]}</strong></td><td><span class="tag tag-blue" style="font-size:10px;">${r[1]}</span></td><td>${r[2]}</td><td style="font-size:12px;">${r[3]}</td><td style="font-size:11px;color:var(--text-muted);">${r[4]}</td><td><span class="tag tag-green" style="font-size:10px;">${r[5]}</span></td><td class="money">${r[6]}</td></tr>`;
+});
+cy7Tbl.innerHTML += '</tbody>';
+
+const cy7MPO = [
+  ['MTC / Bay Area','~$49M (est.)','15–20 projects expected','MTC Cycle 7 guidelines · Equity Priority Communities priority','Adopted Jun 2025'],
+  ['SACOG (Sacramento region)','$4.72M','TBD','SACOG Regional ATP – CTC adopted Jun 2025','Adopted Jun 2025'],
+  ['SJCOG (San Joaquin)','$14.73M','3 projects','11 apps/$71.8M requested · Score threshold not specified','Adopted Feb 2025'],
+  ['SANDAG (San Diego)','TBD','TBD','Regional guidelines with systemic safety network scoring','Adopted 2025'],
+  ['SCAG (Southern CA)','~$80M+ (est.)','TBD','Largest MPO · Geographic equity criterion required','Expected Jun 2025'],
+];
+
+const cy7MPOTbl = document.getElementById('tableCy7MPO');
+cy7MPOTbl.innerHTML = `<thead><tr><th>MPO</th><th>Allocation</th><th>Projects</th><th>Notes</th><th>Status</th></tr></thead><tbody>`;
+cy7MPO.forEach(r => {
+  cy7MPOTbl.innerHTML += `<tr><td><strong>${r[0]}</strong></td><td class="money">${r[1]}</td><td>${r[2]}</td><td style="font-size:11px;color:var(--text-muted);">${r[3]}</td><td><span class="tag tag-green" style="font-size:10px;">${r[4]}</span></td></tr>`;
+});
+cy7MPOTbl.innerHTML += '</tbody>';
+
+const cy6Notable = [
+  ['City of Los Angeles','Skid Row Connectivity & Safety Project','Large Infra','$24M+','Crosswalks, lighting, sidewalks in Skid Row DAC · High equity score'],
+  ['City of National City','24th Street Transit Center Connections','Medium Infra','$8M+','Bike/ped connections to transit · Binational border DAC'],
+  ['City of West Sacramento','I Street Bridge Deck Conversion','Large Infra','$15M+','Railroad bridge converted to active transportation trail'],
+  ['Orange County','OC Loop Segments P & Q','Large Infra','$12M+','Regional trail network expansion · Transformative corridor'],
+  ['Santa Clara VTA','Bascom Avenue Complete Street','Large Infra','$18M+','Protected bike lanes, pedestrian improvements, transit integration'],
+  ['Calaveras County','San Andreas Pope St & SRTS','Small Infra','$3M+','Rural SRTS with sidewalks and crosswalks in small urban area'],
+  ['Fresno County','Del Rey Sidewalks Project','Small Infra','$2.5M+','Rural unincorporated DAC sidewalk gap closures'],
+  ['Coachella Valley COG','Arts & Music Line Trail','Large Infra','$20M+','Transformative trail connecting cultural destinations in DAC corridor'],
+];
+
+const cy6Tbl = document.getElementById('tableCy6Notable');
+cy6Tbl.innerHTML = `<thead><tr><th>Applicant</th><th>Project Name</th><th>Type</th><th>Approx. ATP</th><th>Key Elements</th></tr></thead><tbody>`;
+cy6Notable.forEach(r => {
+  cy6Tbl.innerHTML += `<tr><td><strong>${r[0]}</strong></td><td>${r[1]}</td><td><span class="tag tag-blue" style="font-size:10px;">${r[2]}</span></td><td class="money">${r[3]}</td><td style="font-size:11px;color:var(--text-muted);">${r[4]}</td></tr>`;
+});
+cy6Tbl.innerHTML += '</tbody>';
+
+new Chart(document.getElementById('chartScoreThreshold'), {
+  type:'line',
+  data:{
+    labels:['Cycle 4\n(2019)','Cycle 5\n(2021)','Cycle 6\n(2023)','Cycle 7\n(2025)','Cycle 8\n(2027E)'],
+    datasets:[
+      {label:'Score Threshold to Win Statewide Funding',data:[90,92,89,95,90],borderColor:GOLD,backgroundColor:'rgba(255,199,44,0.1)',borderWidth:2.5,pointBackgroundColor:GOLD,pointRadius:6,tension:0.3},
+      {label:'Total Funding ($M, right axis)',data:[440,440,1070,168,500],borderColor:BLUE,backgroundColor:'rgba(0,94,184,0.1)',borderWidth:2,borderDash:[5,3],pointBackgroundColor:BLUE,pointRadius:5,tension:0.3,yAxisID:'y2'}
+    ]
+  },
+  options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'top'}},
+    scales:{
+      y:{min:85,max:100,title:{display:true,text:'Score Threshold (out of 100)'}},
+      y2:{position:'right',title:{display:true,text:'Funding ($M)'},grid:{display:false}}
+    }}
+});
+
+// ── TAB 3: SCORE DISTRIBUTION CHART ──
+
+new Chart(document.getElementById('chartScoreDist'), {
+  type:'bar',
+  data:{
+    labels:['<70','70–74','75–79','80–84','85–88','89–92','93–94','95–97','98–100'],
+    datasets:[
+      {label:'Cycle 6 — Approx. Applications',data:[80,70,85,90,70,40,30,15,5],backgroundColor:BLUE,borderRadius:3,stack:'c6'},
+      {label:'Cycle 6 — Funded (89+)',data:[0,0,0,0,0,40,30,15,5],backgroundColor:GOLD,borderRadius:3,stack:'c6f'},
+      {label:'Cycle 7 — Funded (95+ only)',data:[0,0,0,0,0,0,0,8,5],backgroundColor:RED,borderRadius:3,stack:'c7'},
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:'top'},tooltip:{mode:'index'}},
+    scales:{y:{title:{display:true,text:'Approx. Number of Applications'}}}
+  }
+});
+
+// ── TAB 5: BENCHMARK BARS ──
+
+const benchmarks = [
+  {label:'Project in CalEnviroScreen top 25% (≥40.05 score)',strong:95,typical:55,color:GREEN},
+  {label:'Documented pedestrian/bicycle collision history at locations',strong:90,typical:60,color:RED},
+  {label:'Listed in adopted active transportation plan (Section 891.2)',strong:85,typical:45,color:GOLD},
+  {label:'Specific community engagement in project area (not generic)',strong:88,typical:55,color:PURPLE},
+  {label:'School within 2 miles + SRTS component included',strong:85,typical:40,color:ORANGE},
+  {label:'Multi-modal connectivity (transit + school + services)',strong:90,typical:50,color:CYAN},
+  {label:'California Conservation Corps consultation completed',strong:100,typical:65,color:TEAL},
+  {label:'Committed leveraged funds (LSRP or other sources)',strong:80,typical:40,color:BLUE},
+  {label:'Anti-displacement policies documented',strong:85,typical:30,color:GREEN},
+  {label:'PSR Equivalency — all phases, independent utility demonstrated',strong:95,typical:70,color:GOLD},
+];
+
+const bbEl = document.getElementById('benchmarkBars');
+benchmarks.forEach(b => {
+  bbEl.innerHTML += `
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;">
+        <span style="font-weight:600;">${b.label}</span>
+        <span style="color:var(--text-muted);font-size:11px;">Strong <span style="color:${b.color};font-weight:700;">${b.strong}%</span> vs. Typical <span style="color:var(--text-dim);">${b.typical}%</span></span>
+      </div>
+      <div style="position:relative;height:16px;background:var(--surface3);border-radius:4px;overflow:hidden;">
+        <div style="height:100%;width:${b.typical}%;background:var(--border);border-radius:4px;position:absolute;"></div>
+        <div style="height:100%;width:${b.strong}%;background:${b.color};border-radius:4px;position:absolute;opacity:0.85;"></div>
+      </div>
+    </div>`;
+});
+
+// ── TAB 6: CYCLE 8 TIMELINE ──
+
+const events8 = [
+  {date:'Mar 19–20, 2026',label:'Guidelines Adopted + Call for Projects Opens',tag:'Call Open',color:GREEN},
+  {date:'Mar 27, 2026',label:'Scoring Rubrics Expected to Be Published',tag:'Key Resource',color:GOLD},
+  {date:'May 8, 2026',label:'MPO Regional Guidelines Due to CTC (optional)',tag:'MPO Deadline',color:ORANGE},
+  {date:'Jun 22, 2026',label:'Project Applications Due (All Types)',tag:'FINAL DEADLINE',color:RED},
+  {date:'Jun 25–26, 2026',label:'MPO Regional Guidelines Approval by Commission',tag:'CTC Action',color:BLUE},
+  {date:'Nov 2, 2026',label:'Staff Recommendations — Statewide & Small Urban/Rural',tag:'Recommendations',color:BLUE},
+  {date:'Dec 3–4, 2026',label:'Program Adoption — Statewide & Small Urban/Rural Components',tag:'Adoption',color:GREEN},
+  {date:'Dec 2026',label:'Unprogrammed Project List Distributed to MPOs',tag:'MPO Process',color:PURPLE},
+  {date:'Feb 19, 2027',label:'MPO Draft Recommendations & Programming Package Due',tag:'MPO Deadline',color:ORANGE},
+  {date:'Apr 23, 2027',label:'MPO Final Program of Projects Due',tag:'MPO Final',color:ORANGE},
+  {date:'Jun 2027',label:'MPO Component Program Adoption',tag:'Final Adoption',color:GREEN},
+];
+
+const tlEl = document.getElementById('timeline8');
+events8.forEach(e => {
+  const tagStyle = `background:${e.color}20;color:${e.color};border:1px solid ${e.color}40;`;
+  tlEl.innerHTML += `
+    <div style="display:flex;gap:16px;padding:11px 0;border-bottom:1px solid var(--border);align-items:center;">
+      <div style="min-width:148px;font-size:12px;font-weight:600;color:${e.color};">${e.date}</div>
+      <div style="flex:1;font-size:13px;color:var(--text);">${e.label}</div>
+      <div style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;white-space:nowrap;${tagStyle}">${e.tag}</div>
+    </div>`;
+});
+
+// ── TAB SWITCHING ──
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
+</body>
+</html>

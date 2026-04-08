@@ -17,6 +17,18 @@
               "highlights": []
             },
             {
+              "file": "user_groups_v2_mindmap.html",
+              "title": "User Groups — Question Framework v2",
+              "tag": "Research",
+              "icon": "🧠",
+              "author": "Ashish",
+              "desc": "Interactive mindmap of the v2 user groups question framework, visualising how different user types interact with TMS Insights.",
+              "highlights": [
+                "🧠 Visual mindmap",
+                "👥 User group breakdown"
+              ]
+            },
+            {
               "file": "transportation_analytics_documentation.html",
               "title": "TMS Insights — Product Overview",
               "tag": "Strategy",
@@ -86,8 +98,33 @@
           "label": "Dashboards",
           "cards": [
             {
+              "file": "Concord_Dashboard_v6.html",
+              "title": "Concord Collision Safety Dashboard — v6",
+              "tag": "Dashboard",
+              "icon": "🚦",
+              "author": "Abhishek",
+              "desc": "Latest iteration of the Concord collision safety dashboard with refined layout, updated KPIs, and enhanced data storytelling.",
+              "highlights": [
+                "📊 Latest dashboard version",
+                "🚦 Collision KPIs"
+              ]
+            },
+            {
+              "file": "Concord_Dashboard_Collision_comparision_2015_to_2025.html",
+              "title": "Concord Collision Comparison — 2015–2025",
+              "tag": "Dashboard",
+              "icon": "📅",
+              "author": "Abhishek",
+              "desc": "10-year collision trend dashboard comparing safety outcomes from 2015 to 2025 across severity, location, and contributing factors.",
+              "highlights": [
+                "📅 10-year trend view",
+                "📊 Year-over-year comparison",
+                "⚡ Severity breakdown"
+              ]
+            },
+            {
               "file": "Concord_Dashboard_v2.html",
-              "title": "Concord Collision Safety Dashboard",
+              "title": "Concord Collision Safety Dashboard — v2",
               "tag": "Dashboard",
               "icon": "🚦",
               "author": "Abhishek",
@@ -107,6 +144,17 @@
               "author": "Ashish",
               "desc": "First wide-coded version highlighting the enforcement gap and impression gap. Post-PMMS insights build with advanced quantum measures analytics for Concord.",
               "highlights": []
+            },
+            {
+              "file": "tms-concord-v2 (1).html",
+              "title": "TMS Insights — Concord v2",
+              "tag": "Dashboard",
+              "icon": "🌆",
+              "author": "UX Team",
+              "desc": "Revised TMS Insights interface for Concord — updated layout, navigation, and data views reflecting the v2 design direction.",
+              "highlights": [
+                "🌆 V2 design direction"
+              ]
             }
           ]
         },
@@ -121,6 +169,29 @@
               "author": "UX Team",
               "desc": "Map layout with all layers toggleable. First version of map concepts for Concord TMS.",
               "highlights": []
+            },
+            {
+              "file": "city-district-explorer.html",
+              "title": "City District Explorer",
+              "tag": "Explorer",
+              "icon": "🏙️",
+              "author": "UX Team",
+              "desc": "District-level exploration of Concord's city boundaries, enabling drill-down into neighbourhood-specific collision and safety data.",
+              "highlights": [
+                "🏙️ District boundary layers",
+                "🔍 Drill-down analysis"
+              ]
+            },
+            {
+              "file": "concord-outline-map_1.html",
+              "title": "Concord City Outline Map",
+              "tag": "Map",
+              "icon": "🗺️",
+              "author": "UX Team",
+              "desc": "Clean city outline map of Concord, CA — used as a base layer reference for spatial overlays and design mockups.",
+              "highlights": [
+                "🗺️ City boundary reference"
+              ]
             },
             {
               "file": "corridor-explorer_2.html",
@@ -170,6 +241,18 @@
                 "🗺️ Map-level grant analysis",
                 "🧪 Simulation mode"
               ]
+            },
+            {
+              "file": "dark-purple-layout.html",
+              "title": "Corridor Explorer — Dark Purple Layout",
+              "tag": "Theme",
+              "icon": "🟣",
+              "author": "UX Team",
+              "desc": "Alternative dark purple layout for the Corridor Explorer, exploring a deeper colour palette and refined typography treatment.",
+              "highlights": [
+                "🟣 Dark purple colour theme",
+                "🛣️ Corridor view"
+              ]
             }
           ]
         }
@@ -182,6 +265,47 @@
         {
           "label": "Grant Packages",
           "cards": [
+            {
+              "file": "HSIP_Intelligence_Module.html",
+              "title": "HSIP Intelligence Module",
+              "tag": "Grant",
+              "icon": "🛡️",
+              "author": "Abhishek",
+              "desc": "California Highway Safety Improvement Program intelligence dashboard — covering funding cycles, eligible projects, performance measures, and Concord-specific HSIP application insights.",
+              "highlights": [
+                "🛡️ HSIP program overview",
+                "📋 Funding cycle tracker",
+                "📊 Performance measures",
+                "🎯 Concord recommendations"
+              ]
+            },
+            {
+              "file": "ATP_Intelligence_Module.html",
+              "title": "ATP Intelligence Module",
+              "tag": "Grant",
+              "icon": "🚲",
+              "author": "Abhishek",
+              "desc": "Active Transportation Program intelligence module — covering ATP funding history, eligible project types, cycle analysis, and Concord-specific active transport grant strategy.",
+              "highlights": [
+                "🚲 Active Transportation Program",
+                "📋 Cycle analysis",
+                "🏙️ Concord ATP strategy",
+                "💰 Funding eligibility"
+              ]
+            },
+            {
+              "file": "concord_ss4a_compliance_v2.html",
+              "title": "SS4A FY2026 Grant Compliance Dashboard",
+              "tag": "Grant",
+              "icon": "🏛️",
+              "author": "Abhishek",
+              "desc": "Safe Streets and Roads for All (SS4A) FY2026 compliance dashboard for the City of Concord — tracking action plan requirements, deliverables, and submission readiness.",
+              "highlights": [
+                "🏛️ SS4A FY2026 compliance",
+                "✅ Deliverable tracker",
+                "📄 Submission readiness"
+              ]
+            },
             {
               "file": "grant-intel-map.html",
               "title": "Grant Intelligence Map",
@@ -212,6 +336,31 @@
                 "🏆 HSIP C13 Recommendations",
                 "🛡 SS4A Strategy",
                 "💰 Other Funding Wins"
+              ]
+            },
+            {
+              "file": "tms-grant-dark_1.html",
+              "title": "Grant Package — Dark Theme",
+              "tag": "Grant",
+              "icon": "🌑",
+              "author": "UX Team",
+              "desc": "Dark-themed grant package view for TMS Insights, presenting grant recommendations, countermeasure packages, and submission materials in a polished alternate visual style.",
+              "highlights": [
+                "🌑 Dark theme",
+                "📦 Grant package view"
+              ]
+            },
+            {
+              "file": "countermeasure-selectorv1.html",
+              "title": "Countermeasure Selector — v1",
+              "tag": "Strategy",
+              "icon": "🔧",
+              "author": "UX Team",
+              "desc": "Traffic safety engineering tool for selecting and evaluating countermeasures by location, crash type, and severity. Supports grant application package building.",
+              "highlights": [
+                "🔧 Countermeasure selection",
+                "📍 Location-based filtering",
+                "📦 Grant package support"
               ]
             },
             {

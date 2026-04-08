@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Countermeasure Selector — Traffic Safety Engineering Tool | TrafficGrants.ai</title>
+<meta name="description" content="Interactive countermeasure identification tool linking SWITRS Primary Collision Factors to FHWA Proven Safety Countermeasures and Caltrans LRSM-approved treatments with CMF data for HSIP grant applications.">
+<link rel="canonical" href="https://trafficgrants.ai/countermeasure-selector.html">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0A1628;
+  --surface: #111f35;
+  --surface2: #1a2d4a;
+  --surface3: #243a5e;
+  --border: #2a3f60;
+  --text: #e2e8f0;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --accent: #005EB8;
+  --gold: #FFC72C;
+  --gold-dark: #D4A010;
+  --gold-glow: rgba(255,199,44,0.15);
+  --green: #38A169;
+  --green-glow: rgba(56,161,105,0.15);
+  --red: #E53E3E;
+  --red-glow: rgba(229,62,62,0.15);
+  --orange: #DD6B20;
+  --purple: #805AD5;
+  --cyan: #3182CE;
+  --teal: #2C7A7B;
+  --navy: #003F7F;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
+
+/* ── HEADER ── */
+.header{background:#003F7F;border-bottom:3px solid #FFC72C;padding:36px 40px 32px;position:relative;overflow:hidden;text-align:center;}
+.header::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(-45deg,transparent,transparent 24px,rgba(255,255,255,0.018) 24px,rgba(255,255,255,0.018) 25px);}
+.header-inner{max-width:1400px;margin:0 auto;position:relative;z-index:1;}
+.header-logo{display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:4px;}
+.header-wordmark{display:flex;align-items:baseline;font-family:'DM Serif Display',serif;font-size:34px;line-height:1;}
+.header-wordmark .traffic{color:#fff;}
+.header-wordmark .grants{color:#FFC72C;}
+.header-wordmark .dot-ai{color:#fff;}
+.header-tagline{font-size:12px;color:rgba(255,255,255,0.5);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;}
+.header-subtitle{font-family:'DM Serif Display',serif;font-size:20px;color:rgba(255,255,255,0.92);font-weight:400;margin-bottom:20px;}
+.header-meta{display:flex;gap:32px;flex-wrap:wrap;justify-content:center;}
+.header-stat{text-align:center;}
+.header-stat .val{font-family:'DM Serif Display',serif;font-size:26px;color:var(--gold);}
+.header-stat .lbl{font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:2px;margin-top:2px;}
+
+.back-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 40px;display:flex;align-items:center;height:38px;}
+.back-link{font-size:12px;color:var(--text-muted);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color 0.2s;}
+.back-link:hover{color:var(--gold);}
+
+/* ── WORKFLOW STEPS ── */
+.workflow-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 40px;}
+.workflow-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;gap:0;}
+.step-item{display:flex;align-items:center;gap:10px;flex:1;padding:10px 16px;border-radius:8px;cursor:pointer;transition:all 0.2s;border:1px solid transparent;}
+.step-item.active{background:var(--gold-glow);border-color:rgba(255,199,44,0.3);}
+.step-item.done{opacity:0.6;}
+.step-num{width:26px;height:26px;border-radius:50%;background:var(--surface3);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;transition:all 0.2s;}
+.step-item.active .step-num{background:var(--gold);color:var(--navy);}
+.step-item.done .step-num{background:var(--green);color:#fff;}
+.step-text{font-size:12px;font-weight:600;color:var(--text-muted);}
+.step-item.active .step-text{color:var(--gold);}
+.step-arrow{color:var(--border);font-size:18px;flex-shrink:0;margin:0 4px;}
+
+/* ── MAIN LAYOUT ── */
+.main{max-width:1400px;margin:0 auto;padding:28px 40px;}
+
+/* ── SECTION PANELS ── */
+.panel{display:none;}
+.panel.active{display:block;}
+
+/* ── PANEL HEADERS ── */
+.panel-hdr{margin-bottom:24px;}
+.panel-hdr h2{font-family:'DM Serif Display',serif;font-size:26px;color:#fff;margin-bottom:6px;}
+.panel-hdr p{font-size:14px;color:var(--text-muted);line-height:1.6;max-width:760px;}
+
+/* ── PCF GRID ── */
+.pcf-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-bottom:24px;}
+.pcf-card{background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:18px;cursor:pointer;transition:all 0.22s;position:relative;overflow:hidden;}
+.pcf-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity 0.2s;}
+.pcf-card:hover{transform:translateY(-2px);box-shadow:0 6px 24px rgba(0,0,0,0.3);}
+.pcf-card.selected{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),0 6px 24px rgba(255,199,44,0.15);}
+.pcf-card.selected::before{opacity:1;background:var(--gold-glow);}
+.pcf-icon{font-size:28px;margin-bottom:10px;display:block;}
+.pcf-name{font-size:14px;font-weight:700;color:#fff;margin-bottom:4px;line-height:1.3;}
+.pcf-code{font-size:10px;font-weight:700;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.pcf-desc{font-size:12px;color:var(--text-muted);line-height:1.5;}
+.pcf-check{position:absolute;top:12px;right:12px;width:20px;height:20px;border-radius:50%;border:2px solid var(--border);background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:10px;transition:all 0.2s;}
+.pcf-card.selected .pcf-check{background:var(--gold);border-color:var(--gold);color:var(--navy);font-weight:900;}
+
+/* location type selector */
+.loc-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;}
+.loc-card{background:var(--surface);border:2px solid var(--border);border-radius:12px;padding:20px;cursor:pointer;transition:all 0.22s;text-align:center;}
+.loc-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+.loc-card.selected{border-color:var(--gold);background:var(--gold-glow);}
+.loc-icon{font-size:36px;margin-bottom:10px;display:block;}
+.loc-name{font-size:15px;font-weight:700;color:#fff;margin-bottom:4px;}
+.loc-desc{font-size:12px;color:var(--text-muted);}
+
+/* ── RESULTS ── */
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.results-title{font-family:'DM Serif Display',serif;font-size:22px;color:#fff;}
+.results-count{font-size:13px;color:var(--text-muted);}
+.result-sort{display:flex;gap:8px;}
+.sort-btn{padding:6px 14px;border-radius:6px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.sort-btn.active,.sort-btn:hover{background:var(--surface2);color:var(--gold);border-color:rgba(255,199,44,0.3);}
+
+.cm-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:900px){.cm-grid{grid-template-columns:1fr;}}
+
+.cm-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:all 0.2s;}
+.cm-card:hover{border-color:rgba(255,199,44,0.3);transform:translateY(-2px);box-shadow:0 8px 32px rgba(0,0,0,0.3);}
+.cm-card-top{padding:20px 20px 16px;display:flex;gap:14px;align-items:flex-start;}
+.cm-priority{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;}
+.cm-priority.tier1{background:rgba(255,199,44,0.15);color:var(--gold);border:1px solid rgba(255,199,44,0.3);}
+.cm-priority.tier2{background:rgba(56,161,105,0.15);color:var(--green);border:1px solid rgba(56,161,105,0.3);}
+.cm-priority.tier3{background:rgba(49,130,206,0.15);color:#63b3ed;border:1px solid rgba(49,130,206,0.3);}
+.cm-main{flex:1;min-width:0;}
+.cm-name{font-size:15px;font-weight:700;color:#fff;margin-bottom:3px;line-height:1.3;}
+.cm-code-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:0.3px;}
+.badge-fhwa{background:rgba(0,94,184,0.2);color:#63b3ed;border:1px solid rgba(0,94,184,0.35);}
+.badge-caltrans{background:rgba(56,161,105,0.15);color:var(--green);border:1px solid rgba(56,161,105,0.3);}
+.badge-cost-low{background:rgba(56,161,105,0.12);color:#68d391;border:1px solid rgba(56,161,105,0.25);}
+.badge-cost-med{background:rgba(255,199,44,0.12);color:#fbbf24;border:1px solid rgba(255,199,44,0.25);}
+.badge-cost-high{background:rgba(229,62,62,0.12);color:#fc8181;border:1px solid rgba(229,62,62,0.25);}
+.cm-desc{font-size:13px;color:var(--text-muted);line-height:1.55;}
+
+.cm-card-metrics{background:var(--surface2);padding:14px 20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;border-top:1px solid var(--border);}
+.cm-metric{text-align:center;}
+.cm-metric .m-val{font-family:'DM Serif Display',serif;font-size:20px;font-weight:400;}
+.cm-metric .m-lbl{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+.cmf-good{color:var(--green);}
+.cmf-great{color:var(--gold);}
+.cmf-strong{color:#4FD1C5;}
+
+.cm-card-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;}
+.cm-pcf-tags{display:flex;gap:6px;flex-wrap:wrap;}
+.pcf-mini-tag{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600;background:var(--surface3);color:var(--text-muted);}
+.cm-links{display:flex;gap:8px;}
+.ref-link{font-size:11px;font-weight:600;color:var(--gold);text-decoration:none;padding:4px 10px;border-radius:6px;border:1px solid rgba(255,199,44,0.3);transition:all 0.2s;}
+.ref-link:hover{background:var(--gold-glow);}
+
+/* CMF Bar visual */
+.cmf-bar-wrap{height:6px;background:var(--surface3);border-radius:3px;margin-top:4px;overflow:hidden;}
+.cmf-bar-fill{height:100%;border-radius:3px;transition:width 0.6s ease;}
+
+/* ── SELECTED SUMMARY BAR ── */
+.selection-bar{position:sticky;bottom:0;background:var(--surface);border-top:2px solid var(--gold);padding:14px 40px;display:flex;align-items:center;gap:16px;z-index:100;}
+.sel-label{font-size:13px;font-weight:700;color:var(--gold);}
+.sel-tags{display:flex;gap:8px;flex-wrap:wrap;flex:1;}
+.sel-tag{padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600;background:var(--surface2);border:1px solid var(--border);color:var(--text);}
+.sel-action{display:flex;gap:10px;}
+.btn-primary{padding:10px 22px;border-radius:8px;background:var(--gold);color:var(--navy);border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.btn-primary:hover{background:#FFD54F;transform:translateY(-1px);}
+.btn-secondary{padding:10px 18px;border-radius:8px;background:var(--surface2);color:var(--text);border:1px solid var(--border);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;}
+.btn-secondary:hover{border-color:rgba(255,199,44,0.3);color:var(--gold);}
+
+/* ── EXPORT / SUMMARY PANEL ── */
+.summary-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:16px;}
+.summary-card h3{font-family:'DM Serif Display',serif;font-size:18px;color:#fff;margin-bottom:12px;}
+.grant-row{display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--border);}
+.grant-row:last-child{border-bottom:none;}
+.grant-icon{font-size:20px;width:32px;text-align:center;}
+.grant-name{font-size:13px;font-weight:700;color:#fff;}
+.grant-note{font-size:12px;color:var(--text-muted);}
+.grant-elig{margin-left:auto;display:flex;gap:6px;}
+
+.info-strip{background:rgba(255,199,44,0.07);border:1px solid rgba(255,199,44,0.2);border-left:4px solid var(--gold);border-radius:10px;padding:14px 18px;margin-bottom:20px;}
+.info-strip p{font-size:13px;color:var(--text-muted);line-height:1.6;margin:0;}
+.info-strip strong{color:var(--gold);}
+
+/* Safe System pills */
+.ss-pills{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;}
+.ss-pill{padding:6px 16px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.3px;}
+
+/* ── UTILITY ── */
+.hidden{display:none!important;}
+.text-gold{color:var(--gold);}
+.text-green{color:var(--green);}
+.text-red{color:var(--red);}
+.divider{height:1px;background:var(--border);margin:20px 0;}
+
+/* Filter chip bar */
+.filter-chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}
+.chip{padding:7px 16px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);font-size:12px;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all 0.2s;font-family:'DM Sans',sans-serif;}
+.chip:hover{border-color:rgba(255,199,44,0.4);color:var(--gold);}
+.chip.active{background:var(--gold-glow);border-color:rgba(255,199,44,0.5);color:var(--gold);}
+
+/* No results */
+.no-results{text-align:center;padding:60px 20px;color:var(--text-dim);}
+.no-results .nr-icon{font-size:48px;margin-bottom:12px;display:block;}
+.no-results p{font-size:14px;}
+
+/* FOOTER */
+.footer{text-align:center;padding:28px 40px;background:var(--bg);border-top:1px solid var(--border);margin-top:40px;}
+.footer .brand{font-family:'DM Serif Display',serif;font-size:18px;color:var(--text);margin-bottom:4px;}
+.footer .brand span{color:var(--gold);}
+.footer .sub{font-size:11px;color:rgba(255,255,255,0.28);letter-spacing:1px;line-height:1.8;}
+
+@media(max-width:768px){
+  .header{padding:24px 16px;}
+  .back-bar,.workflow-bar{padding:0 16px;}
+  .workflow-inner{flex-direction:column;gap:8px;}
+  .step-arrow{display:none;}
+  .main{padding:20px 16px;}
+  .loc-grid{grid-template-columns:1fr;}
+  .selection-bar{padding:14px 16px;}
+  .footer{padding:20px 16px;}
+}
+
+/* ── STEP 1 DUAL PANE ── */
+.step1-cols{display:grid;grid-template-columns:1fr 180px 1fr;gap:14px;margin-bottom:14px;}
+@media(max-width:1050px){.step1-cols{grid-template-columns:1fr 1fr;}.matrix-col{display:none;}}
+@media(max-width:680px){.step1-cols{grid-template-columns:1fr;}}
+
+.step1-col{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.col-header{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:2px solid var(--border);}
+.pcf-col-hdr{border-bottom-color:rgba(255,199,44,0.4);}
+.ct-col-hdr{border-bottom-color:rgba(79,209,197,0.4);}
+.col-badge{font-size:10px;font-weight:800;padding:3px 8px;border-radius:4px;letter-spacing:1px;flex-shrink:0;}
+.pcf-badge{background:rgba(255,199,44,0.15);color:var(--gold);border:1px solid rgba(255,199,44,0.4);}
+.ct-badge{background:rgba(79,209,197,0.12);color:#4FD1C5;border:1px solid rgba(79,209,197,0.35);}
+.col-title{font-size:13px;font-weight:700;color:#fff;}
+.col-sub{font-size:10px;color:var(--text-dim);margin-top:1px;}
+.col-count{margin-left:auto;font-size:11px;font-weight:700;color:var(--text-dim);white-space:nowrap;flex-shrink:0;transition:color 0.2s;}
+.col-count.has-sel{color:var(--gold);}
+
+.pcf-list,.ct-list{max-height:520px;overflow-y:auto;}
+.pcf-list::-webkit-scrollbar,.ct-list::-webkit-scrollbar{width:4px;}
+.pcf-list::-webkit-scrollbar-thumb,.ct-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+.pcf-row,.ct-row{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;border-bottom:1px solid rgba(42,63,96,0.4);transition:background 0.15s,border-left 0.15s;user-select:none;border-left:3px solid transparent;}
+.pcf-row:last-child,.ct-row:last-child{border-bottom:none;}
+.pcf-row:hover{background:rgba(255,199,44,0.05);}
+.ct-row:hover{background:rgba(79,209,197,0.05);}
+.pcf-row.selected{background:rgba(255,199,44,0.08);border-left-color:var(--gold);}
+.ct-row.selected{background:rgba(79,209,197,0.08);border-left-color:#4FD1C5;}
+.row-icon{font-size:16px;flex-shrink:0;width:20px;text-align:center;}
+.row-body{flex:1;min-width:0;}
+.row-name{font-size:12px;font-weight:700;color:#fff;line-height:1.2;}
+.row-code{font-size:9.5px;color:var(--text-dim);margin-top:1px;}
+.row-check{width:17px;height:17px;border-radius:50%;border:1.5px solid var(--border);background:var(--surface2);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all 0.15s;}
+.pcf-row.selected .row-check{background:var(--gold);border-color:var(--gold);color:var(--navy);font-weight:900;}
+.ct-row.selected .row-check{background:#4FD1C5;border-color:#4FD1C5;color:#0A1628;font-weight:900;}
+.ksi-badge{font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(229,62,62,0.15);color:#fc8181;border:1px solid rgba(229,62,62,0.25);flex-shrink:0;}
+
+/* Relationship matrix */
+.matrix-col{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:12px;display:flex;flex-direction:column;align-items:stretch;}
+.matrix-title{font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px;text-align:center;margin-bottom:1px;}
+.matrix-subtitle{font-size:8.5px;color:var(--text-dim);text-align:center;margin-bottom:8px;line-height:1.4;}
+.matrix-wrap{display:flex;flex-direction:column;gap:2px;}
+.matrix-row{display:flex;gap:2px;}
+.matrix-cell{flex:1;height:10px;border-radius:1px;background:var(--surface3);transition:all 0.25s;}
+.matrix-cell.strong{background:rgba(255,199,44,0.7);}
+.matrix-cell.moderate{background:rgba(79,209,197,0.5);}
+.matrix-legend{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-top:8px;font-size:8.5px;color:var(--text-dim);}
+.ml-dot{width:9px;height:9px;border-radius:1px;flex-shrink:0;}
+.ml-lbl{margin-right:4px;}
+
+/* Selection summary */
+.selection-summary{background:var(--surface2);border:1px solid var(--border);border-top:2px solid rgba(255,199,44,0.3);border-radius:10px;padding:12px 16px;margin-top:4px;}
+.sel-sum-hdr{font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.sel-sum-body{display:flex;flex-wrap:wrap;gap:6px;}
+.sel-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;}
+.sel-chip-pcf{background:rgba(255,199,44,0.1);color:var(--gold);border:1px solid rgba(255,199,44,0.3);}
+.sel-chip-ct{background:rgba(79,209,197,0.1);color:#4FD1C5;border:1px solid rgba(79,209,197,0.3);}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-inner">
+    <div class="header-logo">
+      <svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg" style="width:46px;height:46px;flex-shrink:0;">
+        <rect x="0" y="0" width="80" height="80" rx="16" fill="#FFC72C"/>
+        <rect x="30" y="4" width="20" height="72" fill="#003F7F" opacity="0.15"/>
+        <rect x="4" y="30" width="72" height="20" fill="#003F7F" opacity="0.15"/>
+        <rect x="30" y="30" width="20" height="20" fill="#003F7F" opacity="0.25"/>
+        <line x1="40" y1="4" x2="40" y2="28" stroke="#003F7F" stroke-width="0.7" stroke-dasharray="2,2.5" opacity="0.5"/>
+        <line x1="40" y1="52" x2="40" y2="76" stroke="#003F7F" stroke-width="0.7" stroke-dasharray="2,2.5" opacity="0.5"/>
+        <line x1="4" y1="40" x2="28" y2="40" stroke="#003F7F" stroke-width="0.7" stroke-dasharray="2,2.5" opacity="0.5"/>
+        <line x1="52" y1="40" x2="76" y2="40" stroke="#003F7F" stroke-width="0.7" stroke-dasharray="2,2.5" opacity="0.5"/>
+        <g transform="translate(5,5)"><rect x="0" y="0" width="14" height="20" rx="3" fill="#003F7F"/><circle cx="7" cy="6" r="2.8" fill="#ef4444" opacity="0.3"/><circle cx="7" cy="12" r="2.8" fill="#fbbf24" opacity="0.3"/><circle cx="7" cy="18" r="2.8" fill="#22c55e"/><circle cx="7" cy="18" r="1.4" fill="#fff" opacity="0.4"/></g>
+        <g transform="translate(60,6)"><circle cx="5" cy="2.5" r="2.5" fill="#003F7F"/><path d="M5 5.5 L5 14" stroke="#22c55e" stroke-width="1.8" stroke-linecap="round"/><path d="M2 9 L5 6.5" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/><path d="M8 9.5 L5 6.5" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/></g>
+        <rect x="6" y="68" width="68" height="6" rx="2" fill="#003F7F" opacity="0.45"/>
+        <rect x="8" y="69.5" width="7" height="3" rx="1" fill="#22c55e" opacity="0.9"/>
+        <rect x="17" y="69.5" width="7" height="3" rx="1" fill="#22c55e" opacity="0.7"/>
+        <rect x="26" y="69.5" width="7" height="3" rx="1" fill="#22c55e" opacity="0.5"/>
+        <text x="57" y="73" font-family="DM Sans,sans-serif" font-size="7" font-weight="700" fill="#003F7F" opacity="0.55">$</text>
+      </svg>
+      <div class="header-wordmark">
+        <span class="traffic">traffic</span><span class="grants">grants</span><span class="dot-ai">.ai</span>
+      </div>
+    </div>
+    <div class="header-tagline">Grant Intelligence for Transportation Professionals</div>
+    <div class="header-subtitle">Countermeasure Selector → Grant Finder</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.45);margin-top:-14px;margin-bottom:20px;letter-spacing:0.5px;">FHWA/Caltrans CM</div>
+    <div class="header-meta" style="justify-content:center;flex-wrap:nowrap;gap:40px;">
+      <div class="header-stat"><div class="val">28</div><div class="lbl">FHWA Proven Countermeasures</div></div>
+      <div class="header-stat"><div class="val">60+</div><div class="lbl">Caltrans LRSM Treatments</div></div>
+      <div class="header-stat"><div class="val">15</div><div class="lbl">SWITRS Primary Collision Factors</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="back-bar">
+  <a href="https://trafficgrants.ai/" class="back-link">← TrafficGrants.ai</a>
+</div>
+
+<!-- WORKFLOW STEPS -->
+<div class="workflow-bar">
+  <div class="workflow-inner">
+    <div class="step-item active" id="step1-nav" onclick="goToStep(1)">
+      <div class="step-num" id="sn1">1</div>
+      <div class="step-text">PCFs &amp; Collision Types</div>
+    </div>
+    <div class="step-arrow">›</div>
+    <div class="step-item" id="step2-nav" onclick="goToStep(2)">
+      <div class="step-num" id="sn2">2</div>
+      <div class="step-text">Select Location Type</div>
+    </div>
+    <div class="step-arrow">›</div>
+    <div class="step-item" id="step3-nav" onclick="goToStep(3)">
+      <div class="step-num" id="sn3">3</div>
+      <div class="step-text">View Countermeasures &amp; CMFs</div>
+    </div>
+    <div class="step-arrow">›</div>
+    <div class="step-item" id="step4-nav" onclick="goToStep(4)">
+      <div class="step-num" id="sn4">4</div>
+      <div class="step-text">Grant Eligibility Summary</div>
+    </div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ═══ STEP 1: PCF + COLLISION TYPE SELECTION ═══ -->
+<div class="panel active" id="panel1">
+  <div class="panel-hdr">
+    <h2>Step 1 — Select Collision Patterns from Your TIMS Analysis</h2>
+    <p>Select the <strong style="color:var(--gold);">Primary Collision Factors (PCFs)</strong> and <strong style="color:#4FD1C5;">Collision Types</strong> found in your SWITRS/TIMS query. Both dimensions drive countermeasure matching — together they pinpoint the right treatment for your specific crash pattern.</p>
+  </div>
+
+  <div class="info-strip">
+    <p><strong>How to use:</strong> In TIMS (tims.berkeley.edu), run a 5-year query filtered to your jurisdiction. Pull the <em>Primary Collision Factor</em> breakdown and the <em>Collision Type</em> (manner of collision) breakdown. Select every PCF and collision type that appears prominently — especially those driving KSI crashes. The relationship matrix below shows how they interact.</p>
+  </div>
+
+  <!-- TWO-COLUMN LAYOUT -->
+  <div class="step1-cols">
+
+    <!-- LEFT: PCF -->
+    <div class="step1-col">
+      <div class="col-header pcf-col-hdr">
+        <span class="col-badge pcf-badge">PCF</span>
+        <div>
+          <div class="col-title">Primary Collision Factors</div>
+          <div class="col-sub">CHP-assigned cause — from CVC violation codes</div>
+        </div>
+        <div class="col-count" id="pcf-count-badge">0 selected</div>
+      </div>
+      <div class="pcf-list" id="pcf-list">
+        <!-- JS populated -->
+      </div>
+    </div>
+
+    <!-- RELATIONSHIP MATRIX (center) -->
+    <div class="matrix-col">
+      <div class="matrix-title">Relationship Matrix</div>
+      <div class="matrix-subtitle">Highlighted when both dimensions selected</div>
+      <div class="matrix-wrap" id="relationship-matrix">
+        <!-- JS populated -->
+      </div>
+      <div class="matrix-legend">
+        <span class="ml-dot" style="background:rgba(255,199,44,0.7);"></span><span class="ml-lbl">Strong link</span>
+        <span class="ml-dot" style="background:rgba(79,209,197,0.5);margin-left:10px;"></span><span class="ml-lbl">Moderate link</span>
+        <span class="ml-dot" style="background:var(--surface3);margin-left:10px;"></span><span class="ml-lbl">No link</span>
+      </div>
+    </div>
+
+    <!-- RIGHT: COLLISION TYPES -->
+    <div class="step1-col">
+      <div class="col-header ct-col-hdr">
+        <span class="col-badge ct-badge">TYPE</span>
+        <div>
+          <div class="col-title">Collision Types</div>
+          <div class="col-sub">SWITRS manner of collision — how the crash happened physically</div>
+        </div>
+        <div class="col-count" id="ct-count-badge">0 selected</div>
+      </div>
+      <div class="ct-list" id="ct-list">
+        <!-- JS populated -->
+      </div>
+    </div>
+
+  </div><!-- /step1-cols -->
+
+  <!-- SELECTION SUMMARY -->
+  <div class="selection-summary" id="sel-summary" style="display:none;">
+    <div class="sel-sum-hdr">📌 Your Collision Profile</div>
+    <div class="sel-sum-body" id="sel-sum-body"></div>
+  </div>
+
+  <div style="display:flex;justify-content:flex-end;margin-top:16px;">
+    <button class="btn-primary" onclick="goToStep(2)" id="next1-btn" disabled>Continue: Select Location Type →</button>
+  </div>
+</div>
+
+<!-- ═══ STEP 2: LOCATION TYPE ═══ -->
+<div class="panel" id="panel2">
+  <div class="panel-hdr">
+    <h2>Step 2 — Select Location Type</h2>
+    <p>Countermeasure eligibility and CMF values vary by facility type. Select the primary location where these PCFs are occurring.</p>
+  </div>
+
+  <div class="loc-grid">
+    <div class="loc-card" onclick="selectLocation('signalized')" id="loc-signalized">
+      <span class="loc-icon">🚦</span>
+      <div class="loc-name">Signalized Intersection</div>
+      <div class="loc-desc">Intersection controlled by traffic signal. Includes multi-leg, T-intersections with signals.</div>
+    </div>
+    <div class="loc-card" onclick="selectLocation('stop')" id="loc-stop">
+      <span class="loc-icon">🛑</span>
+      <div class="loc-name">Stop-Controlled Intersection</div>
+      <div class="loc-desc">Two-way or all-way stop control. No traffic signal present.</div>
+    </div>
+    <div class="loc-card" onclick="selectLocation('midblock')" id="loc-midblock">
+      <span class="loc-icon">🛣️</span>
+      <div class="loc-name">Midblock / Roadway Segment</div>
+      <div class="loc-desc">Between intersections on arterials, collectors, or local roads. Includes pedestrian midblock crossings.</div>
+    </div>
+    <div class="loc-card" onclick="selectLocation('curve')" id="loc-curve">
+      <span class="loc-icon">↩️</span>
+      <div class="loc-name">Horizontal Curve</div>
+      <div class="loc-desc">Roadway departure crashes on curved alignments. Includes rural and urban contexts.</div>
+    </div>
+    <div class="loc-card" onclick="selectLocation('ped-crossing')" id="loc-ped-crossing">
+      <span class="loc-icon">🚶</span>
+      <div class="loc-name">Pedestrian / Bicycle Facility</div>
+      <div class="loc-desc">Crosswalks, sidewalks, bike lanes, shared-use paths, trail crossings.</div>
+    </div>
+    <div class="loc-card" onclick="selectLocation('multilane')" id="loc-multilane">
+      <span class="loc-icon">🛤️</span>
+      <div class="loc-name">Multilane Arterial / Highway</div>
+      <div class="loc-desc">4+ lane divided or undivided arterials. High-volume corridors with access.</div>
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;margin-top:8px;">
+    <button class="btn-secondary" onclick="goToStep(1)">← Back</button>
+    <button class="btn-primary" onclick="goToStep(3)" id="next2-btn" disabled>View Countermeasures →</button>
+  </div>
+</div>
+
+<!-- ═══ STEP 3: COUNTERMEASURES ═══ -->
+<div class="panel" id="panel3">
+  <div class="panel-hdr">
+    <h2>Step 3 — Recommended Countermeasures</h2>
+    <p>Treatments are ranked by crash reduction effectiveness (CMF) for your selected PCFs and location type. All treatments listed are HSIP-eligible unless noted. Green = FHWA Proven Safety Countermeasure. Blue = Caltrans LRSM Cycle 12.</p>
+  </div>
+
+  <div class="filter-chips" id="filter-chips">
+    <button class="chip active" onclick="filterResults('all',this)">All Treatments</button>
+    <button class="chip" onclick="filterResults('fhwa',this)">FHWA Proven</button>
+    <button class="chip" onclick="filterResults('caltrans',this)">Caltrans LRSM</button>
+    <button class="chip" onclick="filterResults('low-cost',this)">Low Cost (&lt;$100K)</button>
+    <button class="chip" onclick="filterResults('high-cmf',this)">Highest CMF (&gt;30% reduction)</button>
+    <button class="chip" onclick="filterResults('systemic',this)">Systemic / Network</button>
+  </div>
+
+  <div class="results-header">
+    <div>
+      <div class="results-title" id="results-title">Countermeasures</div>
+      <div class="results-count" id="results-count"></div>
+    </div>
+    <div class="result-sort">
+      <span style="font-size:12px;color:var(--text-dim);align-self:center;margin-right:4px;">Sort:</span>
+      <button class="sort-btn active" onclick="sortResults('cmf',this)">CMF Effectiveness</button>
+      <button class="sort-btn" onclick="sortResults('relevance',this)">Best Match</button>
+      <button class="sort-btn" onclick="sortResults('cost',this)">Cost (Low→High)</button>
+      <button class="sort-btn" onclick="sortResults('speed',this)">Speed</button>
+    </div>
+  </div>
+
+  <div class="cm-grid" id="cm-grid">
+    <!-- Populated by JS -->
+  </div>
+
+  <div class="no-results hidden" id="no-results">
+    <span class="nr-icon">🔍</span>
+    <p>No countermeasures match the current filter. Try a different filter above.</p>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;margin-top:20px;">
+    <button class="btn-secondary" onclick="goToStep(2)">← Back</button>
+    <button class="btn-primary" onclick="goToStep(4)">View Grant Eligibility Summary →</button>
+  </div>
+</div>
+
+<!-- ═══ STEP 4: GRANT ELIGIBILITY SUMMARY ═══ -->
+<div class="panel" id="panel4">
+  <div class="panel-hdr">
+    <h2>Step 4 — Grant Eligibility &amp; Application Strategy</h2>
+    <p>Based on your collision pattern and selected countermeasures, here is how these treatments align with available grant programs.</p>
+  </div>
+
+  <div class="info-strip">
+    <p><strong>Grant Application Tip:</strong> HSIP requires a 90/10 federal/local split. Projects must be identified via crash experience, crash potential, or crash rate analysis (TIMS). Your LRSP or SS4A Action Plan serves as the qualifying safety plan. List all countermeasures with their <strong>Caltrans LRSM code</strong> (e.g., SI01, R15) and CMF in the application — this is directly used by HSIP Analyzer for B/C calculation.</p>
+  </div>
+
+  <div class="summary-card" id="pcf-summary-card">
+    <h3>🎯 Your Collision Profile</h3>
+    <div id="pcf-summary-content"></div>
+  </div>
+
+  <div class="summary-card">
+    <h3>💰 Grant Program Eligibility</h3>
+    <div class="grant-row">
+      <span class="grant-icon">🏛️</span>
+      <div>
+        <div class="grant-name">HSIP — Highway Safety Improvement Program (Cycle 13, ~Late 2026)</div>
+        <div class="grant-note">90% federal / 10% local · Requires LRSP or SS4A Action Plan · All LRSM-coded countermeasures eligible</div>
+      </div>
+      <div class="grant-elig">
+        <span class="badge badge-caltrans">✓ Primary Program</span>
+      </div>
+    </div>
+    <div class="grant-row">
+      <span class="grant-icon">🛡️</span>
+      <div>
+        <div class="grant-name">SS4A — Safe Streets &amp; Roads for All (FY2026, Due May 26, 2026)</div>
+        <div class="grant-note">Planning &amp; implementation grants · 20% match · Requires adopted Action Plan · Countermeasures must address 5 E's</div>
+      </div>
+      <div class="grant-elig">
+        <span class="badge badge-fhwa">✓ Implementation Eligible</span>
+      </div>
+    </div>
+    <div class="grant-row">
+      <span class="grant-icon">🚲</span>
+      <div>
+        <div class="grant-name">ATP Cycle 8 — Active Transportation Program (Due Jun 22, 2026)</div>
+        <div class="grant-note">For pedestrian/bicycle countermeasures only · No match required · DAC benefit required · Score on Safety criterion</div>
+      </div>
+      <div class="grant-elig" id="atp-elig">
+        <span class="badge badge-cost-med">⚠️ If Ped/Bike PCFs Selected</span>
+      </div>
+    </div>
+    <div class="grant-row">
+      <span class="grant-icon">🏗️</span>
+      <div>
+        <div class="grant-name">OBAG 4 / MTC — One Bay Area Grant (FY27–30, Bay Area agencies)</div>
+        <div class="grant-note">$820M total · County CMA allocation · 11.47% match · Complete streets, safety, and PDA investments</div>
+      </div>
+      <div class="grant-elig">
+        <span class="badge badge-caltrans">✓ Capital Eligible</span>
+      </div>
+    </div>
+    <div class="grant-row">
+      <span class="grant-icon">🛣️</span>
+      <div>
+        <div class="grant-name">OTS Grants — Office of Traffic Safety (Behavioral Programs)</div>
+        <div class="grant-note">DUI, speed, distracted driving enforcement · No match required · Behavioral/enforcement only (not infrastructure)</div>
+      </div>
+      <div class="grant-elig" id="ots-elig">
+        <span class="badge badge-cost-low">✓ If DUI/Speed PCFs</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="summary-card" id="cm-summary-card">
+    <h3>📋 Countermeasure Coding for HSIP Application</h3>
+    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Enter these codes and CMF values directly into the Caltrans HSIP Analyzer tool. Benefit is calculated as: <strong style="color:var(--gold);">B = CRF × Crashes/yr × Crash Cost × Service Life</strong></p>
+    <div id="hsip-code-table"></div>
+  </div>
+
+  <div class="summary-card">
+    <h3>🔗 Key Resources</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <a href="https://tims.berkeley.edu" target="_blank" style="text-decoration:none;">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(255,199,44,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;">🗺️ TIMS — Transportation Injury Mapping System</div>
+          <div style="font-size:11px;color:var(--text-muted);">UC Berkeley · SWITRS query tool · Spot, corridor, and systemic analysis · Free for CA agencies</div>
+        </div>
+      </a>
+      <a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2024/lrsm2024-v2.pdf" target="_blank" style="text-decoration:none;">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(255,199,44,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;">📘 Caltrans Local Roadway Safety Manual (2024)</div>
+          <div style="font-size:11px;color:var(--text-muted);">Complete countermeasure codes, CMFs, and HSIP Analyzer instructions</div>
+        </div>
+      </a>
+      <a href="https://highways.dot.gov/safety/proven-safety-countermeasures" target="_blank" style="text-decoration:none;">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(255,199,44,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;">🇺🇸 FHWA Proven Safety Countermeasures (All 28)</div>
+          <div style="font-size:11px;color:var(--text-muted);">Official FHWA PSC initiative · Fact sheets, CMF data, implementation guides</div>
+        </div>
+      </a>
+      <a href="https://www.cmfclearinghouse.org" target="_blank" style="text-decoration:none;">
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(255,199,44,0.4)'" onmouseout="this.style.borderColor='var(--border)'">
+          <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:4px;">📊 CMF Clearinghouse — FHWA</div>
+          <div style="font-size:11px;color:var(--text-muted);">3,000+ CMFs searchable by facility type, crash type, and treatment · Star-rated quality</div>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <div style="display:flex;justify-content:space-between;margin-top:8px;">
+    <button class="btn-secondary" onclick="goToStep(3)">← Back to Countermeasures</button>
+    <button class="btn-primary" onclick="resetTool()">🔄 Start New Analysis</button>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- SELECTION SUMMARY BAR -->
+<div class="selection-bar hidden" id="selection-bar">
+  <span class="sel-label">Selected PCFs:</span>
+  <div class="sel-tags" id="sel-tags-display"></div>
+  <div class="sel-action">
+    <button class="btn-secondary" onclick="clearSelection()">Clear</button>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="brand">traffic<span>grants</span>.ai</div>
+  <div class="sub">© 2026 TrafficGrants.ai — Countermeasure Selector · Sources: FHWA PSCi, Caltrans LRSM 2024, CMF Clearinghouse, SWITRS/TIMS, California SHSP<br>CMF values are approximate ranges for planning purposes · Always verify with HSIP Analyzer and current Caltrans guidelines</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+// DATA — PRIMARY COLLISION FACTORS (SWITRS)
+// ══════════════════════════════════════════════════
+const PCF_DATA = [
+  { id:'unsafe-speed', code:'VC 22350', icon:'💨', name:'Unsafe Speed', desc:'Driving faster than safe for conditions; exceeding posted limit or speed for weather/traffic' },
+  { id:'row-veh', code:'VC 21800-22', icon:'↔️', name:'Automobile Right-of-Way', desc:'Failure to yield at intersections — most common PCF at stop-controlled locations' },
+  { id:'improper-turn', code:'VC 22100-07', icon:'↩️', name:'Improper Turning', desc:'Improper U-turns, wide turns, turning from wrong lane, failure to signal' },
+  { id:'traffic-signal', code:'VC 21450-61', icon:'🚦', name:'Traffic Signals & Signs', desc:'Running red lights, failure to obey traffic controls, signal violations' },
+  { id:'dui', code:'VC 23152', icon:'🍺', name:'DUI — Alcohol or Drugs', desc:'Driving under the influence of alcohol, cannabis, or other impairing substances' },
+  { id:'ped-violation', code:'VC 21950-71', icon:'🚶', name:'Pedestrian Violation', desc:'Pedestrian failure to yield, jaywalking, crossing outside crosswalk' },
+  { id:'following-close', code:'VC 21703', icon:'🚗', name:'Following Too Closely', desc:'Tailgating; insufficient stopping distance; common cause of rear-end collisions on arterials' },
+  { id:'unsafe-lane', code:'VC 21658-60', icon:'〰️', name:'Unsafe Lane Change', desc:'Improper lane changes, weaving, failure to check mirrors, merging violations' },
+  { id:'wrong-side', code:'VC 21650', icon:'⬅️', name:'Wrong Side of Road', desc:'Head-on collisions from crossing centerline, unsafe passing, roadway departure' },
+  { id:'pedestrian-row', code:'VC 21950', icon:'🛑', name:'Pedestrian Right-of-Way', desc:'Driver failure to yield to pedestrian in crosswalk — leading cause of ped KSI' },
+  { id:'bicycle-veh', code:'VC 21200', icon:'🚲', name:'Bicycle / Vehicle Conflict', desc:'Bike-vehicle collisions including dooring, intersection conflicts, bike lane encroachment' },
+  { id:'distracted', code:'VC 23123', icon:'📱', name:'Distracted Driving', desc:'Phone use, inattention, failure to observe — contributing to multiple crash types' },
+  { id:'running-stop', code:'VC 22450', icon:'⛔', name:'Stop Sign Violation', desc:'Failure to stop at required stop sign; rolling stops at controlled intersections' },
+  { id:'road-condition', code:'VC 22350(b)', icon:'🌧️', name:'Road Condition / Defect', desc:'Wet pavement, potholes, poor striping, inadequate lighting — infrastructure-related PCF' },
+  { id:'other-improper', code:'VC 21100+', icon:'⚠️', name:'Other Improper Driving', desc:'Catch-all: aggressive driving, racing, unsafe backing, miscellaneous violations' }
+];
+
+// ══════════════════════════════════════════════════
+// DATA — COUNTERMEASURES (FHWA + CALTRANS LRSM 2024)
+// ══════════════════════════════════════════════════
+const CM_DATA = [
+  // ── INTERSECTION / SIGNALIZED ──
+  {
+    id:'lpi', name:'Leading Pedestrian Interval (LPI)',
+    lrsmCode:'SI01', fhwaPsc:true, caltransLrsm:true,
+    desc:'Gives pedestrians 3–7 second head start before vehicles receive green, establishing pedestrian presence before turning vehicles.',
+    pcfs:['pedestrian-row','traffic-signal','ped-violation'],
+    locations:['signalized','ped-crossing'],
+    cmfRange:'13–46%', cmfNum:0.78, crashTypes:'Pedestrian KSI, turning conflicts',
+    cost:'low', costRange:'$5K–$25K per intersection', implementSpeed:'Fast (3–6 mo)',
+    safeSystem:'Manage Conflicts in Time',
+    grant:['HSIP','SS4A','ATP'],
+    isSystemic:true,
+    refs:[{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'},{label:'LRSM §4',url:'https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2024/lrsm2024-v2.pdf'}]
+  },
+  {
+    id:'roundabout', name:'Roundabout Conversion',
+    lrsmCode:'NS05r / NS05mr', fhwaPsc:true, caltransLrsm:true,
+    desc:'Converts intersection to modern roundabout or mini-roundabout. Eliminates severe angle conflicts — reduces fatal/injury crashes by 70–90% at stop-controlled locations.',
+    pcfs:['row-veh','running-stop','traffic-signal','unsafe-speed'],
+    locations:['stop','signalized'],
+    cmfRange:'70–90% (fatal/injury)', cmfNum:0.25, crashTypes:'Angle, head-on, sideswipe',
+    cost:'high', costRange:'$500K–$3M+', implementSpeed:'Slow (12–36 mo)',
+    safeSystem:'Remove Severe Conflicts',
+    grant:['HSIP','SS4A'],
+    isSystemic:false,
+    refs:[{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'},{label:'FHWA Guide',url:'https://www.fhwa.dot.gov/publications/research/safety/10006/'}]
+  },
+  {
+    id:'lt-phasing', name:'Left-Turn Phasing / Protected-Only LT',
+    lrsmCode:'SI02', fhwaPsc:false, caltransLrsm:true,
+    desc:'Converts permissive or permitted/protected left turn to protected-only phasing, eliminating oncoming-traffic conflicts at signalized intersections.',
+    pcfs:['improper-turn','row-veh','traffic-signal'],
+    locations:['signalized'],
+    cmfRange:'25–55%', cmfNum:0.60, crashTypes:'Left-turn angle, head-on',
+    cost:'low', costRange:'$5K–$30K (retiming)', implementSpeed:'Fast (1–3 mo)',
+    safeSystem:'Manage Conflicts in Time',
+    grant:['HSIP','SS4A'],
+    isSystemic:true,
+    refs:[{label:'Caltrans LRSM',url:'https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2024/lrsm2024-v2.pdf'}]
+  },
+  {
+    id:'rlt-overlap', name:'Right-Turn Overlap Phasing',
+    lrsmCode:'SI03', fhwaPsc:false, caltransLrsm:true,
+    desc:'Provides dedicated right-turn phase overlapping pedestrian crossing, reducing pedestrian-vehicle conflicts on right turns.',
+    pcfs:['pedestrian-row','improper-turn','ped-violation'],
+    locations:['signalized'],
+    cmfRange:'15–30%', cmfNum:0.80, crashTypes:'Right-turn/pedestrian',
+    cost:'low', costRange:'$3K–$15K', implementSpeed:'Fast (1–3 mo)',
+    safeSystem:'Manage Conflicts in Time',
+    grant:['HSIP'],
+    isSystemic:false,
+    refs:[{label:'Caltrans LRSM',url:'https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2024/lrsm2024-v2.pdf'}]
+  },
+  {
+    id:'yellow-interval', name:'Yellow Change Interval Optimization',
+    lrsmCode:'SI05', fhwaPsc:true, caltransLrsm:true,
+    desc:'Recalculate yellow and all-red intervals per ITE standards for actual approach speeds. Properly-timed intervals reduce red-light running by addressing inadequate clearance time.',
+    pcfs:['traffic-signal','following-close','unsafe-speed'],
+    locations:['signalized'],
+    cmfRange:'12–35%', cmfNum:0.77, crashTypes:'Angle, rear-end at signals',
+    cost:'low', costRange:'$1K–$5K (engineering only)', implementSpeed:'Fast (<1 mo)',
+    safeSystem:'Manage Conflicts in Time',
+    grant:['HSIP'],
+    isSystemic:true,
+    refs:[{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'}]
+  },
+  {
+    id:'backplates', name:'Backplates with Retroreflective Borders',
+    lrsmCode:'SI06', fhwaPsc:true, caltransLrsm:true,
+    desc:'Adding backplates with retroreflective yellow borders to signal heads increases conspicuity for drivers approaching intersections, especially at night or in sun glare.',
+    pcfs:['traffic-signal','running-stop','dui'],
+    locations:['signalized'],
+    cmfRange:'15–25%', cmfNum:0.81, crashTypes:'Angle, right-angle',
+    cost:'low', costRange:'$2K–$10K per intersection', implementSpeed:'Fast (1–3 mo)',
+    safeSystem:'Manage Conflicts in Time',
+    grant:['HSIP'],
+    isSystemic:true,
+    refs:[{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'}]
+  },
+  {
+    id:'reduced-lt-conflict', name:'Reduced Left-Turn Conflict Intersection (RCUT/MUT)',
+    lrsmCode:'NS08', fhwaPsc:true, caltransLrsm:true,
+    desc:'Restricts left turns and through movements from minor approaches, replacing them with downstream U-turns. Dramatically reduces severe angle conflicts at rural and suburban intersections.',
+    pcfs:['row-veh','improper-turn','wrong-side'],
+    locations:['stop','multilane'],
+    cmfRange:'40–70%', cmfNum:0.45, crashTypes:'Angle, head-on, left-turn',
+    cost:'med', costRange:'$150K–$500K', implementSpeed:'Medium (6–18 mo)',
+    safeSystem:'Remove Severe Conflicts',
+    grant:['HSIP','SS4A'],
+    isSystemic:false,
+    refs:[{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'}]
+  },
+  {
+    id:'stop-systemic', name:'Systemic Low-Cost Countermeasures at Stop-Controlled Intersections',
+    lrsmCode:'NS01–NS04', fhwaPsc:true, caltransLrsm:true,
+    desc:'Package of low-cost improvements: oversized stop signs, double-post signs, retroreflective post sleeves, stop bar markings, sight distance clearing. Most effective as systemic network application.',
+    pcfs:['running-stop','row-veh','road-condition'],
+    locations:['stop'],
+    cmfRange:'20–40% (combined package)', cmfNum:0.72, crashTypes:'Angle, right-angle',
+    cost:'low', costRange:'$2K–$20K per intersection', implementSpeed:'Fast (1–6 mo)',
+    safeSystem:'Manage Conflicts in Time',
+    grant:['HSIP'],
+    isSystemic:true,
+    refs:[{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'},{label:'Caltrans LRSM',url:'https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2024/lrsm2024-v2.pdf'}]
+  },
+  {
+    id:'ded-turn-lanes', name:'Dedicated Left/Right-Turn Lanes at Intersections',
+    lrsmCode:'SI09 / SI14', fhwaPsc:true, caltransLrsm:true,
+    desc:'Adding dedicated turn lanes removes turning vehicles from through lanes, reducing rear-end conflicts and enabling more efficient signal timing.',
+    pcfs:['following-close','improper-turn','row-veh','unsafe-lane'],
+    locations:['signalized','stop'],
+    cmfRange:'15–40%', cmfNum:0.73, crashTypes:'Rear-end, angle, sideswipe',
+    cost:'high', costRange:'$300K–$1.5M', implementSpeed:'Slow (12–30 mo)',
+    safeSystem:'Remove Severe Conflicts',
+    grant:['HSIP','SS4A','OBAG'],
+    isSystemic:false,
+    refs:[{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'}]
+  },
+  {
+    id:'pedestrian-scramble', name:'Pedestrian Scramble / Barnes Dance',
+    lrsmCode:'SI11', fhwaPsc:false, caltransLrsm:true,
+    desc:'All-way pedestrian phase halts all vehicular traffic simultaneously, allowing pedestrians to cross in all directions including diagonally. Eliminates all vehicle-turning/pedestrian conflicts.',
+    pcfs:['pedestrian-row','ped-violation','improper-turn'],
+    locations:['signalized'],
+    cmfRange:'35–60%', cmfNum:0.55, crashTypes:'Pedestrian at intersections',
+    cost:'low', costRange:'$5K–$30K (signal retiming + markings)', implementSpeed:'Fast (2–6 mo)',
+    safeSystem:'Remove Severe Conflicts',
+    grant:['HSIP','SS4A','ATP'],
+    isSystemic:false,
+    refs:[{label:'Caltrans LRSM',url:'https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2024/lrsm2024-v2.pdf'}]
+  },
+
+  // ── PEDESTRIAN / BICYCLE ──
+  {
+    id:'phb', name:'Pedestrian Hybrid Beacon (HAWK)',
+    lrsmCode:'R06', fhwaPsc:true, caltransLrsm:true,
+    desc:'FHWA-approved traffic control device for midblock crossings and uncontrolled locations on high-speed roadways. Stops traffic on driver demand. Reduces pedestrian crashes by 29–61%.',
+    pcfs:['pedestrian-row','ped-violation','road-condition'],
+    locations:['midblock','multilane','ped-crossing'],
+    cmfRange:'29–61%', cmfNum:0.55, crashTypes:'Pedestrian KSI at uncontrolled crossings',
+    cost:'med', costRange:'$80K–$250K', implementSpeed:'Medium (6–12 mo)',
+    safeSystem:'Manage Conflicts in Time',
+    grant:['HSIP','SS4A','ATP'],
+    isSystemic:false,
+    refs:[{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'},{label:'MUTCD',url:'https://mutcd.fhwa.dot.gov/'}]
+  },
+  {
+    id:'rrfb', name:'Rectangular Rapid-Flash Beacon (RRFB)',
+    lrsmCode:'R07', fhwaPsc:false, caltransLrsm:true,
+    desc:'Pedestrian-activated LED beacon with distinctive irregular flash pattern at crosswalks. High conspicuity increases driver yielding rates significantly (85%+ compliance vs 18% baseline).',
+    pcfs:['pedestrian-row','ped-violation'],
+    locations:['midblock','stop','ped-crossing'],
+    cmfRange:'52–63%', cmfNum:0.44, crashTypes:'Pedestrian at uncontrolled crosswalks',
+    cost:'med', costRange:'$30K–$100K', implementSpeed:'Fast (3–8 mo)',
+    safeSystem:'Manage Conflicts in Time',
+    grant:['HSIP','SS4A','ATP'],
+    isSystemic:true,
+    refs:[{label:'Caltrans LRSM',url:'https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2024/lrsm2024-v2.pdf'}]
+  },
+  {
+    id:'crosswalk-vis', name:'Crosswalk Visibility Enhancements',
+    lrsmCode:'R01–R03', fhwaPsc:true, caltransLrsm:true,
+    desc:'Package: high-visibility ladder/continental markings, pedestrian warning signs (W11-2), advance yield markings, in-road warning lights. Reduces pedestrian injury crashes up to 40%.',
+    pcfs:['pedestrian-row','ped-violation','road-condition'],
+    locations:['midblock','stop','ped-crossing'],
+    cmfRange:'30–40%', cmfNum:0.68, crashTypes:'Pedestrian at crosswalks',
+    cost:'low', costRange:'$5K–$30K per crossing', implementSpeed:'Fast (1–3 mo)',
+    safeSystem:'Manage Conflicts in Time',
+    grant:['HSIP','ATP'],
+    isSystemic:true,
+    refs:[{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'}]
+  },
+  {
+    id:'medians-islands', name:'Medians & Pedestrian Refuge Islands',
+    lrsmCode:'R09 / R10', fhwaPsc:true, caltransLrsm:true,
+    desc:'Raised median or refuge island in crossing area allows pedestrians to cross one direction of traffic at a time, reducing exposure. Reduces pedestrian crashes by up to 56% in urban areas.',
+    pcfs:['pedestrian-row','ped-violation','unsafe-speed'],
+    locations:['midblock','multilane','ped-crossing'],
+    cmfRange:'40–56%', cmfNum:0.54, crashTypes:'Pedestrian midblock and multilane',
+    cost:'med', costRange:'$100K–$600K', implementSpeed:'Medium (6–18 mo)',
+    safeSystem:'Remove Severe Conflicts',
+    grant:['HSIP','SS4A','ATP'],
+    isSystemic:false,
+    refs:[{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'}]
+  },
+  {
+    id:'separated-bike', name:'Install Separated Bike Lanes (Class IV)',
+    lrsmCode:'R14', fhwaPsc:false, caltransLrsm:true,
+    desc:'Protected bicycle lane separated from vehicle travel lanes by physical barrier (flexible delineators, raised pavement, parking lane). Reduces crashes up to 53% vs painted bike lanes.',
+    pcfs:['bicycle-veh','unsafe-lane','unsafe-speed'],
+    locations:['midblock','multilane','ped-crossing'],
+    cmfRange:'40–75%', cmfNum:0.45, crashTypes:'Bicycle crashes, dooring, sideswipe',
+    cost:'med', costRange:'$50K–$500K/mile', implementSpeed:'Medium (6–18 mo)',
+    safeSystem:'Remove Severe Conflicts',
+    grant:['HSIP','ATP','SS4A'],
+    isSystemic:false,
+    refs:[{label:'Caltrans LRSM',url:'https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2024/lrsm2024-v2.pdf'},{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'}]
+  },
+  {
+    id:'walkways', name:'Sidewalks & Walkways',
+    lrsmCode:'R13', fhwaPsc:true, caltransLrsm:true,
+    desc:'Adding paved sidewalks or shoulders creates separation between pedestrians and vehicles. Adding paved shoulders can reduce pedestrian crashes by 71% on roads without sidewalks.',
+    pcfs:['pedestrian-row','road-condition','ped-violation'],
+    locations:['midblock','multilane','ped-crossing'],
+    cmfRange:'32–71%', cmfNum:0.49, crashTypes:'Pedestrian along roadway',
+    cost:'med', costRange:'$80K–$600K/mile', implementSpeed:'Medium (8–24 mo)',
+    safeSystem:'Remove Severe Conflicts',
+    grant:['HSIP','ATP','SS4A'],
+    isSystemic:false,
+    refs:[{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'}]
+  },
+
+  // ── SPEED MANAGEMENT ──
+  {
+    id:'speed-cameras', name:'Speed Safety Cameras',
+    lrsmCode:'R32', fhwaPsc:true, caltransLrsm:true,
+    desc:'Automated speed enforcement cameras (photo radar). Reduce fatalities and injuries by 47% in work zones and school zones. Added to FHWA PSC list and LRSM Cycle 12. Requires state enabling legislation (CA AB 645 2023 — pilot program).',
+    pcfs:['unsafe-speed','dui','distracted'],
+    locations:['midblock','multilane','curve'],
+    cmfRange:'40–60%', cmfNum:0.52, crashTypes:'Speed-related KSI',
+    cost:'med', costRange:'$50K–$200K per camera', implementSpeed:'Medium (6–18 mo)',
+    safeSystem:'Reduce Vehicle Speeds',
+    grant:['HSIP'],
+    isSystemic:true,
+    refs:[{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'},{label:'Caltrans LRSM',url:'https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2024/lrsm2024-v2.pdf'}]
+  },
+  {
+    id:'speed-limits', name:'Appropriate Speed Limits for All Road Users',
+    lrsmCode:'S01', fhwaPsc:true, caltransLrsm:true,
+    desc:'Setting speed limits based on Safe System principles (context, surrounding land use, users present) rather than 85th percentile only. CA AB 43 (2021) now allows lower speed limits near schools, seniors facilities, and high-injury corridors.',
+    pcfs:['unsafe-speed','distracted','dui'],
+    locations:['midblock','multilane','curve'],
+    cmfRange:'10–30%', cmfNum:0.82, crashTypes:'Speed-related all types',
+    cost:'low', costRange:'$5K–$30K (engineering study + signs)', implementSpeed:'Fast (3–9 mo)',
+    safeSystem:'Reduce Vehicle Speeds',
+    grant:['HSIP'],
+    isSystemic:true,
+    refs:[{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'}]
+  },
+  {
+    id:'road-diet', name:'Road Diet / Lane Reduction',
+    lrsmCode:'R11', fhwaPsc:false, caltransLrsm:true,
+    desc:'Converting a 4-lane undivided road to 3-lane (2 through + 1 center turn) reduces vehicle conflicts, calms speeds, and creates space for bike lanes and wider sidewalks. Reduces total crashes 19–47%.',
+    pcfs:['unsafe-speed','unsafe-lane','pedestrian-row','bicycle-veh'],
+    locations:['midblock','multilane'],
+    cmfRange:'19–47%', cmfNum:0.68, crashTypes:'Total crashes, pedestrian, angle',
+    cost:'low', costRange:'$30K–$200K (restriping)', implementSpeed:'Fast (2–8 mo)',
+    safeSystem:'Remove Severe Conflicts',
+    grant:['HSIP','SS4A','ATP'],
+    isSystemic:false,
+    refs:[{label:'Caltrans LRSM',url:'https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2024/lrsm2024-v2.pdf'},{label:'FHWA Road Diet',url:'https://safety.fhwa.dot.gov/road_diets/'}]
+  },
+
+  // ── ROADWAY DEPARTURE / CURVES ──
+  {
+    id:'curve-delineation', name:'Enhanced Delineation for Horizontal Curves',
+    lrsmCode:'R19 / R20', fhwaPsc:true, caltransLrsm:true,
+    desc:'Chevron warning signs, delineators, and advisory speed signs on horizontal curves. Adding oversized or sequential chevrons can reduce nighttime crashes by 25%. Most cost-effective treatment for curve departure.',
+    pcfs:['unsafe-speed','road-condition','wrong-side','dui'],
+    locations:['curve','midblock'],
+    cmfRange:'18–36%', cmfNum:0.75, crashTypes:'Roadway departure, head-on on curves',
+    cost:'low', costRange:'$2K–$25K per curve', implementSpeed:'Fast (1–3 mo)',
+    safeSystem:'Reduce Vehicle Speeds',
+    grant:['HSIP'],
+    isSystemic:true,
+    refs:[{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'}]
+  },
+  {
+    id:'rumble-strips', name:'Longitudinal Rumble Strips & Stripes',
+    lrsmCode:'R16 / R17', fhwaPsc:true, caltransLrsm:true,
+    desc:'Edge-line and centerline rumble strips on two-lane roads alert drifting drivers. Reduces single-vehicle roadway departure crashes by 35–50%. Centerline strips also reduce head-on crashes.',
+    pcfs:['wrong-side','dui','distracted','road-condition'],
+    locations:['midblock','curve'],
+    cmfRange:'35–50%', cmfNum:0.58, crashTypes:'Roadway departure, head-on',
+    cost:'low', costRange:'$5K–$40K/mile', implementSpeed:'Fast (1–6 mo)',
+    safeSystem:'Reduce Vehicle Speeds',
+    grant:['HSIP'],
+    isSystemic:true,
+    refs:[{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'}]
+  },
+  {
+    id:'wider-edge-lines', name:'Wider Edge Lines',
+    lrsmCode:'R18', fhwaPsc:true, caltransLrsm:true,
+    desc:'Increasing edge line width from 4" to 6–8" enhances visibility of travel lane boundaries, reduces roadway departure crashes by 10–18% on rural two-lane roads at minimal cost.',
+    pcfs:['road-condition','wrong-side','dui','unsafe-speed'],
+    locations:['midblock','curve'],
+    cmfRange:'10–18%', cmfNum:0.87, crashTypes:'Roadway departure',
+    cost:'low', costRange:'$1K–$8K/mile', implementSpeed:'Fast (<1 mo)',
+    safeSystem:'Reduce Vehicle Speeds',
+    grant:['HSIP'],
+    isSystemic:true,
+    refs:[{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'}]
+  },
+  {
+    id:'median-barrier', name:'Median Barriers',
+    lrsmCode:'R24', fhwaPsc:true, caltransLrsm:true,
+    desc:'Physical barriers in median (cable, concrete, guardrail) prevent crossover head-on crashes on divided highways. Most effective on high-speed, high-volume divided roads.',
+    pcfs:['wrong-side','unsafe-speed','dui'],
+    locations:['multilane','midblock'],
+    cmfRange:'55–90% (crossover crashes)', cmfNum:0.30, crashTypes:'Head-on, crossover fatal crashes',
+    cost:'high', costRange:'$300K–$2M/mile', implementSpeed:'Slow (12–30 mo)',
+    safeSystem:'Remove Severe Conflicts',
+    grant:['HSIP'],
+    isSystemic:false,
+    refs:[{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'}]
+  },
+
+  // ── REAR-END / FOLLOWING ──
+  {
+    id:'signal-coord', name:'Signal Coordination / Retiming',
+    lrsmCode:'S05', fhwaPsc:false, caltransLrsm:true,
+    desc:'Coordinating signal timing along a corridor reduces stops and start-stop cycles, lowering rear-end crash probability. Reduces total crashes 7–18% on coordinated arterials.',
+    pcfs:['following-close','traffic-signal','unsafe-speed'],
+    locations:['signalized','midblock'],
+    cmfRange:'7–20%', cmfNum:0.88, crashTypes:'Rear-end on arterials',
+    cost:'low', costRange:'$5K–$50K (engineering)', implementSpeed:'Fast (1–6 mo)',
+    safeSystem:'Manage Conflicts in Time',
+    grant:['HSIP','OBAG'],
+    isSystemic:true,
+    refs:[{label:'Caltrans LRSM',url:'https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2024/lrsm2024-v2.pdf'}]
+  },
+  {
+    id:'dynamic-msg', name:'Dynamic Message Signs / Queue Warning',
+    lrsmCode:'S08', fhwaPsc:false, caltransLrsm:true,
+    desc:'Variable message signs warn drivers of upstream queuing or speed drops, reducing rear-end crashes in high-frequency stop-and-go corridors.',
+    pcfs:['following-close','unsafe-speed','distracted'],
+    locations:['multilane','midblock'],
+    cmfRange:'15–30%', cmfNum:0.79, crashTypes:'Rear-end on high-volume corridors',
+    cost:'med', costRange:'$80K–$300K', implementSpeed:'Medium (6–18 mo)',
+    safeSystem:'Reduce Vehicle Speeds',
+    grant:['HSIP'],
+    isSystemic:false,
+    refs:[{label:'Caltrans LRSM',url:'https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2024/lrsm2024-v2.pdf'}]
+  },
+
+  // ── INTERSECTION ACCESS MANAGEMENT ──
+  {
+    id:'access-mgmt', name:'Corridor Access Management',
+    lrsmCode:'NS07', fhwaPsc:true, caltransLrsm:true,
+    desc:'Consolidating driveways, adding raised medians, and restricting turning movements along a corridor to reduce conflict points. Reduces crashes 10–45% depending on treatments applied.',
+    pcfs:['row-veh','improper-turn','unsafe-lane','unsafe-speed'],
+    locations:['multilane','signalized'],
+    cmfRange:'10–45%', cmfNum:0.72, crashTypes:'Angle, driveway-related crashes',
+    cost:'med', costRange:'$50K–$500K', implementSpeed:'Slow (12–30 mo)',
+    safeSystem:'Remove Severe Conflicts',
+    grant:['HSIP','SS4A','OBAG'],
+    isSystemic:false,
+    refs:[{label:'FHWA PSC',url:'https://highways.dot.gov/safety/proven-safety-countermeasures'}]
+  },
+  {
+    id:'lighting', name:'Intersection / Roadway Lighting',
+    lrsmCode:'R28', fhwaPsc:false, caltransLrsm:true,
+    desc:'Adding or improving illumination at high-crash locations. Particularly effective for nighttime pedestrian crashes and DUI-involved collisions. Reduces nighttime crashes 20–50%.',
+    pcfs:['pedestrian-row','dui','road-condition','bicycle-veh'],
+    locations:['signalized','stop','midblock','ped-crossing'],
+    cmfRange:'20–50% (nighttime)', cmfNum:0.68, crashTypes:'Nighttime pedestrian, bicycle, DUI-related',
+    cost:'low', costRange:'$15K–$100K per location', implementSpeed:'Fast (3–9 mo)',
+    safeSystem:'Remove Severe Conflicts',
+    grant:['HSIP','ATP','SS4A'],
+    isSystemic:true,
+    refs:[{label:'Caltrans LRSM',url:'https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2024/lrsm2024-v2.pdf'}]
+  }
+];
+
+// ══════════════════════════════════════════════════
+// DATA — COLLISION TYPES (SWITRS codes A–H)
+// ══════════════════════════════════════════════════
+const CT_DATA = [
+  {
+    id:'broadside', code:'SWITRS: D', icon:'💥', name:'Broadside (T-Bone)',
+    desc:'Front of one vehicle strikes the side of another. Highest KSI rate of all crash types — side structures offer least protection.',
+    ksi:true,
+    pcfs:['row-veh','running-stop','traffic-signal','improper-turn'],
+    cmIds:['roundabout','lt-phasing','backplates','yellow-interval','stop-systemic','reduced-lt-conflict','lpi']
+  },
+  {
+    id:'rear-end', code:'SWITRS: C', icon:'🚗', name:'Rear-End',
+    desc:'Trailing vehicle strikes the rear of the vehicle ahead. Most common crash type on arterials; often linked to following too closely, distraction, or sudden stops.',
+    ksi:false,
+    pcfs:['following-close','traffic-signal','unsafe-speed','distracted'],
+    cmIds:['signal-coord','lt-phasing','dynamic-msg','ded-turn-lanes','yellow-interval','backplates']
+  },
+  {
+    id:'head-on', code:'SWITRS: A (opposing)', icon:'⬅️', name:'Head-On',
+    desc:'Two vehicles traveling in opposite directions collide. Deadliest crash type per event — accounts for ~10% of crashes but 59% of occupant fatalities nationally.',
+    ksi:true,
+    pcfs:['wrong-side','unsafe-speed','dui','road-condition'],
+    cmIds:['median-barrier','rumble-strips','wider-edge-lines','curve-delineation','reduced-lt-conflict','roundabout']
+  },
+  {
+    id:'sideswipe', code:'SWITRS: B', icon:'〰️', name:'Sideswipe',
+    desc:'Side of one vehicle contacts side of another. Same direction (lane change) or opposing direction (curve departure). Usually less severe, but can trigger secondary crashes.',
+    ksi:false,
+    pcfs:['unsafe-lane','wrong-side','distracted','unsafe-speed'],
+    cmIds:['wider-edge-lines','rumble-strips','road-diet','access-mgmt','curve-delineation']
+  },
+  {
+    id:'hit-object', code:'SWITRS: E', icon:'🌳', name:'Hit Object (Fixed)',
+    desc:'Single vehicle strikes a fixed object (pole, tree, barrier, sign). Second most common crash type. Strongly linked to roadway departure events and DUI.',
+    ksi:true,
+    pcfs:['unsafe-speed','dui','wrong-side','road-condition'],
+    cmIds:['rumble-strips','curve-delineation','wider-edge-lines','speed-limits','speed-cameras','median-barrier']
+  },
+  {
+    id:'overturned', code:'SWITRS: F', icon:'🔄', name:'Overturned / Rollover',
+    desc:'Vehicle rolls onto side or roof. Common on high-speed curves and for high-CG vehicles. Often secondary to another collision or roadway departure.',
+    ksi:true,
+    pcfs:['unsafe-speed','dui','wrong-side','road-condition'],
+    cmIds:['curve-delineation','rumble-strips','speed-limits','wider-edge-lines']
+  },
+  {
+    id:'pedestrian', code:'SWITRS: G (Ped)', icon:'🚶', name:'Vehicle–Pedestrian',
+    desc:'Vehicle strikes a pedestrian. Highest severity when occurring at speed >25 mph. Disproportionately concentrated at midblock crossings and uncontrolled intersections.',
+    ksi:true,
+    pcfs:['pedestrian-row','ped-violation','unsafe-speed','dui','road-condition'],
+    cmIds:['lpi','phb','rrfb','crosswalk-vis','medians-islands','walkways','pedestrian-scramble','lighting','rlt-overlap','speed-limits']
+  },
+  {
+    id:'bicycle', code:'SWITRS: G (Bike)', icon:'🚲', name:'Vehicle–Bicycle',
+    desc:'Vehicle collides with bicyclist. Common crash subtypes: right-hook, left-cross, dooring, intersection angle. KSI rates rising as cycling increases without infrastructure.',
+    ksi:true,
+    pcfs:['bicycle-veh','unsafe-lane','improper-turn','pedestrian-row','road-condition'],
+    cmIds:['separated-bike','lpi','crosswalk-vis','road-diet','lighting','access-mgmt']
+  },
+  {
+    id:'non-collision', code:'SWITRS: A (non-col)', icon:'💨', name:'Non-Collision / Run-Off-Road',
+    desc:'Vehicle leaves roadway without striking another vehicle or fixed object — often runs into ditch, embankment, or soft soil. Closely linked to roadway departure PCFs.',
+    ksi:false,
+    pcfs:['unsafe-speed','dui','distracted','road-condition','wrong-side'],
+    cmIds:['rumble-strips','wider-edge-lines','curve-delineation','speed-limits','speed-cameras']
+  }
+];
+
+// PCF → Collision Type relationship matrix
+// strength: 2=strong, 1=moderate, 0=none
+const PCF_CT_MATRIX = {
+  'unsafe-speed':      {broadside:1,  'rear-end':1,  'head-on':2, sideswipe:1, 'hit-object':2, overturned:2, pedestrian:2,  bicycle:1,  'non-collision':2},
+  'row-veh':           {broadside:2,  'rear-end':0,  'head-on':0, sideswipe:0, 'hit-object':0, overturned:0, pedestrian:0,  bicycle:1,  'non-collision':0},
+  'improper-turn':     {broadside:2,  'rear-end':1,  'head-on':0, sideswipe:1, 'hit-object':1, overturned:0, pedestrian:1,  bicycle:2,  'non-collision':0},
+  'traffic-signal':    {broadside:2,  'rear-end':2,  'head-on':0, sideswipe:0, 'hit-object':0, overturned:0, pedestrian:1,  bicycle:1,  'non-collision':0},
+  'dui':               {broadside:1,  'rear-end':1,  'head-on':2, sideswipe:1, 'hit-object':2, overturned:2, pedestrian:2,  bicycle:1,  'non-collision':2},
+  'ped-violation':     {broadside:0,  'rear-end':0,  'head-on':0, sideswipe:0, 'hit-object':0, overturned:0, pedestrian:2,  bicycle:0,  'non-collision':0},
+  'following-close':   {broadside:0,  'rear-end':2,  'head-on':0, sideswipe:1, 'hit-object':0, overturned:0, pedestrian:0,  bicycle:0,  'non-collision':0},
+  'unsafe-lane':       {broadside:1,  'rear-end':1,  'head-on':1, sideswipe:2, 'hit-object':1, overturned:1, pedestrian:0,  bicycle:2,  'non-collision':1},
+  'wrong-side':        {broadside:0,  'rear-end':0,  'head-on':2, sideswipe:2, 'hit-object':1, overturned:1, pedestrian:0,  bicycle:0,  'non-collision':2},
+  'pedestrian-row':    {broadside:0,  'rear-end':0,  'head-on':0, sideswipe:0, 'hit-object':0, overturned:0, pedestrian:2,  bicycle:1,  'non-collision':0},
+  'bicycle-veh':       {broadside:0,  'rear-end':0,  'head-on':0, sideswipe:1, 'hit-object':0, overturned:0, pedestrian:0,  bicycle:2,  'non-collision':0},
+  'distracted':        {broadside:1,  'rear-end':2,  'head-on':1, sideswipe:1, 'hit-object':1, overturned:0, pedestrian:1,  bicycle:1,  'non-collision':1},
+  'running-stop':      {broadside:2,  'rear-end':0,  'head-on':0, sideswipe:0, 'hit-object':0, overturned:0, pedestrian:1,  bicycle:1,  'non-collision':0},
+  'road-condition':    {broadside:0,  'rear-end':1,  'head-on':1, sideswipe:1, 'hit-object':2, overturned:2, pedestrian:1,  bicycle:1,  'non-collision':2},
+  'other-improper':    {broadside:1,  'rear-end':1,  'head-on':1, sideswipe:1, 'hit-object':1, overturned:1, pedestrian:1,  bicycle:1,  'non-collision':1},
+};
+
+// ══════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════
+let selectedPCFs = new Set();
+let selectedCTs  = new Set();
+let selectedLocation = null;
+let currentStep = 1;
+let currentFilter = 'all';
+let currentSort = 'cmf';
+
+// ══════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════
+function init() {
+  renderPCFList();
+  renderCTList();
+  renderMatrix();
+}
+
+function renderPCFList() {
+  document.getElementById('pcf-list').innerHTML = PCF_DATA.map(p => `
+    <div class="pcf-row" id="pcfrow-${p.id}" onclick="togglePCF('${p.id}')">
+      <span class="row-icon">${p.icon}</span>
+      <div class="row-body">
+        <div class="row-name">${p.name}</div>
+        <div class="row-code">${p.code}</div>
+      </div>
+      <div class="row-check" id="check-${p.id}"></div>
+    </div>`).join('');
+}
+
+function renderCTList() {
+  document.getElementById('ct-list').innerHTML = CT_DATA.map(c => `
+    <div class="ct-row" id="ctrow-${c.id}" onclick="toggleCT('${c.id}')">
+      <span class="row-icon">${c.icon}</span>
+      <div class="row-body">
+        <div class="row-name">${c.name}</div>
+        <div class="row-code">${c.code}</div>
+      </div>
+      ${c.ksi ? '<span class="ksi-badge">KSI</span>' : ''}
+      <div class="row-check" id="ctcheck-${c.id}"></div>
+    </div>`).join('');
+}
+
+function renderMatrix() {
+  const wrap = document.getElementById('relationship-matrix');
+  const pcfIds = PCF_DATA.map(p=>p.id);
+  const ctIds  = CT_DATA.map(c=>c.id);
+  // rows = PCFs, cols = collision types
+  wrap.innerHTML = pcfIds.map((pid,pi) => `
+    <div class="matrix-row" id="mrow-${pid}">
+      ${ctIds.map((cid,ci) => {
+        const strength = (PCF_CT_MATRIX[pid]||{})[cid]||0;
+        const cls = strength===2?'strong':strength===1?'moderate':'';
+        return `<div class="matrix-cell ${cls}" id="mc-${pid}-${cid}" title="${PCF_DATA[pi].name} → ${CT_DATA[ci].name}"></div>`;
+      }).join('')}
+    </div>`).join('');
+}
+
+function updateMatrix() {
+  const pcfIds = PCF_DATA.map(p=>p.id);
+  const ctIds  = CT_DATA.map(c=>c.id);
+  pcfIds.forEach(pid => {
+    ctIds.forEach(cid => {
+      const cell = document.getElementById(`mc-${pid}-${cid}`);
+      if (!cell) return;
+      const strength = (PCF_CT_MATRIX[pid]||{})[cid]||0;
+      const pSel = selectedPCFs.has(pid);
+      const cSel = selectedCTs.has(cid);
+      cell.className = 'matrix-cell';
+      if (strength===2) cell.classList.add('strong');
+      else if (strength===1) cell.classList.add('moderate');
+      // Highlight if both selected
+      if (pSel && cSel && strength>0) {
+        cell.style.boxShadow = '0 0 0 1.5px rgba(255,199,44,0.8)';
+        cell.style.transform = 'scale(1.3)';
+      } else {
+        cell.style.boxShadow=''; cell.style.transform='';
+      }
+    });
+  });
+}
+
+// ══════════════════════════════════════════════════
+// SELECTION TOGGLES
+// ══════════════════════════════════════════════════
+function togglePCF(id) {
+  if (selectedPCFs.has(id)) {
+    selectedPCFs.delete(id);
+    document.getElementById('pcfrow-'+id).classList.remove('selected');
+    document.getElementById('check-'+id).textContent = '';
+  } else {
+    selectedPCFs.add(id);
+    document.getElementById('pcfrow-'+id).classList.add('selected');
+    document.getElementById('check-'+id).textContent = '✓';
+  }
+  updateCounts(); updateSummary(); updateMatrix();
+  document.getElementById('next1-btn').disabled = (selectedPCFs.size + selectedCTs.size) === 0;
+}
+
+function toggleCT(id) {
+  if (selectedCTs.has(id)) {
+    selectedCTs.delete(id);
+    document.getElementById('ctrow-'+id).classList.remove('selected');
+    document.getElementById('ctcheck-'+id).textContent = '';
+  } else {
+    selectedCTs.add(id);
+    document.getElementById('ctrow-'+id).classList.add('selected');
+    document.getElementById('ctcheck-'+id).textContent = '✓';
+  }
+  updateCounts(); updateSummary(); updateMatrix();
+  document.getElementById('next1-btn').disabled = (selectedPCFs.size + selectedCTs.size) === 0;
+}
+
+function updateCounts() {
+  const pb = document.getElementById('pcf-count-badge');
+  const cb = document.getElementById('ct-count-badge');
+  pb.textContent = selectedPCFs.size > 0 ? `${selectedPCFs.size} selected` : '0 selected';
+  cb.textContent = selectedCTs.size  > 0 ? `${selectedCTs.size} selected`  : '0 selected';
+  pb.className = 'col-count' + (selectedPCFs.size > 0 ? ' has-sel' : '');
+  cb.className = 'col-count' + (selectedCTs.size  > 0 ? ' has-sel' : '');
+}
+
+function updateSummary() {
+  const sumEl = document.getElementById('sel-summary');
+  const bodyEl = document.getElementById('sel-sum-body');
+  const total = selectedPCFs.size + selectedCTs.size;
+  if (total === 0) { sumEl.style.display='none'; return; }
+  sumEl.style.display='block';
+  const pcfChips = [...selectedPCFs].map(id => {
+    const p = PCF_DATA.find(x=>x.id===id);
+    return `<span class="sel-chip sel-chip-pcf">${p.icon} ${p.name}</span>`;
+  });
+  const ctChips = [...selectedCTs].map(id => {
+    const c = CT_DATA.find(x=>x.id===id);
+    return `<span class="sel-chip sel-chip-ct">${c.icon} ${c.name}</span>`;
+  });
+  bodyEl.innerHTML = pcfChips.join('') + ctChips.join('');
+}
+
+function clearSelection() {
+  selectedPCFs.forEach(id => {
+    document.getElementById('pcfrow-'+id).classList.remove('selected');
+    document.getElementById('check-'+id).textContent = '';
+  });
+  selectedPCFs.clear();
+  selectedCTs.forEach(id => {
+    document.getElementById('ctrow-'+id).classList.remove('selected');
+    document.getElementById('ctcheck-'+id).textContent = '';
+  });
+  selectedCTs.clear();
+  updateCounts(); updateSummary(); updateMatrix();
+  document.getElementById('next1-btn').disabled = true;
+  document.getElementById('selection-bar').classList.add('hidden');
+}
+
+// ══════════════════════════════════════════════════
+// LOCATION SELECTION
+// ══════════════════════════════════════════════════
+function selectLocation(loc) {
+  if (selectedLocation) document.getElementById('loc-'+selectedLocation).classList.remove('selected');
+  selectedLocation = loc;
+  document.getElementById('loc-'+loc).classList.add('selected');
+  document.getElementById('next2-btn').disabled = false;
+}
+
+// ══════════════════════════════════════════════════
+// STEP NAVIGATION
+// ══════════════════════════════════════════════════
+function goToStep(step) {
+  if (step === 2 && (selectedPCFs.size + selectedCTs.size) === 0) return;
+  if (step === 3) buildResults();
+  if (step === 4) buildSummary();
+
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel'+step).classList.add('active');
+
+  document.querySelectorAll('.step-item').forEach((el, i) => {
+    el.classList.remove('active','done');
+    const sn = document.getElementById('sn'+(i+1));
+    if (i+1 < step) { el.classList.add('done'); sn.textContent = '✓'; }
+    else if (i+1 === step) { el.classList.add('active'); sn.textContent = i+1; }
+    else { sn.textContent = i+1; }
+  });
+
+  currentStep = step;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ══════════════════════════════════════════════════
+// BUILD RESULTS — now includes CT matching
+// ══════════════════════════════════════════════════
+function buildResults() {
+  const matching = CM_DATA.filter(cm => {
+    const pcfMatch = [...selectedPCFs].some(pcf => cm.pcfs.includes(pcf));
+    // CT match: any selected collision type lists this CM in its cmIds
+    const ctMatch  = [...selectedCTs].some(ctId => {
+      const ct = CT_DATA.find(x=>x.id===ctId);
+      return ct && ct.cmIds.includes(cm.id);
+    });
+    const locMatch = !selectedLocation || cm.locations.includes(selectedLocation);
+    const anyMatch = (selectedPCFs.size > 0 && selectedCTs.size > 0)
+      ? (pcfMatch || ctMatch)   // union when both dimensions used
+      : pcfMatch || ctMatch;    // union otherwise
+    return anyMatch && locMatch;
+  });
+
+  // Score each CM by how many selected inputs it matches (for relevance sort)
+  matching.forEach(cm => {
+    let score = 0;
+    selectedPCFs.forEach(p => { if(cm.pcfs.includes(p)) score+=2; });
+    selectedCTs.forEach(c => {
+      const ct = CT_DATA.find(x=>x.id===c);
+      if (ct && ct.cmIds.includes(cm.id)) score+=1;
+    });
+    cm._relevance = score;
+  });
+
+  window._allResults = matching;
+  sortAndRender();
+
+  const locNames = {signalized:'Signalized Intersection',stop:'Stop-Controlled',midblock:'Midblock/Segment',curve:'Horizontal Curve','ped-crossing':'Ped/Bike Facility',multilane:'Multilane Arterial'};
+  const ctNames  = [...selectedCTs].map(id=>CT_DATA.find(x=>x.id===id).name).join(', ');
+  const pcfNames = [...selectedPCFs].map(id=>PCF_DATA.find(x=>x.id===id).name).join(', ');
+  document.getElementById('results-title').textContent = `${matching.length} Countermeasures Found`;
+  let subtitle = [];
+  if (pcfNames) subtitle.push(`PCFs: ${pcfNames}`);
+  if (ctNames)  subtitle.push(`Types: ${ctNames}`);
+  subtitle.push(`Location: ${locNames[selectedLocation]||'All'}`);
+  document.getElementById('results-count').textContent = subtitle.join(' · ');
+}
+
+function sortAndRender(filter) {
+  const f = filter || currentFilter;
+  let results = [...window._allResults];
+
+  if (f === 'fhwa') results = results.filter(c=>c.fhwaPsc);
+  else if (f === 'caltrans') results = results.filter(c=>c.caltransLrsm);
+  else if (f === 'low-cost') results = results.filter(c=>c.cost==='low');
+  else if (f === 'high-cmf') results = results.filter(c=>c.cmfNum <= 0.70);
+  else if (f === 'systemic') results = results.filter(c=>c.isSystemic);
+
+  if (currentSort === 'cmf') results.sort((a,b)=>a.cmfNum-b.cmfNum);
+  else if (currentSort === 'relevance') results.sort((a,b)=>(b._relevance||0)-(a._relevance||0));
+  else if (currentSort === 'cost') {
+    const order = {low:0,med:1,high:2};
+    results.sort((a,b)=>order[a.cost]-order[b.cost]);
+  }
+  else if (currentSort === 'speed') {
+    const order = {Fast:0,Medium:1,Slow:2};
+    results.sort((a,b)=>order[a.implementSpeed.split(' ')[0]]-order[b.implementSpeed.split(' ')[0]]);
+  }
+
+  const grid = document.getElementById('cm-grid');
+  const noRes = document.getElementById('no-results');
+  if (results.length === 0) {
+    grid.innerHTML=''; noRes.classList.remove('hidden');
+  } else {
+    noRes.classList.add('hidden');
+    grid.innerHTML = results.map((cm,idx) => renderCM(cm,idx)).join('');
+  }
+}
+
+function getCMFColor(num) {
+  if (num <= 0.5) return 'cmf-great';
+  if (num <= 0.75) return 'cmf-good';
+  return 'cmf-strong';
+}
+function getTier(num) {
+  if (num <= 0.5) return {cls:'tier1',label:'T1'};
+  if (num <= 0.75) return {cls:'tier2',label:'T2'};
+  return {cls:'tier3',label:'T3'};
+}
+
+function renderCM(cm, idx) {
+  const tier = getTier(cm.cmfNum);
+  const reduction = Math.round((1-cm.cmfNum)*100);
+  const barWidth = Math.min(reduction,90);
+  const colorClass = getCMFColor(cm.cmfNum);
+
+  // Build tags — PCFs that matched AND collision types that matched
+  const relPCFs = [...selectedPCFs].filter(p=>cm.pcfs.includes(p));
+  const relCTs  = [...selectedCTs].filter(cid => {
+    const ct = CT_DATA.find(x=>x.id===cid);
+    return ct && ct.cmIds.includes(cm.id);
+  });
+
+  const pcfTagsHtml = relPCFs.map(p=>{
+    const pObj=PCF_DATA.find(x=>x.id===p);
+    return `<span class="pcf-mini-tag" style="background:rgba(255,199,44,0.08);color:var(--gold);border:1px solid rgba(255,199,44,0.2);">${pObj.icon} ${pObj.name}</span>`;
+  }).join('');
+  const ctTagsHtml  = relCTs.map(c=>{
+    const cObj=CT_DATA.find(x=>x.id===c);
+    return `<span class="pcf-mini-tag" style="background:rgba(79,209,197,0.08);color:#4FD1C5;border:1px solid rgba(79,209,197,0.2);">${cObj.icon} ${cObj.name}</span>`;
+  }).join('');
+
+  return `
+  <div class="cm-card" style="animation:fadeIn 0.3s ease ${idx*0.05}s both;">
+    <div class="cm-card-top">
+      <div class="cm-priority ${tier.cls}" title="Priority tier by CMF effectiveness">${tier.label}</div>
+      <div class="cm-main">
+        <div class="cm-name">${cm.name}</div>
+        <div class="cm-code-row">
+          ${cm.fhwaPsc ? '<span class="badge badge-fhwa">🇺🇸 FHWA Proven</span>' : ''}
+          ${cm.caltransLrsm ? `<span class="badge badge-caltrans">🐻 LRSM: ${cm.lrsmCode}</span>` : ''}
+          <span class="badge badge-cost-${cm.cost}">💰 ${cm.cost==='low'?'Low Cost':cm.cost==='med'?'Medium Cost':'High Cost'}</span>
+        </div>
+        <div class="cm-desc">${cm.desc}</div>
+      </div>
+    </div>
+    <div class="cm-card-metrics">
+      <div class="cm-metric">
+        <div class="m-val ${colorClass}">${reduction}%</div>
+        <div class="cmf-bar-wrap"><div class="cmf-bar-fill" style="width:${barWidth}%;background:${reduction>=50?'#38A169':reduction>=30?'#FFC72C':'#3182CE'};"></div></div>
+        <div class="m-lbl">Crash Reduction (CRF)</div>
+      </div>
+      <div class="cm-metric">
+        <div class="m-val" style="color:var(--text-muted);font-size:14px;">${cm.costRange}</div>
+        <div class="m-lbl">Typical Cost Range</div>
+      </div>
+      <div class="cm-metric">
+        <div class="m-val" style="color:${cm.implementSpeed.startsWith('Fast')?'#38A169':cm.implementSpeed.startsWith('Medium')?'#FFC72C':'#E53E3E'};font-size:15px;">${cm.implementSpeed}</div>
+        <div class="m-lbl">Implementation</div>
+      </div>
+    </div>
+    <div class="cm-card-footer">
+      <div class="cm-pcf-tags">${pcfTagsHtml}${ctTagsHtml}</div>
+      <div class="cm-links">
+        ${cm.refs.map(r=>`<a class="ref-link" href="${r.url}" target="_blank">${r.label} ↗</a>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function filterResults(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));
+  btn.classList.add('active');
+  sortAndRender(f);
+}
+
+function sortResults(s, btn) {
+  currentSort = s;
+  document.querySelectorAll('.sort-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  sortAndRender();
+}
+
+// ══════════════════════════════════════════════════
+// BUILD SUMMARY (Step 4)
+// ══════════════════════════════════════════════════
+function buildSummary() {
+  const pcfArr = [...selectedPCFs].map(id=>PCF_DATA.find(x=>x.id===id));
+  const ctArr  = [...selectedCTs].map(id=>CT_DATA.find(x=>x.id===id));
+  const pcfContent = document.getElementById('pcf-summary-content');
+
+  pcfContent.innerHTML = `
+    ${pcfArr.length ? `
+    <div style="font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Primary Collision Factors</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+      ${pcfArr.map(p=>`<div style="display:flex;align-items:center;gap:6px;background:rgba(255,199,44,0.07);border:1px solid rgba(255,199,44,0.2);border-radius:8px;padding:7px 12px;">
+        <span style="font-size:16px;">${p.icon}</span>
+        <div><div style="font-size:12px;font-weight:700;color:#fff;">${p.name}</div><div style="font-size:9px;color:var(--text-dim);">${p.code}</div></div>
+      </div>`).join('')}
+    </div>` : ''}
+    ${ctArr.length ? `
+    <div style="font-size:10px;font-weight:700;color:#4FD1C5;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Collision Types</div>
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+      ${ctArr.map(c=>`<div style="display:flex;align-items:center;gap:6px;background:rgba(79,209,197,0.07);border:1px solid rgba(79,209,197,0.2);border-radius:8px;padding:7px 12px;">
+        <span style="font-size:16px;">${c.icon}</span>
+        <div>
+          <div style="display:flex;align-items:center;gap:6px;"><span style="font-size:12px;font-weight:700;color:#fff;">${c.name}</span>${c.ksi?'<span style="font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;background:rgba(229,62,62,0.15);color:#fc8181;border:1px solid rgba(229,62,62,0.25);">KSI</span>':''}</div>
+          <div style="font-size:9px;color:var(--text-dim);">${c.code}</div>
+        </div>
+      </div>`).join('')}
+    </div>` : ''}
+    <div class="divider"></div>
+    <div style="margin-top:12px;">
+      <div style="font-size:11px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;">Safe System Approach — Strategies Addressed</div>
+      <div class="ss-pills">
+        ${[...new Set((window._allResults||[]).map(c=>c.safeSystem))].map(s=>{
+          const colors = {'Remove Severe Conflicts':'rgba(229,62,62,0.15)!color!#fc8181','Manage Conflicts in Time':'rgba(255,199,44,0.15)!color!#FFC72C','Reduce Vehicle Speeds':'rgba(56,161,105,0.15)!color!#68d391'};
+          const parts = (colors[s]||'rgba(128,90,213,0.15)!color!#b794f4').split('!color!');
+          return `<span class="ss-pill" style="background:${parts[0]};color:${parts[1]};border:1px solid ${parts[1]}40;">⚡ ${s}</span>`;
+        }).join('')}
+      </div>
+    </div>`;
+
+  const top = ((window._allResults||[]).slice()).sort((a,b)=>a.cmfNum-b.cmfNum).slice(0,8);
+  const hsipTable = document.getElementById('hsip-code-table');
+  if (top.length === 0) { hsipTable.innerHTML='<p style="color:var(--text-dim);font-size:13px;">Complete Steps 1–3 first.</p>'; return; }
+  hsipTable.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:12px;">
+      <thead><tr style="background:var(--surface3);">
+        <th style="text-align:left;padding:9px 12px;color:var(--gold);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;border:1px solid var(--border);">Countermeasure</th>
+        <th style="padding:9px 12px;color:var(--gold);font-size:10px;text-transform:uppercase;border:1px solid var(--border);">LRSM Code</th>
+        <th style="padding:9px 12px;color:var(--gold);font-size:10px;text-transform:uppercase;border:1px solid var(--border);">CRF</th>
+        <th style="padding:9px 12px;color:var(--gold);font-size:10px;text-transform:uppercase;border:1px solid var(--border);">CMF</th>
+        <th style="padding:9px 12px;color:var(--gold);font-size:10px;text-transform:uppercase;border:1px solid var(--border);">Cost</th>
+        <th style="padding:9px 12px;color:var(--gold);font-size:10px;text-transform:uppercase;border:1px solid var(--border);">Addresses</th>
+      </tr></thead>
+      <tbody>${top.map(cm=>`
+        <tr style="border:1px solid var(--border);">
+          <td style="padding:9px 12px;border:1px solid var(--border);font-weight:600;color:var(--text);">${cm.name}</td>
+          <td style="padding:9px 12px;border:1px solid var(--border);text-align:center;"><code style="background:var(--surface3);color:var(--green);padding:2px 7px;border-radius:4px;font-size:11px;">${cm.lrsmCode}</code></td>
+          <td style="padding:9px 12px;border:1px solid var(--border);text-align:center;font-weight:700;color:${cm.cmfNum<=0.5?'#38A169':cm.cmfNum<=0.75?'#FFC72C':'#63b3ed'};">${Math.round((1-cm.cmfNum)*100)}%</td>
+          <td style="padding:9px 12px;border:1px solid var(--border);text-align:center;color:var(--text-muted);">${cm.cmfNum.toFixed(2)}</td>
+          <td style="padding:9px 12px;border:1px solid var(--border);text-align:center;">${cm.cost==='low'?'<span style="color:#68d391;">⬤ Low</span>':cm.cost==='med'?'<span style="color:#fbbf24;">⬤ Med</span>':'<span style="color:#fc8181;">⬤ High</span>'}</td>
+          <td style="padding:9px 12px;border:1px solid var(--border);font-size:11px;color:var(--text-muted);">${cm.crashTypes}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    <div style="margin-top:10px;font-size:11px;color:var(--text-dim);">CRF = Crash Reduction Factor · CMF = Crash Modification Factor · Lower CMF = more effective · Enter into HSIP Analyzer for B/C ratio</div>`;
+}
+
+function resetTool() {
+  clearSelection();
+  if (selectedLocation) {
+    document.getElementById('loc-'+selectedLocation).classList.remove('selected');
+    selectedLocation = null;
+  }
+  document.getElementById('next2-btn').disabled = true;
+  goToStep(1);
+}
+
+init();
+</script>
+</body>
+</html>
